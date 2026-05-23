@@ -106,10 +106,12 @@ const ft=ts=>new Date(ts).toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-d
 const ls={get:k=>{try{return localStorage.getItem(k)}catch{return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch{}}};
 
 /* ── Supabase minimal REST client ── */
+const SB_URL='https://vuasovjmxpejjywlnith.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ1YXNvdmpteHBlamp5d2xuaXRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1MzMyOTUsImV4cCI6MjA5NTEwOTI5NX0._ZBfJKnKpGXCMJyANumvE1HYtoK97rjv0NmN4Sw2w0Q';
+
 async function sbReq(table,query='',opts={}){
-  const url=ls.get(SK.SB_URL);
-  const key=ls.get(SK.SB_KEY);
-  if(!url||!key)throw new Error('Supabase belum dikonfigurasi. Pergi ke Tetapan → Supabase.');
+  const url=SB_URL;
+  const key=SB_KEY;
   const res=await fetch(`${url}/rest/v1/${table}${query}`,{
     method:opts.method||'GET',
     headers:{'apikey':key,'Authorization':`Bearer ${key}`,'Content-Type':'application/json','Prefer':'return=representation',...(opts.headers||{})},
