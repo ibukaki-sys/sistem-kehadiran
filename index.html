@@ -732,7 +732,7 @@ function AdminPanel({pin,setPin,onBack}){
         <div style={{display:'flex',flexDirection:'column',gap:12}}>
           <Field label="Nama Program"><input placeholder="Cth: Kursus Pemantapan PdP" value={pfNama} onChange={e=>setPfNama(e.target.value)}/></Field>
           <Field label="Tempat"><input placeholder="Cth: Dewan Sekolah" value={pfTempat} onChange={e=>setPfTempat(e.target.value)}/></Field>
-          <Field label="Tarikh"><input type="date" value={pfTarikh} onChange={e=>setPfTarikh(e.target.value)}/></Field>
+          <Field label="Tarikh"><input type="date" value={pfTarikh} onChange={e=>{const d=e.target.value;setPfTarikh(d);if(d)setPfHari(new Date(d+'T00:00').getDay());}}/></Field>
           <Field label="Hari"><select value={pfHari} onChange={e=>setPfHari(e.target.value)}>{HR.map((h,i)=><option key={i} value={i}>{h}</option>)}</select></Field>
           {pErr&&<div className="alert alert-err"><i className="ti ti-alert-circle" style={{fontSize:14,flexShrink:0}}/>{pErr}</div>}
           {pOk&&<div className="alert alert-ok"><i className="ti ti-check" style={{fontSize:14,flexShrink:0}}/>{pOk}</div>}
