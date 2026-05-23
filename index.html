@@ -10,21 +10,20 @@
   <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7/babel.min.js"></script>
-  <script>/* qrcodejs2 — embedded, no CDN dependency */
-var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this.parsedData=[];for(var b=[],d=0,e=this.data.length;e>d;d++){var f=this.data.charCodeAt(d);f>65536?(b[0]=240|(1835008&f)>>>18,b[1]=128|(258048&f)>>>12,b[2]=128|(4032&f)>>>6,b[3]=128|63&f):f>2048?(b[0]=224|(61440&f)>>>12,b[1]=128|(4032&f)>>>6,b[2]=128|63&f):f>128?(b[0]=192|(1984&f)>>>6,b[1]=128|63&f):b[0]=f,this.parsedData=this.parsedData.concat(b)}this.parsedData.length!=this.data.length&&(this.parsedData.unshift(191),this.parsedData.unshift(187),this.parsedData.unshift(239))}function b(a,b){this.typeNumber=a,this.errorCorrectLevel=b,this.modules=null,this.moduleCount=0,this.dataCache=null,this.dataList=[]}function i(a,b){if(void 0==a.length)throw new Error(a.length+"/"+b);for(var c=0;c<a.length&&0==a[c];)c++;this.num=new Array(a.length-c+b);for(var d=0;d<a.length-c;d++)this.num[d]=a[d+c]}function j(a,b){this.totalCount=a,this.dataCount=b}function k(){this.buffer=[],this.length=0}function m(){return"undefined"!=typeof CanvasRenderingContext2D}function n(){var a=!1,b=navigator.userAgent;return/android/i.test(b)&&(a=!0,aMat=b.toString().match(/android ([0-9]\.[0-9])/i),aMat&&aMat[1]&&(a=parseFloat(aMat[1]))),a}function r(a,b){for(var c=1,e=s(a),f=0,g=l.length;g>=f;f++){var h=0;switch(b){case d.L:h=l[f][0];break;case d.M:h=l[f][1];break;case d.Q:h=l[f][2];break;case d.H:h=l[f][3]}if(h>=e)break;c++}if(c>l.length)throw new Error("Too long data");return c}function s(a){var b=encodeURI(a).toString().replace(/\%[0-9a-fA-F]{2}/g,"a");return b.length+(b.length!=a?3:0)}a.prototype={getLength:function(){return this.parsedData.length},write:function(a){for(var b=0,c=this.parsedData.length;c>b;b++)a.put(this.parsedData[b],8)}},b.prototype={addData:function(b){var c=new a(b);this.dataList.push(c),this.dataCache=null},isDark:function(a,b){if(0>a||this.moduleCount<=a||0>b||this.moduleCount<=b)throw new Error(a+","+b);return this.modules[a][b]},getModuleCount:function(){return this.moduleCount},make:function(){this.makeImpl(!1,this.getBestMaskPattern())},makeImpl:function(a,c){this.moduleCount=4*this.typeNumber+17,this.modules=new Array(this.moduleCount);for(var d=0;d<this.moduleCount;d++){this.modules[d]=new Array(this.moduleCount);for(var e=0;e<this.moduleCount;e++)this.modules[d][e]=null}this.setupPositionProbePattern(0,0),this.setupPositionProbePattern(this.moduleCount-7,0),this.setupPositionProbePattern(0,this.moduleCount-7),this.setupPositionAdjustPattern(),this.setupTimingPattern(),this.setupTypeInfo(a,c),this.typeNumber>=7&&this.setupTypeNumber(a),null==this.dataCache&&(this.dataCache=b.createData(this.typeNumber,this.errorCorrectLevel,this.dataList)),this.mapData(this.dataCache,c)},setupPositionProbePattern:function(a,b){for(var c=-1;7>=c;c++)if(!(-1>=a+c||this.moduleCount<=a+c))for(var d=-1;7>=d;d++)-1>=b+d||this.moduleCount<=b+d||(this.modules[a+c][b+d]=c>=0&&6>=c&&(0==d||6==d)||d>=0&&6>=d&&(0==c||6==c)||c>=2&&4>=c&&d>=2&&4>=d?!0:!1)},getBestMaskPattern:function(){for(var a=0,b=0,c=0;8>c;c++){this.makeImpl(!0,c);var d=f.getLostPoint(this);(0==c||a>d)&&(a=d,b=c)}return b},createMovieClip:function(a,b,c){var d=a.createEmptyMovieClip(b,c),e=1;this.make();for(var f=0;f<this.modules.length;f++)for(var g=f*e,h=0;h<this.modules[f].length;h++){var i=h*e,j=this.modules[f][h];j&&(d.beginFill(0,100),d.moveTo(i,g),d.lineTo(i+e,g),d.lineTo(i+e,g+e),d.lineTo(i,g+e),d.endFill())}return d},setupTimingPattern:function(){for(var a=8;a<this.moduleCount-8;a++)null==this.modules[a][6]&&(this.modules[a][6]=0==a%2);for(var b=8;b<this.moduleCount-8;b++)null==this.modules[6][b]&&(this.modules[6][b]=0==b%2)},setupPositionAdjustPattern:function(){for(var a=f.getPatternPosition(this.typeNumber),b=0;b<a.length;b++)for(var c=0;c<a.length;c++){var d=a[b],e=a[c];if(null==this.modules[d][e])for(var g=-2;2>=g;g++)for(var h=-2;2>=h;h++)this.modules[d+g][e+h]=-2==g||2==g||-2==h||2==h||0==g&&0==h?!0:!1}},setupTypeNumber:function(a){for(var b=f.getBCHTypeNumber(this.typeNumber),c=0;18>c;c++){var d=!a&&1==(1&b>>c);this.modules[Math.floor(c/3)][c%3+this.moduleCount-8-3]=d}for(var c=0;18>c;c++){var d=!a&&1==(1&b>>c);this.modules[c%3+this.moduleCount-8-3][Math.floor(c/3)]=d}},setupTypeInfo:function(a,b){for(var c=this.errorCorrectLevel<<3|b,d=f.getBCHTypeInfo(c),e=0;15>e;e++){var g=!a&&1==(1&d>>e);6>e?this.modules[e][8]=g:8>e?this.modules[e+1][8]=g:this.modules[this.moduleCount-15+e][8]=g}for(var e=0;15>e;e++){var g=!a&&1==(1&d>>e);8>e?this.modules[8][this.moduleCount-e-1]=g:9>e?this.modules[8][15-e-1+1]=g:this.modules[8][15-e-1]=g}this.modules[this.moduleCount-8][8]=!a},mapData:function(a,b){for(var c=-1,d=this.moduleCount-1,e=7,g=0,h=this.moduleCount-1;h>0;h-=2)for(6==h&&h--;;){for(var i=0;2>i;i++)if(null==this.modules[d][h-i]){var j=!1;g<a.length&&(j=1==(1&a[g]>>>e));var k=f.getMask(b,d,h-i);k&&(j=!j),this.modules[d][h-i]=j,e--,-1==e&&(g++,e=7)}if(d+=c,0>d||this.moduleCount<=d){d-=c,c=-c;break}}}},b.PAD0=236,b.PAD1=17,b.createData=function(a,c,d){for(var e=j.getRSBlocks(a,c),g=new k,h=0;h<d.length;h++){var i=d[h];g.put(i.mode,4),g.put(i.getLength(),f.getLengthInBits(i.mode,a)),i.write(g)}for(var l=0,h=0;h<e.length;h++)l+=e[h].dataCount;if(g.getLengthInBits()>8*l)throw new Error("code length overflow. ("+g.getLengthInBits()+">"+8*l+")");for(g.getLengthInBits()+4<=8*l&&g.put(0,4);0!=g.getLengthInBits()%8;)g.putBit(!1);for(;;){if(g.getLengthInBits()>=8*l)break;if(g.put(b.PAD0,8),g.getLengthInBits()>=8*l)break;g.put(b.PAD1,8)}return b.createBytes(g,e)},b.createBytes=function(a,b){for(var c=0,d=0,e=0,g=new Array(b.length),h=new Array(b.length),j=0;j<b.length;j++){var k=b[j].dataCount,l=b[j].totalCount-k;d=Math.max(d,k),e=Math.max(e,l),g[j]=new Array(k);for(var m=0;m<g[j].length;m++)g[j][m]=255&a.buffer[m+c];c+=k;var n=f.getErrorCorrectPolynomial(l),o=new i(g[j],n.getLength()-1),p=o.mod(n);h[j]=new Array(n.getLength()-1);for(var m=0;m<h[j].length;m++){var q=m+p.getLength()-h[j].length;h[j][m]=q>=0?p.get(q):0}}for(var r=0,m=0;m<b.length;m++)r+=b[m].totalCount;for(var s=new Array(r),t=0,m=0;d>m;m++)for(var j=0;j<b.length;j++)m<g[j].length&&(s[t++]=g[j][m]);for(var m=0;e>m;m++)for(var j=0;j<b.length;j++)m<h[j].length&&(s[t++]=h[j][m]);return s};for(var c={MODE_NUMBER:1,MODE_ALPHA_NUM:2,MODE_8BIT_BYTE:4,MODE_KANJI:8},d={L:1,M:0,Q:3,H:2},e={PATTERN000:0,PATTERN001:1,PATTERN010:2,PATTERN011:3,PATTERN100:4,PATTERN101:5,PATTERN110:6,PATTERN111:7},f={PATTERN_POSITION_TABLE:[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],G15:1335,G18:7973,G15_MASK:21522,getBCHTypeInfo:function(a){for(var b=a<<10;f.getBCHDigit(b)-f.getBCHDigit(f.G15)>=0;)b^=f.G15<<f.getBCHDigit(b)-f.getBCHDigit(f.G15);return(a<<10|b)^f.G15_MASK},getBCHTypeNumber:function(a){for(var b=a<<12;f.getBCHDigit(b)-f.getBCHDigit(f.G18)>=0;)b^=f.G18<<f.getBCHDigit(b)-f.getBCHDigit(f.G18);return a<<12|b},getBCHDigit:function(a){for(var b=0;0!=a;)b++,a>>>=1;return b},getPatternPosition:function(a){return f.PATTERN_POSITION_TABLE[a-1]},getMask:function(a,b,c){switch(a){case e.PATTERN000:return 0==(b+c)%2;case e.PATTERN001:return 0==b%2;case e.PATTERN010:return 0==c%3;case e.PATTERN011:return 0==(b+c)%3;case e.PATTERN100:return 0==(Math.floor(b/2)+Math.floor(c/3))%2;case e.PATTERN101:return 0==b*c%2+b*c%3;case e.PATTERN110:return 0==(b*c%2+b*c%3)%2;case e.PATTERN111:return 0==(b*c%3+(b+c)%2)%2;default:throw new Error("bad maskPattern:"+a)}},getErrorCorrectPolynomial:function(a){for(var b=new i([1],0),c=0;a>c;c++)b=b.multiply(new i([1,g.gexp(c)],0));return b},getLengthInBits:function(a,b){if(b>=1&&10>b)switch(a){case c.MODE_NUMBER:return 10;case c.MODE_ALPHA_NUM:return 9;case c.MODE_8BIT_BYTE:return 8;case c.MODE_KANJI:return 8;default:throw new Error("mode:"+a)}else if(27>b)switch(a){case c.MODE_NUMBER:return 12;case c.MODE_ALPHA_NUM:return 11;case c.MODE_8BIT_BYTE:return 16;case c.MODE_KANJI:return 10;default:throw new Error("mode:"+a)}else{if(!(41>b))throw new Error("type:"+b);switch(a){case c.MODE_NUMBER:return 14;case c.MODE_ALPHA_NUM:return 13;case c.MODE_8BIT_BYTE:return 16;case c.MODE_KANJI:return 12;default:throw new Error("mode:"+a)}}},getLostPoint:function(a){for(var b=a.getModuleCount(),c=0,d=0;b>d;d++)for(var e=0;b>e;e++){for(var f=0,g=a.isDark(d,e),h=-1;1>=h;h++)if(!(0>d+h||d+h>=b))for(var i=-1;1>=i;i++)0>e+i||e+i>=b||(0!=h||0!=i)&&g==a.isDark(d+h,e+i)&&f++;f>5&&(c+=3+f-5)}for(var d=0;b-1>d;d++)for(var e=0;b-1>e;e++){var j=0;a.isDark(d,e)&&j++,a.isDark(d+1,e)&&j++,a.isDark(d,e+1)&&j++,a.isDark(d+1,e+1)&&j++,(0==j||4==j)&&(c+=3)}for(var d=0;b>d;d++)for(var e=0;b-6>e;e++)a.isDark(d,e)&&!a.isDark(d,e+1)&&a.isDark(d,e+2)&&a.isDark(d,e+3)&&a.isDark(d,e+4)&&!a.isDark(d,e+5)&&a.isDark(d,e+6)&&(c+=40);for(var e=0;b>e;e++)for(var d=0;b-6>d;d++)a.isDark(d,e)&&!a.isDark(d+1,e)&&a.isDark(d+2,e)&&a.isDark(d+3,e)&&a.isDark(d+4,e)&&!a.isDark(d+5,e)&&a.isDark(d+6,e)&&(c+=40);for(var k=0,e=0;b>e;e++)for(var d=0;b>d;d++)a.isDark(d,e)&&k++;var l=Math.abs(100*k/b/b-50)/5;return c+=10*l}},g={glog:function(a){if(1>a)throw new Error("glog("+a+")");return g.LOG_TABLE[a]},gexp:function(a){for(;0>a;)a+=255;for(;a>=256;)a-=255;return g.EXP_TABLE[a]},EXP_TABLE:new Array(256),LOG_TABLE:new Array(256)},h=0;8>h;h++)g.EXP_TABLE[h]=1<<h;for(var h=8;256>h;h++)g.EXP_TABLE[h]=g.EXP_TABLE[h-4]^g.EXP_TABLE[h-5]^g.EXP_TABLE[h-6]^g.EXP_TABLE[h-8];for(var h=0;255>h;h++)g.LOG_TABLE[g.EXP_TABLE[h]]=h;i.prototype={get:function(a){return this.num[a]},getLength:function(){return this.num.length},multiply:function(a){for(var b=new Array(this.getLength()+a.getLength()-1),c=0;c<this.getLength();c++)for(var d=0;d<a.getLength();d++)b[c+d]^=g.gexp(g.glog(this.get(c))+g.glog(a.get(d)));return new i(b,0)},mod:function(a){if(this.getLength()-a.getLength()<0)return this;for(var b=g.glog(this.get(0))-g.glog(a.get(0)),c=new Array(this.getLength()),d=0;d<this.getLength();d++)c[d]=this.get(d);for(var d=0;d<a.getLength();d++)c[d]^=g.gexp(g.glog(a.get(d))+b);return new i(c,0).mod(a)}},j.RS_BLOCK_TABLE=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]],j.getRSBlocks=function(a,b){var c=j.getRsBlockTable(a,b);if(void 0==c)throw new Error("bad rs block @ typeNumber:"+a+"/errorCorrectLevel:"+b);for(var d=c.length/3,e=[],f=0;d>f;f++)for(var g=c[3*f+0],h=c[3*f+1],i=c[3*f+2],k=0;g>k;k++)e.push(new j(h,i));return e},j.getRsBlockTable=function(a,b){switch(b){case d.L:return j.RS_BLOCK_TABLE[4*(a-1)+0];case d.M:return j.RS_BLOCK_TABLE[4*(a-1)+1];case d.Q:return j.RS_BLOCK_TABLE[4*(a-1)+2];case d.H:return j.RS_BLOCK_TABLE[4*(a-1)+3];default:return void 0}},k.prototype={get:function(a){var b=Math.floor(a/8);return 1==(1&this.buffer[b]>>>7-a%8)},put:function(a,b){for(var c=0;b>c;c++)this.putBit(1==(1&a>>>b-c-1))},getLengthInBits:function(){return this.length},putBit:function(a){var b=Math.floor(this.length/8);this.buffer.length<=b&&this.buffer.push(0),a&&(this.buffer[b]|=128>>>this.length%8),this.length++}};var l=[[17,14,11,7],[32,26,20,14],[53,42,32,24],[78,62,46,34],[106,84,60,44],[134,106,74,58],[154,122,86,64],[192,152,108,84],[230,180,130,98],[271,213,151,119],[321,251,177,137],[367,287,203,155],[425,331,241,177],[458,362,258,194],[520,412,292,220],[586,450,322,250],[644,504,364,280],[718,560,394,310],[792,624,442,338],[858,666,482,382],[929,711,509,403],[1003,779,565,439],[1091,857,611,461],[1171,911,661,511],[1273,997,715,535],[1367,1059,751,593],[1465,1125,805,625],[1528,1190,868,658],[1628,1264,908,698],[1732,1370,982,742],[1840,1452,1030,790],[1952,1538,1112,842],[2068,1628,1168,898],[2188,1722,1228,958],[2303,1809,1283,983],[2431,1911,1351,1051],[2563,1989,1423,1093],[2699,2099,1499,1139],[2809,2213,1579,1219],[2953,2331,1663,1273]],o=function(){var a=function(a,b){this._el=a,this._htOption=b};return a.prototype.draw=function(a){function g(a,b){var c=document.createElementNS("http://www.w3.org/2000/svg",a);for(var d in b)b.hasOwnProperty(d)&&c.setAttribute(d,b[d]);return c}var b=this._htOption,c=this._el,d=a.getModuleCount();Math.floor(b.width/d),Math.floor(b.height/d),this.clear();var h=g("svg",{viewBox:"0 0 "+String(d)+" "+String(d),width:"100%",height:"100%",fill:b.colorLight});h.setAttributeNS("http://www.w3.org/2000/xmlns/","xmlns:xlink","http://www.w3.org/1999/xlink"),c.appendChild(h),h.appendChild(g("rect",{fill:b.colorDark,width:"1",height:"1",id:"template"}));for(var i=0;d>i;i++)for(var j=0;d>j;j++)if(a.isDark(i,j)){var k=g("use",{x:String(i),y:String(j)});k.setAttributeNS("http://www.w3.org/1999/xlink","href","#template"),h.appendChild(k)}},a.prototype.clear=function(){for(;this._el.hasChildNodes();)this._el.removeChild(this._el.lastChild)},a}(),p="svg"===document.documentElement.tagName.toLowerCase(),q=p?o:m()?function(){function a(){this._elImage.src=this._elCanvas.toDataURL("image/png"),this._elImage.style.display="block",this._elCanvas.style.display="none"}function d(a,b){var c=this;if(c._fFail=b,c._fSuccess=a,null===c._bSupportDataURI){var d=document.createElement("img"),e=function(){c._bSupportDataURI=!1,c._fFail&&_fFail.call(c)},f=function(){c._bSupportDataURI=!0,c._fSuccess&&c._fSuccess.call(c)};return d.onabort=e,d.onerror=e,d.onload=f,d.src="data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==",void 0}c._bSupportDataURI===!0&&c._fSuccess?c._fSuccess.call(c):c._bSupportDataURI===!1&&c._fFail&&c._fFail.call(c)}if(this._android&&this._android<=2.1){var b=1/window.devicePixelRatio,c=CanvasRenderingContext2D.prototype.drawImage;CanvasRenderingContext2D.prototype.drawImage=function(a,d,e,f,g,h,i,j){if("nodeName"in a&&/img/i.test(a.nodeName))for(var l=arguments.length-1;l>=1;l--)arguments[l]=arguments[l]*b;else"undefined"==typeof j&&(arguments[1]*=b,arguments[2]*=b,arguments[3]*=b,arguments[4]*=b);c.apply(this,arguments)}}var e=function(a,b){this._bIsPainted=!1,this._android=n(),this._htOption=b,this._elCanvas=document.createElement("canvas"),this._elCanvas.width=b.width,this._elCanvas.height=b.height,a.appendChild(this._elCanvas),this._el=a,this._oContext=this._elCanvas.getContext("2d"),this._bIsPainted=!1,this._elImage=document.createElement("img"),this._elImage.style.display="none",this._el.appendChild(this._elImage),this._bSupportDataURI=null};return e.prototype.draw=function(a){var b=this._elImage,c=this._oContext,d=this._htOption,e=a.getModuleCount(),f=d.width/e,g=d.height/e,h=Math.round(f),i=Math.round(g);b.style.display="none",this.clear();for(var j=0;e>j;j++)for(var k=0;e>k;k++){var l=a.isDark(j,k),m=k*f,n=j*g;c.strokeStyle=l?d.colorDark:d.colorLight,c.lineWidth=1,c.fillStyle=l?d.colorDark:d.colorLight,c.fillRect(m,n,f,g),c.strokeRect(Math.floor(m)+.5,Math.floor(n)+.5,h,i),c.strokeRect(Math.ceil(m)-.5,Math.ceil(n)-.5,h,i)}this._bIsPainted=!0},e.prototype.makeImage=function(){this._bIsPainted&&d.call(this,a)},e.prototype.isPainted=function(){return this._bIsPainted},e.prototype.clear=function(){this._oContext.clearRect(0,0,this._elCanvas.width,this._elCanvas.height),this._bIsPainted=!1},e.prototype.round=function(a){return a?Math.floor(1e3*a)/1e3:a},e}():function(){var a=function(a,b){this._el=a,this._htOption=b};return a.prototype.draw=function(a){for(var b=this._htOption,c=this._el,d=a.getModuleCount(),e=Math.floor(b.width/d),f=Math.floor(b.height/d),g=['<table style="border:0;border-collapse:collapse;">'],h=0;d>h;h++){g.push("<tr>");for(var i=0;d>i;i++)g.push('<td style="border:0;border-collapse:collapse;padding:0;margin:0;width:'+e+"px;height:"+f+"px;background-color:"+(a.isDark(h,i)?b.colorDark:b.colorLight)+';"></td>');g.push("</tr>")}g.push("</table>"),c.innerHTML=g.join("");var j=c.childNodes[0],k=(b.width-j.offsetWidth)/2,l=(b.height-j.offsetHeight)/2;k>0&&l>0&&(j.style.margin=l+"px "+k+"px")},a.prototype.clear=function(){this._el.innerHTML=""},a}();QRCode=function(a,b){if(this._htOption={width:256,height:256,typeNumber:4,colorDark:"#000000",colorLight:"#ffffff",correctLevel:d.H},"string"==typeof b&&(b={text:b}),b)for(var c in b)this._htOption[c]=b[c];"string"==typeof a&&(a=document.getElementById(a)),this._android=n(),this._el=a,this._oQRCode=null,this._oDrawing=new q(this._el,this._htOption),this._htOption.text&&this.makeCode(this._htOption.text)},QRCode.prototype.makeCode=function(a){this._oQRCode=new b(r(a,this._htOption.correctLevel),this._htOption.correctLevel),this._oQRCode.addData(a),this._oQRCode.make(),this._el.title=a,this._oDrawing.draw(this._oQRCode),this.makeImage()},QRCode.prototype.makeImage=function(){"function"==typeof this._oDrawing.makeImage&&(!this._android||this._android>=3)&&this._oDrawing.makeImage()},QRCode.prototype.clear=function(){this._oDrawing.clear()},QRCode.CorrectLevel=d}();
-</script>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <script>/* qrcodejs2 — embedded, no CDN dependency */
+var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this.parsedData=[];for(var b=[],d=0,e=this.data.length;e>d;d++){var f=this.data.charCodeAt(d);f>65536?(b[0]=240|(1835008&f)>>>18,b[1]=128|(258048&f)>>>12,b[2]=128|(4032&f)>>>6,b[3]=128|63&f):f>2048?(b[0]=224|(61440&f)>>>12,b[1]=128|(4032&f)>>>6,b[2]=128|63&f):f>128?(b[0]=192|(1984&f)>>>6,b[1]=128|63&f):b[0]=f,this.parsedData=this.parsedData.concat(b)}this.parsedData.length!=this.data.length&&(this.parsedData.unshift(191),this.parsedData.unshift(187),this.parsedData.unshift(239))}function b(a,b){this.typeNumber=a,this.errorCorrectLevel=b,this.modules=null,this.moduleCount=0,this.dataCache=null,this.dataList=[]}function i(a,b){if(void 0==a.length)throw new Error(a.length+"/"+b);for(var c=0;c<a.length&&0==a[c];)c++;this.num=new Array(a.length-c+b);for(var d=0;d<a.length-c;d++)this.num[d]=a[d+c]}function j(a,b){this.totalCount=a,this.dataCount=b}function k(){this.buffer=[],this.length=0}function m(){return"undefined"!=typeof CanvasRenderingContext2D}function n(){var a=!1,b=navigator.userAgent;return/android/i.test(b)&&(a=!0,aMat=b.toString().match(/android ([0-9]\.[0-9])/i),aMat&&aMat[1]&&(a=parseFloat(aMat[1]))),a}function r(a,b){for(var c=1,e=s(a),f=0,g=l.length;g>=f;f++){var h=0;switch(b){case d.L:h=l[f][0];break;case d.M:h=l[f][1];break;case d.Q:h=l[f][2];break;case d.H:h=l[f][3]}if(h>=e)break;c++}if(c>l.length)throw new Error("Too long data");return c}function s(a){var b=encodeURI(a).toString().replace(/\%[0-9a-fA-F]{2}/g,"a");return b.length+(b.length!=a?3:0)}a.prototype={getLength:function(){return this.parsedData.length},write:function(a){for(var b=0,c=this.parsedData.length;c>b;b++)a.put(this.parsedData[b],8)}},b.prototype={addData:function(b){var c=new a(b);this.dataList.push(c),this.dataCache=null},isDark:function(a,b){if(0>a||this.moduleCount<=a||0>b||this.moduleCount<=b)throw new Error(a+","+b);return this.modules[a][b]},getModuleCount:function(){return this.moduleCount},make:function(){this.makeImpl(!1,this.getBestMaskPattern())},makeImpl:function(a,c){this.moduleCount=4*this.typeNumber+17,this.modules=new Array(this.moduleCount);for(var d=0;d<this.moduleCount;d++){this.modules[d]=new Array(this.moduleCount);for(var e=0;e<this.moduleCount;e++)this.modules[d][e]=null}this.setupPositionProbePattern(0,0),this.setupPositionProbePattern(this.moduleCount-7,0),this.setupPositionProbePattern(0,this.moduleCount-7),this.setupPositionAdjustPattern(),this.setupTimingPattern(),this.setupTypeInfo(a,c),this.typeNumber>=7&&this.setupTypeNumber(a),null==this.dataCache&&(this.dataCache=b.createData(this.typeNumber,this.errorCorrectLevel,this.dataList)),this.mapData(this.dataCache,c)},setupPositionProbePattern:function(a,b){for(var c=-1;7>=c;c++)if(!(-1>=a+c||this.moduleCount<=a+c))for(var d=-1;7>=d;d++)-1>=b+d||this.moduleCount<=b+d||(this.modules[a+c][b+d]=c>=0&&6>=c&&(0==d||6==d)||d>=0&&6>=d&&(0==c||6==c)||c>=2&&4>=c&&d>=2&&4>=d?!0:!1)},getBestMaskPattern:function(){for(var a=0,b=0,c=0;8>c;c++){this.makeImpl(!0,c);var d=f.getLostPoint(this);(0==c||a>d)&&(a=d,b=c)}return b},createMovieClip:function(a,b,c){var d=a.createEmptyMovieClip(b,c),e=1;this.make();for(var f=0;f<this.modules.length;f++)for(var g=f*e,h=0;h<this.modules[f].length;h++){var i=h*e,j=this.modules[f][h];j&&(d.beginFill(0,100),d.moveTo(i,g),d.lineTo(i+e,g),d.lineTo(i+e,g+e),d.lineTo(i,g+e),d.endFill())}return d},setupTimingPattern:function(){for(var a=8;a<this.moduleCount-8;a++)null==this.modules[a][6]&&(this.modules[a][6]=0==a%2);for(var b=8;b<this.moduleCount-8;b++)null==this.modules[6][b]&&(this.modules[6][b]=0==b%2)},setupPositionAdjustPattern:function(){for(var a=f.getPatternPosition(this.typeNumber),b=0;b<a.length;b++)for(var c=0;c<a.length;c++){var d=a[b],e=a[c];if(null==this.modules[d][e])for(var g=-2;2>=g;g++)for(var h=-2;2>=h;h++)this.modules[d+g][e+h]=-2==g||2==g||-2==h||2==h||0==g&&0==h?!0:!1}},setupTypeNumber:function(a){for(var b=f.getBCHTypeNumber(this.typeNumber),c=0;18>c;c++){var d=!a&&1==(1&b>>c);this.modules[Math.floor(c/3)][c%3+this.moduleCount-8-3]=d}for(var c=0;18>c;c++){var d=!a&&1==(1&b>>c);this.modules[c%3+this.moduleCount-8-3][Math.floor(c/3)]=d}},setupTypeInfo:function(a,b){for(var c=this.errorCorrectLevel<<3|b,d=f.getBCHTypeInfo(c),e=0;15>e;e++){var g=!a&&1==(1&d>>e);6>e?this.modules[e][8]=g:8>e?this.modules[e+1][8]=g:this.modules[this.moduleCount-15+e][8]=g}for(var e=0;15>e;e++){var g=!a&&1==(1&d>>e);8>e?this.modules[8][this.moduleCount-e-1]=g:9>e?this.modules[8][15-e-1+1]=g:this.modules[8][15-e-1]=g}this.modules[this.moduleCount-8][8]=!a},mapData:function(a,b){for(var c=-1,d=this.moduleCount-1,e=7,g=0,h=this.moduleCount-1;h>0;h-=2)for(6==h&&h--;;){for(var i=0;2>i;i++)if(null==this.modules[d][h-i]){var j=!1;g<a.length&&(j=1==(1&a[g]>>>e));var k=f.getMask(b,d,h-i);k&&(j=!j),this.modules[d][h-i]=j,e--,-1==e&&(g++,e=7)}if(d+=c,0>d||this.moduleCount<=d){d-=c,c=-c;break}}}},b.PAD0=236,b.PAD1=17,b.createData=function(a,c,d){for(var e=j.getRSBlocks(a,c),g=new k,h=0;h<d.length;h++){var i=d[h];g.put(i.mode,4),g.put(i.getLength(),f.getLengthInBits(i.mode,a)),i.write(g)}for(var l=0,h=0;h<e.length;h++)l+=e[h].dataCount;if(g.getLengthInBits()>8*l)throw new Error("code length overflow. ("+g.getLengthInBits()+">"+8*l+")");for(g.getLengthInBits()+4<=8*l&&g.put(0,4);0!=g.getLengthInBits()%8;)g.putBit(!1);for(;;){if(g.getLengthInBits()>=8*l)break;if(g.put(b.PAD0,8),g.getLengthInBits()>=8*l)break;g.put(b.PAD1,8)}return b.createBytes(g,e)},b.createBytes=function(a,b){for(var c=0,d=0,e=0,g=new Array(b.length),h=new Array(b.length),j=0;j<b.length;j++){var k=b[j].dataCount,l=b[j].totalCount-k;d=Math.max(d,k),e=Math.max(e,l),g[j]=new Array(k);for(var m=0;m<g[j].length;m++)g[j][m]=255&a.buffer[m+c];c+=k;var n=f.getErrorCorrectPolynomial(l),o=new i(g[j],n.getLength()-1),p=o.mod(n);h[j]=new Array(n.getLength()-1);for(var m=0;m<h[j].length;m++){var q=m+p.getLength()-h[j].length;h[j][m]=q>=0?p.get(q):0}}for(var r=0,m=0;m<b.length;m++)r+=b[m].totalCount;for(var s=new Array(r),t=0,m=0;d>m;m++)for(var j=0;j<b.length;j++)m<g[j].length&&(s[t++]=g[j][m]);for(var m=0;e>m;m++)for(var j=0;j<b.length;j++)m<h[j].length&&(s[t++]=h[j][m]);return s};for(var c={MODE_NUMBER:1,MODE_ALPHA_NUM:2,MODE_8BIT_BYTE:4,MODE_KANJI:8},d={L:1,M:0,Q:3,H:2},e={PATTERN000:0,PATTERN001:1,PATTERN010:2,PATTERN011:3,PATTERN100:4,PATTERN101:5,PATTERN110:6,PATTERN111:7},f={PATTERN_POSITION_TABLE:[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],G15:1335,G18:7973,G15_MASK:21522,getBCHTypeInfo:function(a){for(var b=a<<10;f.getBCHDigit(b)-f.getBCHDigit(f.G15)>=0;)b^=f.G15<<f.getBCHDigit(b)-f.getBCHDigit(f.G15);return(a<<10|b)^f.G15_MASK},getBCHTypeNumber:function(a){for(var b=a<<12;f.getBCHDigit(b)-f.getBCHDigit(f.G18)>=0;)b^=f.G18<<f.getBCHDigit(b)-f.getBCHDigit(f.G18);return a<<12|b},getBCHDigit:function(a){for(var b=0;0!=a;)b++,a>>>=1;return b},getPatternPosition:function(a){return f.PATTERN_POSITION_TABLE[a-1]},getMask:function(a,b,c){switch(a){case e.PATTERN000:return 0==(b+c)%2;case e.PATTERN001:return 0==b%2;case e.PATTERN010:return 0==c%3;case e.PATTERN011:return 0==(b+c)%3;case e.PATTERN100:return 0==(Math.floor(b/2)+Math.floor(c/3))%2;case e.PATTERN101:return 0==b*c%2+b*c%3;case e.PATTERN110:return 0==(b*c%2+b*c%3)%2;case e.PATTERN111:return 0==(b*c%3+(b+c)%2)%2;default:throw new Error("bad maskPattern:"+a)}},getErrorCorrectPolynomial:function(a){for(var b=new i([1],0),c=0;a>c;c++)b=b.multiply(new i([1,g.gexp(c)],0));return b},getLengthInBits:function(a,b){if(b>=1&&10>b)switch(a){case c.MODE_NUMBER:return 10;case c.MODE_ALPHA_NUM:return 9;case c.MODE_8BIT_BYTE:return 8;case c.MODE_KANJI:return 8;default:throw new Error("mode:"+a)}else if(27>b)switch(a){case c.MODE_NUMBER:return 12;case c.MODE_ALPHA_NUM:return 11;case c.MODE_8BIT_BYTE:return 16;case c.MODE_KANJI:return 10;default:throw new Error("mode:"+a)}else{if(!(41>b))throw new Error("type:"+b);switch(a){case c.MODE_NUMBER:return 14;case c.MODE_ALPHA_NUM:return 13;case c.MODE_8BIT_BYTE:return 16;case c.MODE_KANJI:return 12;default:throw new Error("mode:"+a)}}},getLostPoint:function(a){for(var b=a.getModuleCount(),c=0,d=0;b>d;d++)for(var e=0;b>e;e++){for(var f=0,g=a.isDark(d,e),h=-1;1>=h;h++)if(!(0>d+h||d+h>=b))for(var i=-1;1>=i;i++)0>e+i||e+i>=b||(0!=h||0!=i)&&g==a.isDark(d+h,e+i)&&f++;f>5&&(c+=3+f-5)}for(var d=0;b-1>d;d++)for(var e=0;b-1>e;e++){var j=0;a.isDark(d,e)&&j++,a.isDark(d+1,e)&&j++,a.isDark(d,e+1)&&j++,a.isDark(d+1,e+1)&&j++,(0==j||4==j)&&(c+=3)}for(var d=0;b>d;d++)for(var e=0;b-6>e;e++)a.isDark(d,e)&&!a.isDark(d,e+1)&&a.isDark(d,e+2)&&a.isDark(d,e+3)&&a.isDark(d,e+4)&&!a.isDark(d,e+5)&&a.isDark(d,e+6)&&(c+=40);for(var e=0;b>e;e++)for(var d=0;b-6>d;d++)a.isDark(d,e)&&!a.isDark(d+1,e)&&a.isDark(d+2,e)&&a.isDark(d+3,e)&&a.isDark(d+4,e)&&!a.isDark(d+5,e)&&a.isDark(d+6,e)&&(c+=40);for(var k=0,e=0;b>e;e++)for(var d=0;b>d;d++)a.isDark(d,e)&&k++;var l=Math.abs(100*k/b/b-50)/5;return c+=10*l}},g={glog:function(a){if(1>a)throw new Error("glog("+a+")");return g.LOG_TABLE[a]},gexp:function(a){for(;0>a;)a+=255;for(;a>=256;)a-=255;return g.EXP_TABLE[a]},EXP_TABLE:new Array(256),LOG_TABLE:new Array(256)},h=0;8>h;h++)g.EXP_TABLE[h]=1<<h;for(var h=8;256>h;h++)g.EXP_TABLE[h]=g.EXP_TABLE[h-4]^g.EXP_TABLE[h-5]^g.EXP_TABLE[h-6]^g.EXP_TABLE[h-8];for(var h=0;255>h;h++)g.LOG_TABLE[g.EXP_TABLE[h]]=h;i.prototype={get:function(a){return this.num[a]},getLength:function(){return this.num.length},multiply:function(a){for(var b=new Array(this.getLength()+a.getLength()-1),c=0;c<this.getLength();c++)for(var d=0;d<a.getLength();d++)b[c+d]^=g.gexp(g.glog(this.get(c))+g.glog(a.get(d)));return new i(b,0)},mod:function(a){if(this.getLength()-a.getLength()<0)return this;for(var b=g.glog(this.get(0))-g.glog(a.get(0)),c=new Array(this.getLength()),d=0;d<this.getLength();d++)c[d]=this.get(d);for(var d=0;d<a.getLength();d++)c[d]^=g.gexp(g.glog(a.get(d))+b);return new i(c,0).mod(a)}},j.RS_BLOCK_TABLE=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]],j.getRSBlocks=function(a,b){var c=j.getRsBlockTable(a,b);if(void 0==c)throw new Error("bad rs block @ typeNumber:"+a+"/errorCorrectLevel:"+b);for(var d=c.length/3,e=[],f=0;d>f;f++)for(var g=c[3*f+0],h=c[3*f+1],i=c[3*f+2],k=0;g>k;k++)e.push(new j(h,i));return e},j.getRsBlockTable=function(a,b){switch(b){case d.L:return j.RS_BLOCK_TABLE[4*(a-1)+0];case d.M:return j.RS_BLOCK_TABLE[4*(a-1)+1];case d.Q:return j.RS_BLOCK_TABLE[4*(a-1)+2];case d.H:return j.RS_BLOCK_TABLE[4*(a-1)+3];default:return void 0}},k.prototype={get:function(a){var b=Math.floor(a/8);return 1==(1&this.buffer[b]>>>7-a%8)},put:function(a,b){for(var c=0;b>c;c++)this.putBit(1==(1&a>>>b-c-1))},getLengthInBits:function(){return this.length},putBit:function(a){var b=Math.floor(this.length/8);this.buffer.length<=b&&this.buffer.push(0),a&&(this.buffer[b]|=128>>>this.length%8),this.length++}};var l=[[17,14,11,7],[32,26,20,14],[53,42,32,24],[78,62,46,34],[106,84,60,44],[134,106,74,58],[154,122,86,64],[192,152,108,84],[230,180,130,98],[271,213,151,119],[321,251,177,137],[367,287,203,155],[425,331,241,177],[458,362,258,194],[520,412,292,220],[586,450,322,250],[644,504,364,280],[718,560,394,310],[792,624,442,338],[858,666,482,382],[929,711,509,403],[1003,779,565,439],[1091,857,611,461],[1171,911,661,511],[1273,997,715,535],[1367,1059,751,593],[1465,1125,805,625],[1528,1190,868,658],[1628,1264,908,698],[1732,1370,982,742],[1840,1452,1030,790],[1952,1538,1112,842],[2068,1628,1168,898],[2188,1722,1228,958],[2303,1809,1283,983],[2431,1911,1351,1051],[2563,1989,1423,1093],[2699,2099,1499,1139],[2809,2213,1579,1219],[2953,2331,1663,1273]],o=function(){var a=function(a,b){this._el=a,this._htOption=b};return a.prototype.draw=function(a){function g(a,b){var c=document.createElementNS("http://www.w3.org/2000/svg",a);for(var d in b)b.hasOwnProperty(d)&&c.setAttribute(d,b[d]);return c}var b=this._htOption,c=this._el,d=a.getModuleCount();Math.floor(b.width/d),Math.floor(b.height/d),this.clear();var h=g("svg",{viewBox:"0 0 "+String(d)+" "+String(d),width:"100%",height:"100%",fill:b.colorLight});h.setAttributeNS("http://www.w3.org/2000/xmlns/","xmlns:xlink","http://www.w3.org/1999/xlink"),c.appendChild(h),h.appendChild(g("rect",{fill:b.colorDark,width:"1",height:"1",id:"template"}));for(var i=0;d>i;i++)for(var j=0;d>j;j++)if(a.isDark(i,j)){var k=g("use",{x:String(i),y:String(j)});k.setAttributeNS("http://www.w3.org/1999/xlink","href","#template"),h.appendChild(k)}},a.prototype.clear=function(){for(;this._el.hasChildNodes();)this._el.removeChild(this._el.lastChild)},a}(),p="svg"===document.documentElement.tagName.toLowerCase(),q=p?o:m()?function(){function a(){this._elImage.src=this._elCanvas.toDataURL("image/png"),this._elImage.style.display="block",this._elCanvas.style.display="none"}function d(a,b){var c=this;if(c._fFail=b,c._fSuccess=a,null===c._bSupportDataURI){var d=document.createElement("img"),e=function(){c._bSupportDataURI=!1,c._fFail&&_fFail.call(c)},f=function(){c._bSupportDataURI=!0,c._fSuccess&&c._fSuccess.call(c)};return d.onabort=e,d.onerror=e,d.onload=f,d.src="data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==",void 0}c._bSupportDataURI===!0&&c._fSuccess?c._fSuccess.call(c):c._bSupportDataURI===!1&&c._fFail&&c._fFail.call(c)}if(this._android&&this._android<=2.1){var b=1/window.devicePixelRatio,c=CanvasRenderingContext2D.prototype.drawImage;CanvasRenderingContext2D.prototype.drawImage=function(a,d,e,f,g,h,i,j){if("nodeName"in a&&/img/i.test(a.nodeName))for(var l=arguments.length-1;l>=1;l--)arguments[l]=arguments[l]*b;else"undefined"==typeof j&&(arguments[1]*=b,arguments[2]*=b,arguments[3]*=b,arguments[4]*=b);c.apply(this,arguments)}}var e=function(a,b){this._bIsPainted=!1,this._android=n(),this._htOption=b,this._elCanvas=document.createElement("canvas"),this._elCanvas.width=b.width,this._elCanvas.height=b.height,a.appendChild(this._elCanvas),this._el=a,this._oContext=this._elCanvas.getContext("2d"),this._bIsPainted=!1,this._elImage=document.createElement("img"),this._elImage.style.display="none",this._el.appendChild(this._elImage),this._bSupportDataURI=null};return e.prototype.draw=function(a){var b=this._elImage,c=this._oContext,d=this._htOption,e=a.getModuleCount(),f=d.width/e,g=d.height/e,h=Math.round(f),i=Math.round(g);b.style.display="none",this.clear();for(var j=0;e>j;j++)for(var k=0;e>k;k++){var l=a.isDark(j,k),m=k*f,n=j*g;c.strokeStyle=l?d.colorDark:d.colorLight,c.lineWidth=1,c.fillStyle=l?d.colorDark:d.colorLight,c.fillRect(m,n,f,g),c.strokeRect(Math.floor(m)+.5,Math.floor(n)+.5,h,i),c.strokeRect(Math.ceil(m)-.5,Math.ceil(n)-.5,h,i)}this._bIsPainted=!0},e.prototype.makeImage=function(){this._bIsPainted&&d.call(this,a)},e.prototype.isPainted=function(){return this._bIsPainted},e.prototype.clear=function(){this._oContext.clearRect(0,0,this._elCanvas.width,this._elCanvas.height),this._bIsPainted=!1},e.prototype.round=function(a){return a?Math.floor(1e3*a)/1e3:a},e}():function(){var a=function(a,b){this._el=a,this._htOption=b};return a.prototype.draw=function(a){for(var b=this._htOption,c=this._el,d=a.getModuleCount(),e=Math.floor(b.width/d),f=Math.floor(b.height/d),g=['<table style="border:0;border-collapse:collapse;">'],h=0;d>h;h++){g.push("<tr>");for(var i=0;d>i;i++)g.push('<td style="border:0;border-collapse:collapse;padding:0;margin:0;width:'+e+"px;height:"+f+"px;background-color:"+(a.isDark(h,i)?b.colorDark:b.colorLight)+';"></td>');g.push("</tr>")}g.push("</table>"),c.innerHTML=g.join("");var j=c.childNodes[0],k=(b.width-j.offsetWidth)/2,l=(b.height-j.offsetHeight)/2;k>0&&l>0&&(j.style.margin=l+"px "+k+"px")},a.prototype.clear=function(){this._el.innerHTML=""},a}();QRCode=function(a,b){if(this._htOption={width:256,height:256,typeNumber:4,colorDark:"#000000",colorLight:"#ffffff",correctLevel:d.H},"string"==typeof b&&(b={text:b}),b)for(var c in b)this._htOption[c]=b[c];"string"==typeof a&&(a=document.getElementById(a)),this._android=n(),this._el=a,this._oQRCode=null,this._oDrawing=new q(this._el,this._htOption),this._htOption.text&&this.makeCode(this._htOption.text)},QRCode.prototype.makeCode=function(a){this._oQRCode=new b(r(a,this._htOption.correctLevel),this._htOption.correctLevel),this._oQRCode.addData(a),this._oQRCode.make(),this._el.title=a,this._oDrawing.draw(this._oQRCode),this.makeImage()},QRCode.prototype.makeImage=function(){"function"==typeof this._oDrawing.makeImage&&(!this._android||this._android>=3)&&this._oDrawing.makeImage()},QRCode.prototype.clear=function(){this._oDrawing.clear()},QRCode.CorrectLevel=d}();</script>
   <style>
     :root{
-      --wine:#8B1A2E; --wine-l:#FDF0F2; --wine-m:#A82035; --wine-d:#5C001A;
-      --bark:#2D0510; --bark2:#3D0A18;
-      --page:#F9F4F5; --card:#FFFFFF;
-      --border:#EDD8DC; --border2:#F7EDEF;
-      --text:#1A0A0D; --muted:#7A4555; --dim:#C09AA8;
-      --ok:#0F6B3D; --ok-l:#EEFAF3;
-      --err:#B91C1C; --err-l:#FEF2F2;
-      --warn-l:#FFFBEB;
-      --r:12px; --r-s:8px; --r-xs:6px;
+      --wine:#8B1A2E;--wine-l:#FDF0F2;--wine-m:#A82035;--wine-d:#5C001A;
+      --bark:#2D0510;--bark2:#3D0A18;
+      --page:#F9F4F5;--card:#FFF;
+      --border:#EDD8DC;--border2:#F7EDEF;
+      --text:#1A0A0D;--muted:#7A4555;--dim:#C09AA8;
+      --ok:#0F6B3D;--ok-l:#EEFAF3;
+      --err:#B91C1C;--err-l:#FEF2F2;
+      --warn-l:#FFFBEB;--warn:#92400E;
+      --r:12px;--r-s:8px;
       --sh1:0 1px 3px rgba(0,0,0,.05);
       --sh2:0 4px 16px rgba(0,0,0,.07);
       --sh3:0 8px 36px rgba(139,26,46,.14);
@@ -33,82 +32,63 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
     body{font-family:'Outfit',-apple-system,sans-serif;background:var(--page);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
     #root{max-width:980px;margin:0 auto;background:#fff;min-height:100vh;box-shadow:0 0 80px rgba(139,26,46,.1)}
     input,select,button,textarea{font-family:'Outfit',sans-serif}
-    input,select{
-      display:block;width:100%;padding:10px 13px;
-      border:1.5px solid var(--border);border-radius:var(--r-s);
-      background:#fff;font-size:14px;color:var(--text);
-      outline:none;transition:border-color .15s,box-shadow .15s;
-    }
+    input,select{display:block;width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--r-s);background:#fff;font-size:14px;color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s}
     input:focus,select:focus{border-color:var(--wine);box-shadow:0 0 0 3px rgba(139,26,46,.09);background:#fff}
     input::placeholder{color:var(--dim)}
     label.lbl{display:block;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
     .fld{display:flex;flex-direction:column;gap:5px}
-
-    /* Buttons */
-    .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:var(--r-s);cursor:pointer;font-weight:600;font-size:14px;transition:all .15s;border:none;padding:10px 18px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:var(--r-s);cursor:pointer;font-weight:600;font-size:14px;transition:all .15s;border:none;padding:10px 18px;font-family:'Outfit',sans-serif}
     .btn:active{transform:scale(.97)}
     .btn-p{background:var(--wine);color:#fff;box-shadow:0 2px 10px rgba(139,26,46,.28)}
-    .btn-p:hover{background:var(--wine-m);box-shadow:0 4px 18px rgba(139,26,46,.38)}
+    .btn-p:hover{background:var(--wine-m)}
+    .btn-p:disabled{opacity:.5;cursor:not-allowed;transform:none}
     .btn-o{background:transparent;color:var(--bark);border:1.5px solid var(--bark)}
     .btn-o:hover{background:var(--wine-l);border-color:var(--wine);color:var(--wine-d)}
-    .btn-g{background:var(--wine-l);color:var(--wine-d);border:1px solid rgba(139,26,46,.15);font-size:13px;padding:9px 16px}
+    .btn-o:disabled{opacity:.5;cursor:not-allowed}
+    .btn-g{background:var(--wine-l);color:var(--wine-d);border:1px solid rgba(139,26,46,.15);font-size:13px;padding:8px 14px}
     .btn-g:hover{background:#fce4e8}
-    .btn-dk{color:rgba(255,255,255,.65);border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);font-size:12px;padding:7px 13px}
+    .btn-dk{color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);font-size:12px;padding:6px 12px}
     .btn-dk:hover{background:rgba(255,255,255,.18);color:#fff}
     .btn-block{width:100%}
     .btn-sm{padding:7px 13px;font-size:12px;gap:5px}
-    .btn-icon{padding:7px;border-radius:var(--r-xs);background:none;border:none;cursor:pointer;color:var(--dim);transition:all .15s}
+    .btn-icon{padding:6px;border-radius:6px;background:none;border:none;cursor:pointer;color:var(--dim);transition:all .15s}
     .btn-icon:hover{background:var(--wine-l);color:var(--wine-d)}
-
-    /* Cards */
     .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r)}
     .card-sh{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh2)}
-
-    /* Tables */
     .tbl{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
     .tbl th{padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;background:var(--wine-l);border-bottom:1.5px solid var(--border)}
-    .tbl th:last-child{text-align:right}
     .tbl td{padding:10px 14px;border-top:1px solid var(--border2);vertical-align:middle}
     .tbl tbody tr{transition:background .1s}
     .tbl tbody tr:hover td{background:#fdf8f9;cursor:pointer}
-    .tbl-r td:last-child{text-align:right}
-
-    /* Section label */
     .sec{font-size:10px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.09em;margin-bottom:10px}
-
-    /* Sidebar nav */
-    .nav{width:100%;display:flex;align-items:center;gap:9px;background:none;border:none;border-radius:var(--r-s);padding:9px 11px;cursor:pointer;margin-bottom:2px;color:rgba(255,255,255,.4);text-align:left;font-size:13px;font-weight:400;border-left:2px solid transparent;transition:all .15s;font-family:'Outfit',sans-serif}
-    .nav:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.75)}
-    .nav.on{background:rgba(255,255,255,.11);color:#fff;font-weight:600;border-left-color:var(--wine)}
-    .nav.qr.on{background:rgba(139,26,46,.38)}
-
-    /* Alerts */
+    .badge{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;white-space:nowrap}
     .alert{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border-radius:var(--r-s);font-size:13px;line-height:1.5}
     .alert-err{background:var(--err-l);color:var(--err);border:1px solid #FECACA}
     .alert-ok{background:var(--ok-l);color:var(--ok);border:1px solid #A7F3D0}
-    .alert-warn{background:var(--warn-l);color:#92400E;border:1px solid #FDE68A}
+    .alert-warn{background:var(--warn-l);color:var(--warn);border:1px solid #FDE68A}
     .alert-info{background:var(--wine-l);color:var(--wine-d);border:1px solid rgba(139,26,46,.2)}
-
-    /* Animations */
-    @keyframes spin{to{transform:rotate(360deg)}}
-    @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-    @keyframes popIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
-    @keyframes shimmer{from{opacity:.6}to{opacity:1}}
-
-    /* Prog list item */
+    .nav{width:100%;display:flex;align-items:center;gap:9px;background:none;border:none;border-radius:var(--r-s);padding:9px 11px;cursor:pointer;margin-bottom:2px;color:rgba(255,255,255,.42);text-align:left;font-size:13px;font-weight:400;border-left:2px solid transparent;transition:all .15s;font-family:'Outfit',sans-serif}
+    .nav:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.75)}
+    .nav.on{background:rgba(255,255,255,.11);color:#fff;font-weight:600;border-left-color:var(--wine)}
+    .nav.qr.on{background:rgba(139,26,46,.38)}
     .pi{padding:12px 14px;cursor:pointer;border-left:3px solid transparent;transition:all .12s;border-bottom:1px solid var(--border2)}
     .pi:hover{background:var(--wine-l);border-left-color:rgba(139,26,46,.3)}
     .pi.on{background:var(--wine-l);border-left-color:var(--wine)}
+    /* Prominent school banner */
+    .sch-banner{background:linear-gradient(135deg,#2D0510 0%,#4a0a1a 60%,#3D0A18 100%);position:relative;overflow:hidden}
+    .sch-banner::after{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.025'%3E%3Cpath d='M20 0L40 20 20 40 0 20z'/%3E%3C/g%3E%3C/svg%3E");pointer-events:none}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes popIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
   </style>
 </head>
 <body>
 <div id="root"></div>
 <script type="text/babel">
-const {useState,useEffect,useRef}=React;
 
-/* ── Constants ── */
-const BG='#8B1A2E',BGL='#FDF0F2',BGD='#5C001A';
-const BARK='#2D0510',BARK2='#3D0A18';
+const {useState,useEffect,useRef,useCallback}=React;
+
+const BG='#8B1A2E',BGL='#FDF0F2',BGD='#5C001A',BARK='#2D0510',BARK2='#3D0A18';
 const BAH=['Pengurusan','Guru','Pentadbiran'];
 const HR=['Ahad','Isnin','Selasa','Rabu','Khamis','Jumaat','Sabtu'];
 const BC=[
@@ -116,198 +96,212 @@ const BC=[
   {bg:'#FDF0F2',col:'#5C001A',dot:'#8B1A2E'},
   {bg:'#E8EEF8',col:'#0C2F7A',dot:'#2355C4'},
 ];
-const SK={ST:'smk_st4',PR:'smk_pr4',AT:'smk_at4',PIN:'smk_pin4'};
+const SK={PIN:'smk_pin5',SB_URL:'smk_sb_url',SB_KEY:'smk_sb_key'};
 const SCHOOL='SMK Haji Abdul Rahman Limbong';
 const DEF_PIN='1234';
-
 const gId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6).toUpperCase();
-async function ld(k,s){try{const v=localStorage.getItem(k);if(v){s(JSON.parse(v));return true;}return false;}catch{return false;}}
-async function sv(k,d){try{localStorage.setItem(k,JSON.stringify(d));}catch{}}
 const fd=d=>new Date(d+'T00:00').toLocaleDateString('ms-MY',{day:'2-digit',month:'long',year:'numeric'});
 const fds=d=>new Date(d+'T00:00').toLocaleDateString('ms-MY',{day:'2-digit',month:'short',year:'numeric'});
 const ft=ts=>new Date(ts).toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit'});
+const ls={get:k=>{try{return localStorage.getItem(k)}catch{return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch{}}};
 
-/* Detect program from URL params */
+/* ── Supabase minimal REST client ── */
+async function sbReq(table,query='',opts={}){
+  const url=ls.get(SK.SB_URL);
+  const key=ls.get(SK.SB_KEY);
+  if(!url||!key)throw new Error('Supabase belum dikonfigurasi. Pergi ke Tetapan → Supabase.');
+  const res=await fetch(`${url}/rest/v1/${table}${query}`,{
+    method:opts.method||'GET',
+    headers:{'apikey':key,'Authorization':`Bearer ${key}`,'Content-Type':'application/json','Prefer':'return=representation',...(opts.headers||{})},
+    body:opts.body!=null?JSON.stringify(opts.body):undefined,
+  });
+  if(!res.ok){const t=await res.text();throw new Error(`${res.status}: ${t}`);}
+  if(res.status===204)return[];
+  return res.json();
+}
+const DB={
+  getStaff:()=>sbReq('kakitangan','?order=nama.asc'),
+  addStaff:d=>sbReq('kakitangan','',{method:'POST',body:d}),
+  delStaff:id=>sbReq('kakitangan',`?id=eq.${id}`,{method:'DELETE'}),
+  findByKP:kp=>sbReq('kakitangan',`?no_kp=eq.${encodeURIComponent(kp)}`),
+  getProgs:()=>sbReq('program','?order=created_at.desc'),
+  addProg:d=>sbReq('program','',{method:'POST',body:d}),
+  delProg:id=>sbReq('program',`?id=eq.${id}`,{method:'DELETE'}),
+  getAtt:pid=>sbReq('kehadiran',`?program_id=eq.${pid}&order=masa.asc`),
+  checkDup:(pid,kp)=>sbReq('kehadiran',`?program_id=eq.${pid}&no_kp=eq.${encodeURIComponent(kp)}`),
+  addAtt:d=>sbReq('kehadiran','',{method:'POST',body:d}),
+};
+
 function getProgramFromURL(){
   const p=new URLSearchParams(window.location.search);
   if(!p.get('p'))return null;
   return{id:p.get('p')||'',nama:decodeURIComponent(p.get('nm')||''),tempat:decodeURIComponent(p.get('tp')||''),tarikh:p.get('dt')||'',hari:parseInt(p.get('hr')||'0'),fromUrl:true};
 }
-function getBaseUrl(){
-  const{origin,pathname}=window.location;
-  return origin+pathname;
-}
+function getBaseUrl(){return window.location.origin+window.location.pathname;}
 
 /* ── Shared UI ── */
 function Bdg({l,i}){
   const c=BC[i%3];
-  return(
-    <span className="badge" style={{background:c.bg,color:c.col}}>
-      <span style={{width:5,height:5,borderRadius:'50%',background:c.dot,display:'inline-block',marginRight:5}}/>
-      {l}
-    </span>
-  );
+  return <span className="badge" style={{background:c.bg,color:c.col}}>
+    <span style={{width:5,height:5,borderRadius:'50%',background:c.dot,display:'inline-block',marginRight:5}}/>
+    {l}
+  </span>;
 }
-
-function Field({label,children}){
-  return(
-    <div className="fld">
-      {label&&<label className="lbl">{label}</label>}
-      {children}
-    </div>
-  );
+function Field({label,children,hint}){
+  return <div className="fld">
+    {label&&<label className="lbl">{label}</label>}
+    {children}
+    {hint&&<div style={{fontSize:11,color:'var(--dim)'}}>{hint}</div>}
+  </div>;
 }
-
 function StatCard({icon,label,value,color}){
-  return(
-    <div style={{background:'#fff',border:'1px solid var(--border)',borderRadius:'var(--r)',padding:'14px 16px',display:'flex',alignItems:'center',gap:12,boxShadow:'var(--sh1)'}}>
-      <div style={{width:40,height:40,borderRadius:10,background:color+'15',color,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,flexShrink:0}}>
-        <i className={`ti ti-${icon}`}/>
-      </div>
-      <div>
-        <div style={{fontSize:24,fontWeight:700,lineHeight:1,color:'var(--text)',marginBottom:3}}>{value}</div>
-        <div style={{fontSize:11,color:'var(--muted)',fontWeight:500,textTransform:'uppercase',letterSpacing:'.04em'}}>{label}</div>
-      </div>
+  return <div style={{background:'#fff',border:'1px solid var(--border)',borderRadius:'var(--r)',padding:'14px 16px',display:'flex',alignItems:'center',gap:12,boxShadow:'var(--sh1)'}}>
+    <div style={{width:40,height:40,borderRadius:10,background:color+'15',color,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,flexShrink:0}}>
+      <i className={`ti ti-${icon}`}/>
     </div>
-  );
+    <div>
+      <div style={{fontSize:24,fontWeight:700,lineHeight:1,color:'var(--text)',marginBottom:3}}>{value}</div>
+      <div style={{fontSize:11,color:'var(--muted)',fontWeight:500,textTransform:'uppercase',letterSpacing:'.04em'}}>{label}</div>
+    </div>
+  </div>;
 }
 
-/* ── QR display — uses embedded qrcodejs2, no CDN ── */
-function QRGen({data,size=200,wrapRef}){
-  const localRef=useRef();
-  const ref=wrapRef||localRef;
+/* Prominent school header */
+function SchoolBanner({right,compact=false}){
+  return <div className="sch-banner" style={{padding:compact?'12px 18px':'18px 20px',position:'relative'}}>
+    <div style={{display:'flex',alignItems:'center',gap:14,position:'relative',zIndex:1}}>
+      <div style={{flexShrink:0}}>
+        <div style={{width:compact?44:56,height:compact?44:56,borderRadius:compact?12:14,background:'rgba(255,255,255,.12)',border:'1.5px solid rgba(255,255,255,.2)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <i className="ti ti-school" style={{fontSize:compact?22:28,color:'rgba(255,255,255,.9)'}}/>
+        </div>
+      </div>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontSize:9,color:'rgba(255,255,255,.4)',letterSpacing:'.09em',textTransform:'uppercase',marginBottom:2}}>Kementerian Pendidikan Malaysia</div>
+        <div style={{fontSize:compact?15:19,fontWeight:800,color:'#fff',letterSpacing:'.01em',lineHeight:1.15,marginBottom:2}}>{SCHOOL}</div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.5)'}}>Sistem Kehadiran Program</div>
+      </div>
+      {right&&<div style={{flexShrink:0}}>{right}</div>}
+    </div>
+  </div>;
+}
+
+/* ── QRGen — captures data URL immediately via onDataUrl callback ── */
+function QRGen({data,size=200,onDataUrl}){
+  const ref=useRef();
   useEffect(()=>{
     if(!data||!ref.current)return;
     ref.current.innerHTML='';
-    // qrcodejs2 is embedded — always available, no CDN needed
-    new window.QRCode(ref.current,{
-      text:data,
-      width:size,
-      height:size,
-      colorDark:BARK,
-      colorLight:'#ffffff',
-      correctLevel:(window.QRCode&&window.QRCode.CorrectLevel)?window.QRCode.CorrectLevel.M:0,
-    });
-  },[data,size]);
-  return<div ref={ref} style={{lineHeight:0,display:'flex',alignItems:'center',justifyContent:'center'}}/>;
-}
-
-/* Get QR canvas from QRGen wrapper.
-   qrcodejs2 renders canvas synchronously, then may hide it (display:none)
-   after converting to img. The canvas buffer is still readable even when hidden. */
-function waitForQRCanvas(wrapRef){
-  return new Promise((resolve,reject)=>{
-    let tries=0;
-    function check(){
-      if(!wrapRef.current){if(++tries>80){reject(new Error('QR gagal dirender. Cuba lagi.'));return;}setTimeout(check,100);return;}
-      // qrcodejs2 may hide canvas — but canvas.toDataURL() still works when hidden
-      const canvas=wrapRef.current.querySelector('canvas');
-      if(canvas&&canvas.width>0){resolve(canvas);return;}
-      // Fallback: if img was created instead of canvas, draw img onto a new canvas
-      const img=wrapRef.current.querySelector('img');
-      if(img&&img.src&&img.src.startsWith('data:image')){
-        const c=document.createElement('canvas');
-        c.width=img.naturalWidth||200;c.height=img.naturalHeight||200;
-        const ctx=c.getContext('2d');ctx.drawImage(img,0,0);
-        resolve(c);return;
-      }
-      if(++tries>80){reject(new Error('QR gagal dirender selepas 8 saat. Sila muat semula halaman.'));return;}
-      setTimeout(check,100);
+    const temp=document.createElement('div');
+    // qrcodejs2 creates canvas synchronously in the temp div
+    try{
+      new window.QRCode(temp,{
+        text:data,width:size,height:size,
+        colorDark:BARK,colorLight:'#ffffff',
+        correctLevel:(window.QRCode&&window.QRCode.CorrectLevel)?window.QRCode.CorrectLevel.M:0,
+      });
+    }catch(e){console.error('QRCode error:',e);return;}
+    // Get canvas immediately — before makeImage() hides it
+    const canvas=temp.querySelector('canvas');
+    if(canvas&&canvas.width>0){
+      const du=canvas.toDataURL('image/png');
+      if(onDataUrl)onDataUrl(du);
+      ref.current.appendChild(canvas);
+    }else{
+      // Fallback: qrcodejs2 img mode (SVG renderer)
+      setTimeout(()=>{
+        const img=temp.querySelector('img');
+        if(img&&img.src&&img.src.startsWith('data:')){
+          if(onDataUrl)onDataUrl(img.src);
+          const im=new Image();im.src=img.src;im.width=size;im.height=size;im.style.display='block';
+          if(ref.current)ref.current.appendChild(im);
+        }
+      },500);
     }
-    check();
-  });
+  },[data,size]);
+  return <div ref={ref} style={{lineHeight:0,display:'flex',alignItems:'center',justifyContent:'center'}}/>;
 }
 
-/* Download branded PNG — reads pixels from the already-rendered on-screen canvas */
-function downloadQR(prog,srcCanvas){
-  const W=480,H=620,pad=28;
-  const c=document.createElement('canvas');c.width=W;c.height=H;
-  const x=c.getContext('2d');
-  /* Background */
-  x.fillStyle='#fff';x.fillRect(0,0,W,H);
-  /* Header */
-  const grad=x.createLinearGradient(0,0,W,82);
-  grad.addColorStop(0,BARK);grad.addColorStop(1,'#6b1020');
-  x.fillStyle=grad;x.fillRect(0,0,W,82);
-  x.fillStyle='rgba(255,255,255,.45)';x.font='600 9px Arial';x.textAlign='center';
-  x.fillText(SCHOOL.toUpperCase(),W/2,20);
-  x.fillStyle='#fff';x.font='bold 15px Arial';x.fillText('SISTEM KEHADIRAN PROGRAM',W/2,44);
-  x.fillStyle='rgba(255,255,255,.35)';x.font='10px Arial';
-  x.fillText('Imbas kod QR untuk mendaftar kehadiran',W/2,62);
-  /* QR */
-  const qs=280,qx=(W-qs)/2,qy=98;
-  x.fillStyle='#f9f3f4';x.beginPath();x.roundRect(qx-14,qy-14,qs+28,qs+28,12);x.fill();
-  x.drawImage(srcCanvas,qx,qy,qs,qs);
-  /* Accent */
-  x.fillStyle=BG;x.fillRect(qx,qy+qs+10,qs,3);
-  /* Info */
-  const iy=qy+qs+28;
-  x.fillStyle='#1A0A0D';x.font='bold 17px Arial';x.textAlign='center';
-  x.fillText(prog.nama.length>40?prog.nama.slice(0,37)+'…':prog.nama,W/2,iy+8);
-  x.fillStyle='#7A4555';x.font='13px Arial';
-  x.fillText(prog.tempat,W/2,iy+30);
-  x.fillText(`${HR[prog.hari]}, ${fd(prog.tarikh)}`,W/2,iy+50);
-  x.strokeStyle='#EDD8DC';x.setLineDash([4,4]);x.lineWidth=1;
-  x.beginPath();x.moveTo(pad,iy+66);x.lineTo(W-pad,iy+66);x.stroke();x.setLineDash([]);
-  x.fillStyle='#B8909A';x.font='10px Arial';
-  x.fillText('Imbas dengan kamera telefon atau mana-mana apl QR scanner',W/2,iy+84);
-  /* Footer */
-  x.fillStyle=BG;x.fillRect(0,H-7,W,7);
-  x.strokeStyle='#EDD8DC';x.lineWidth=1;x.strokeRect(.5,.5,W-1,H-1);
-  /* Download */
-  const a=document.createElement('a');
-  a.download=`QR-${prog.nama.replace(/\s+/g,'-')}.png`;
-  a.href=c.toDataURL('image/png');a.click();
+/* Download branded PNG */
+function downloadQR(prog,dataUrl){
+  if(!dataUrl){alert('QR belum siap. Tunggu sebentar.');return;}
+  const img=new Image();
+  img.onload=()=>{
+    const W=480,H=610;
+    const c=document.createElement('canvas');c.width=W;c.height=H;
+    const x=c.getContext('2d');
+    x.fillStyle='#fff';x.fillRect(0,0,W,H);
+    const g=x.createLinearGradient(0,0,W,86);g.addColorStop(0,BARK);g.addColorStop(1,'#6b1020');
+    x.fillStyle=g;x.fillRect(0,0,W,86);
+    x.fillStyle='rgba(255,255,255,.35)';x.font='9px Arial';x.textAlign='center';
+    x.fillText('KEMENTERIAN PENDIDIKAN MALAYSIA',W/2,16);
+    x.fillStyle='#fff';x.font='bold 16px Arial';x.fillText('SMK HAJI ABDUL RAHMAN LIMBONG',W/2,38);
+    x.fillStyle='rgba(255,255,255,.4)';x.font='10px Arial';x.fillText('SISTEM KEHADIRAN PROGRAM',W/2,56);
+    x.strokeStyle='rgba(255,255,255,.15)';x.lineWidth=1;
+    x.beginPath();x.moveTo(26,68);x.lineTo(W-26,68);x.stroke();
+    const qs=270,qx=(W-qs)/2,qy=100;
+    x.fillStyle='#f9f3f4';x.beginPath();x.roundRect(qx-12,qy-12,qs+24,qs+24,10);x.fill();
+    x.drawImage(img,qx,qy,qs,qs);
+    x.fillStyle=BG;x.fillRect(qx,qy+qs+8,qs,3);
+    const iy=qy+qs+26;
+    x.fillStyle='#1A0A0D';x.font='bold 16px Arial';x.textAlign='center';
+    x.fillText(prog.nama.length>42?prog.nama.slice(0,39)+'...':prog.nama,W/2,iy+6);
+    x.fillStyle='#7A4555';x.font='12px Arial';
+    x.fillText(prog.tempat,W/2,iy+26);
+    x.fillText(`${HR[prog.hari]}, ${fd(prog.tarikh)}`,W/2,iy+44);
+    x.strokeStyle='#EDD8DC';x.setLineDash([4,4]);x.lineWidth=1;
+    x.beginPath();x.moveTo(26,iy+60);x.lineTo(W-26,iy+60);x.stroke();x.setLineDash([]);
+    x.fillStyle='#B8909A';x.font='10px Arial';
+    x.fillText('Imbas dengan kamera telefon atau mana-mana apl QR scanner',W/2,iy+78);
+    x.fillStyle=BG;x.fillRect(0,H-6,W,6);
+    x.strokeStyle='#EDD8DC';x.lineWidth=1;x.strokeRect(.5,.5,W-1,H-1);
+    const a=document.createElement('a');
+    a.download=`QR-${prog.nama.replace(/\s+/g,'-')}.png`;
+    a.href=c.toDataURL('image/png');a.click();
+  };
+  img.src=dataUrl;
 }
 
-/* Print QR — reads from the already-rendered on-screen canvas */
-function printQR(prog,srcCanvas){
-  const du=srcCanvas.toDataURL('image/png');
-  const w=window.open('','_blank','width=560,height=760');
+function printQR(prog,dataUrl){
+  if(!dataUrl){alert('QR belum siap. Tunggu sebentar.');return;}
+  const w=window.open('','_blank','width=560,height=780');
   if(!w){alert('Sila benarkan pop-up untuk fungsi cetak.');return;}
-  w.document.write(`<!DOCTYPE html><html><head><title>QR — ${prog.nama}</title>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet"/>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:'Outfit',Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#F9F4F5;padding:24px}
-    .card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 8px 40px rgba(139,26,46,.15),0 2px 8px rgba(0,0,0,.08);width:380px}
-    .hdr{background:linear-gradient(135deg,#2D0510 0%,#6b1020 100%);padding:22px 24px 18px;text-align:center}
-    .sch{font-size:9px;color:rgba(255,255,255,.4);letter-spacing:.09em;text-transform:uppercase;margin-bottom:6px}
-    .ttl{font-size:15px;font-weight:700;color:#fff;margin-bottom:3px}
-    .sub{font-size:10px;color:rgba(255,255,255,.35)}
-    .qw{padding:22px 24px 8px;display:flex;justify-content:center;background:#fdf5f6}
-    .qw img{width:240px;height:240px;border-radius:8px}
-    .bar{height:3px;background:#8B1A2E;margin:0 24px}
-    .inf{padding:18px 24px 22px;background:#fdf5f6}
-    .inf h2{font-size:16px;font-weight:700;color:#1A0A0D;margin-bottom:6px}
-    .inf .meta{font-size:12px;color:#7A4555;margin:3px 0;display:flex;align-items:center;gap:6px}
-    .nt{font-size:10px;color:#C09AA8;margin-top:14px;padding-top:12px;border-top:1px dashed #EDD8DC;line-height:1.6}
-    .ft{background:#8B1A2E;height:6px}
-    @media print{body{background:#fff;padding:0}button{display:none}}
-  </style>
+  w.document.write(`<!DOCTYPE html><html><head><title>QR \u2014 ${prog.nama}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Outfit',Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#F9F4F5;padding:24px}
+  .card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 8px 40px rgba(139,26,46,.15);width:380px;text-align:center}
+  .hdr{background:linear-gradient(135deg,#2D0510 0%,#6b1020 100%);padding:18px 22px 15px}
+  .kpm{font-size:8px;color:rgba(255,255,255,.35);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+  .sch{font-size:15px;font-weight:800;color:#fff;margin-bottom:3px;line-height:1.3}
+  .sys{font-size:10px;color:rgba(255,255,255,.4)}
+  .qw{padding:20px;display:flex;justify-content:center;background:#fdf5f6}
+  .qw img{width:220px;height:220px;border-radius:8px}
+  .bar{height:3px;background:#8B1A2E;margin:0 22px}
+  .inf{padding:16px 22px 20px;background:#fdf5f6}
+  .inf h2{font-size:15px;font-weight:700;color:#1A0A0D;margin-bottom:6px}
+  .inf p{font-size:12px;color:#7A4555;margin:3px 0}
+  .nt{font-size:10px;color:#C09AA8;margin-top:12px;padding-top:10px;border-top:1px dashed #EDD8DC;line-height:1.6}
+  .ft{background:#8B1A2E;height:5px}
+  @media print{body{background:#fff;padding:0}}</style>
   </head><body><div class="card">
-  <div class="hdr"><div class="sch">${SCHOOL}</div><div class="ttl">SISTEM KEHADIRAN PROGRAM</div><div class="sub">Imbas dengan kamera telefon atau apl QR scanner</div></div>
-  <div class="qw"><img src="${du}" alt="QR"/></div>
-  <div class="bar"></div>
-  <div class="inf">
-    <h2>${prog.nama}</h2>
-    <div class="meta">📍 ${prog.tempat}</div>
-    <div class="meta">📅 ${HR[prog.hari]}, ${fd(prog.tarikh)}</div>
-    <p class="nt">Imbas kod QR ini untuk membuka laman web pendaftaran kehadiran. Masukkan No. Kad Pengenalan anda selepas laman web dibuka.</p>
-  </div>
-  <div class="ft"></div>
-  </div><script>setTimeout(()=>window.print(),600)<\/script></body></html>`);
+  <div class="hdr"><div class="kpm">Kementerian Pendidikan Malaysia</div>
+  <div class="sch">SMK Haji Abdul Rahman Limbong</div>
+  <div class="sys">Sistem Kehadiran Program</div></div>
+  <div class="qw"><img src="${dataUrl}"/></div><div class="bar"></div>
+  <div class="inf"><h2>${prog.nama}</h2>
+  <p>\u{1F4CD} ${prog.tempat}</p><p>\u{1F4C5} ${HR[prog.hari]}, ${fd(prog.tarikh)}</p>
+  <p class="nt">Imbas kod QR ini dengan kamera telefon untuk membuka laman web pendaftaran kehadiran secara automatik.</p></div>
+  <div class="ft"></div></div><script>setTimeout(()=>window.print(),500)<\/script></body></html>`);
   w.document.close();
 }
 
-/* ── QR Camera Scanner ── */
+/* ── QR Scanner ── */
 function QRScanner({onScan,onCancel}){
   const vR=useRef(),cR=useRef(),rafR=useRef(),stR=useRef();
   const [st,setSt]=useState('init');
   useEffect(()=>{
     (async()=>{
       try{
-        const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}});
+        const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
         stR.current=s;
         if(vR.current){vR.current.srcObject=s;await vR.current.play();setSt('ok');tick();}
       }catch{setSt('err');}
@@ -326,91 +320,95 @@ function QRScanner({onScan,onCancel}){
     }
     rafR.current=requestAnimationFrame(tick);
   }
-  return(
-    <div>
-      <div style={{position:'relative',borderRadius:16,overflow:'hidden',background:'#111',aspectRatio:'4/3'}}>
-        <video ref={vR} playsInline muted style={{width:'100%',height:'100%',objectFit:'cover',display:st==='ok'?'block':'none'}}/>
-        <canvas ref={cR} style={{display:'none'}}/>
-        {st==='init'&&(
-          <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12}}>
-            <div style={{width:32,height:32,border:'3px solid rgba(255,255,255,.3)',borderTopColor:'#fff',borderRadius:'50%',animation:'spin .7s linear infinite'}}/>
-            <span style={{color:'rgba(255,255,255,.6)',fontSize:14}}>Membuka kamera...</span>
-          </div>
-        )}
-        {st==='err'&&(
-          <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:10,padding:24}}>
-            <i className="ti ti-camera-off" style={{fontSize:48,color:'rgba(255,255,255,.3)'}}/>
-            <div style={{fontSize:15,color:'rgba(255,255,255,.7)',fontWeight:500,textAlign:'center'}}>Kamera tidak boleh diakses</div>
-            <div style={{fontSize:12,color:'rgba(255,255,255,.4)',textAlign:'center'}}>Sila gunakan kamera telefon untuk mengimbas kod QR program</div>
-          </div>
-        )}
-        {st==='ok'&&(
-          <>
-            <div style={{position:'absolute',inset:0,background:'radial-gradient(circle at center,transparent 30%,rgba(0,0,0,.55) 100%)'}}/>
-            <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',width:200,height:200,pointerEvents:'none'}}>
-              {[{t:0,l:0,br:'16px 0 0 0'},{t:0,r:0,bl:'0 16px 0 0'},{b:0,l:0,tr:'0 0 0 16px'},{b:0,r:0,tl:'0 0 16px 0'}].map((pos,i)=>(
-                <div key={i} style={{position:'absolute',width:28,height:28,border:'3px solid #fff',...Object.fromEntries(Object.entries(pos).map(([k,v])=>[{t:'top',b:'bottom',l:'left',r:'right',tr:'borderTopRightRadius',tl:'borderTopLeftRadius',br:'borderBottomRightRadius',bl:'borderBottomLeftRadius'}[k],v]))}}/>
-              ))}
-              <div style={{position:'absolute',inset:0,border:'1px solid rgba(255,255,255,.15)',borderRadius:12}}/>
-            </div>
-          </>
-        )}
-      </div>
-      <button onClick={onCancel} className="btn btn-block" style={{marginTop:12,background:'rgba(139,26,46,.08)',color:BGD,border:'1px solid rgba(139,26,46,.2)',fontWeight:600}}>
-        Batal
-      </button>
+  return <div>
+    <div style={{position:'relative',borderRadius:16,overflow:'hidden',background:'#111',aspectRatio:'4/3'}}>
+      <video ref={vR} playsInline muted style={{width:'100%',height:'100%',objectFit:'cover',display:st==='ok'?'block':'none'}}/>
+      <canvas ref={cR} style={{display:'none'}}/>
+      {st==='init'&&<div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12}}>
+        <div style={{width:30,height:30,border:'3px solid rgba(255,255,255,.3)',borderTopColor:'#fff',borderRadius:'50%',animation:'spin .7s linear infinite'}}/>
+        <span style={{color:'rgba(255,255,255,.6)',fontSize:13}}>Membuka kamera...</span>
+      </div>}
+      {st==='err'&&<div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:10,padding:24}}>
+        <i className="ti ti-camera-off" style={{fontSize:44,color:'rgba(255,255,255,.3)'}}/>
+        <div style={{fontSize:14,color:'rgba(255,255,255,.7)',fontWeight:500,textAlign:'center'}}>Kamera tidak boleh diakses</div>
+        <div style={{fontSize:12,color:'rgba(255,255,255,.4)',textAlign:'center'}}>Gunakan kamera telefon untuk imbas kod QR program</div>
+      </div>}
+      {st==='ok'&&<>
+        <div style={{position:'absolute',inset:0,background:'radial-gradient(circle at center,transparent 28%,rgba(0,0,0,.55) 100%)'}}/>
+        <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',width:190,height:190,pointerEvents:'none'}}>
+          {[[{top:0,left:0},{borderTopLeftRadius:12}],[{top:0,right:0},{borderTopRightRadius:12}],[{bottom:0,left:0},{borderBottomLeftRadius:12}],[{bottom:0,right:0},{borderBottomRightRadius:12}]].map(([p,r],i)=>(
+            <div key={i} style={{position:'absolute',width:26,height:26,border:'3px solid #fff',...p,...r}}/>
+          ))}
+        </div>
+      </>}
     </div>
-  );
+    <button className="btn btn-g btn-block" style={{marginTop:12}} onClick={onCancel}>Batal</button>
+  </div>;
 }
 
 /* ── Attendance Form ── */
-function AttendanceForm({prog,staff,att,svAt,onBack,onNext}){
+function AttendanceForm({prog,onBack,onNext}){
   const [ic,setIc]=useState('');
   const [err,setErr]=useState('');
+  const [walkIn,setWalkIn]=useState(false);
+  const [walkNama,setWalkNama]=useState('');
   const [done,setDone]=useState(null);
-  const cnt=att.filter(a=>a.pId===prog.id).length;
+  const [loading,setLoading]=useState(false);
+  const [cnt,setCnt]=useState(0);
+
+  useEffect(()=>{
+    DB.getAtt(prog.id).then(r=>setCnt((r||[]).length)).catch(()=>{});
+  },[prog.id]);
 
   const submit=async()=>{
     if(ic.length<12)return setErr('No KP mestilah 12 digit');
-    const s=staff.find(s=>s.noKP===ic.trim());
-    if(staff.length>0&&!s)return setErr('No KP tidak dijumpai dalam sistem. Hubungi pentadbir.');
-    if(att.find(a=>a.pId===prog.id&&(s?a.sId===s.id:a.noKP===ic.trim())))
-      return setErr(s?`${s.nama} sudah mendaftar hadir untuk program ini.`:'No KP ini sudah digunakan untuk program ini.');
-    const rec={id:gId(),pId:prog.id,sId:s?.id||'',nama:s?.nama||'—',bah:s?.bah??-1,noKP:ic.trim(),masa:Date.now(),verified:!!s};
-    await svAt([...att,rec]);
-    setDone({nama:s?.nama||ic,bah:s?.bah,verified:!!s});
+    setLoading(true);setErr('');
+    try{
+      const dups=await DB.checkDup(prog.id,ic.trim());
+      if(dups&&dups.length>0){setErr('No KP ini sudah mendaftar hadir untuk program ini.');setLoading(false);return;}
+      const staff=await DB.findByKP(ic.trim());
+      const s=staff&&staff[0];
+      if(!s&&!walkIn){setWalkIn(true);setLoading(false);return;}
+      const rec={
+        id:gId(),program_id:prog.id,
+        kakitangan_id:s?s.id:null,
+        no_kp:ic.trim(),
+        nama:s?s.nama:(walkNama.trim()||'Tidak Dinyatakan'),
+        bahagian:s!=null?s.bahagian:null,
+        verified:!!s,
+      };
+      await DB.addAtt(rec);
+      setCnt(c=>c+1);
+      setDone({nama:rec.nama,bahagian:rec.bahagian,verified:rec.verified});
+    }catch(e){setErr('Ralat: '+e.message);}
+    setLoading(false);
   };
 
   if(done)return(
     <div style={{padding:'40px 24px 32px',textAlign:'center',animation:'popIn .4s cubic-bezier(.175,.885,.32,1.275)'}}>
-      <div style={{width:88,height:88,borderRadius:'50%',background:BGL,color:BG,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px',boxShadow:`0 0 0 8px rgba(139,26,46,.07), 0 0 0 16px rgba(139,26,46,.03)`}}>
-        <i className="ti ti-check" style={{fontSize:44}}/>
+      <div style={{width:88,height:88,borderRadius:'50%',background:BGL,color:BG,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px',fontSize:44,boxShadow:'0 0 0 8px rgba(139,26,46,.07),0 0 0 16px rgba(139,26,46,.03)'}}>
+        <i className="ti ti-check"/>
       </div>
-      <div style={{fontSize:13,color:'var(--muted)',fontWeight:500,textTransform:'uppercase',letterSpacing:'.06em',marginBottom:4}}>Kehadiran Direkod</div>
+      <div style={{fontSize:12,color:'var(--muted)',fontWeight:600,textTransform:'uppercase',letterSpacing:'.06em',marginBottom:4}}>Kehadiran Direkod</div>
       <div style={{fontSize:26,fontWeight:700,color:'var(--text)',marginBottom:6}}>{done.nama}</div>
-      {done.bah>=0&&<div style={{marginBottom:4}}><Bdg l={BAH[done.bah]} i={done.bah}/></div>}
-      <div style={{fontSize:14,color:'var(--muted)',marginTop:8,marginBottom:4}}>{prog.nama}</div>
-      <div style={{fontSize:12,color:'var(--dim)',marginBottom:28}}>
-        {new Date().toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit',second:'2-digit'})} · {cnt+1} kakitangan hadir
-      </div>
-      {onNext&&(
-        <button className="btn btn-p btn-block" onClick={()=>{setDone(null);setIc('');setErr('');}}>
-          <i className="ti ti-user-plus" style={{fontSize:16}}/>Kakitangan Seterusnya
-        </button>
-      )}
-      {onBack&&<button onClick={onBack} style={{marginTop:10,background:'none',border:'none',cursor:'pointer',color:'var(--muted)',fontSize:13}}>Kembali ke menu utama</button>}
+      {done.bahagian!=null&&<div style={{marginBottom:4}}><Bdg l={BAH[done.bahagian]} i={done.bahagian}/></div>}
+      {!done.verified&&<div style={{fontSize:12,color:'var(--warn)',marginTop:6,background:'var(--warn-l)',padding:'4px 12px',borderRadius:99,display:'inline-block',border:'1px solid #FDE68A'}}>Tidak dalam pangkalan data</div>}
+      <div style={{fontSize:14,color:'var(--muted)',marginTop:10,marginBottom:4}}>{prog.nama}</div>
+      <div style={{fontSize:12,color:'var(--dim)',marginBottom:28}}>{cnt} kakitangan hadir</div>
+      {onNext&&<button className="btn btn-p btn-block" onClick={()=>{setDone(null);setIc('');setErr('');setWalkIn(false);setWalkNama('');}}>
+        <i className="ti ti-user-plus" style={{fontSize:16}}/>Kakitangan Seterusnya
+      </button>}
+      {onBack&&<button onClick={onBack} style={{marginTop:10,background:'none',border:'none',cursor:'pointer',color:'var(--muted)',fontSize:13,width:'100%',padding:'6px'}}>Kembali</button>}
     </div>
   );
 
   return(
     <div style={{padding:'24px 20px 28px',animation:'fadeUp .25s ease'}}>
-      {/* Program info */}
       <div style={{background:`linear-gradient(135deg,${BARK} 0%,#6b1020 100%)`,borderRadius:14,padding:'16px 20px',marginBottom:24,position:'relative',overflow:'hidden'}}>
         <div style={{position:'absolute',top:-20,right:-20,width:100,height:100,borderRadius:'50%',background:'rgba(255,255,255,.04)'}}/>
-        <div style={{position:'absolute',bottom:-30,right:20,width:70,height:70,borderRadius:'50%',background:'rgba(255,255,255,.03)'}}/>
-        <div style={{fontSize:9,color:'rgba(255,255,255,.35)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:6}}>{SCHOOL}</div>
+        <div style={{fontSize:9,color:'rgba(255,255,255,.35)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:6}}>SMK Haji Abdul Rahman Limbong</div>
         <div style={{fontSize:17,fontWeight:700,color:'#fff',marginBottom:8,position:'relative'}}>{prog.nama}</div>
-        <div style={{display:'flex',flexWrap:'wrap',gap:14,fontSize:12,color:'rgba(255,255,255,.6)',position:'relative'}}>
+        <div style={{display:'flex',flexWrap:'wrap',gap:12,fontSize:12,color:'rgba(255,255,255,.6)',position:'relative'}}>
           <span style={{display:'flex',alignItems:'center',gap:5}}><i className="ti ti-map-pin" style={{fontSize:12}}/>{prog.tempat}</span>
           <span style={{display:'flex',alignItems:'center',gap:5}}><i className="ti ti-calendar" style={{fontSize:12}}/>{HR[prog.hari]}, {fds(prog.tarikh)}</span>
           <span style={{display:'flex',alignItems:'center',gap:5,background:'rgba(255,255,255,.1)',borderRadius:99,padding:'2px 8px'}}>
@@ -419,650 +417,543 @@ function AttendanceForm({prog,staff,att,svAt,onBack,onNext}){
         </div>
       </div>
 
-      {/* IC input */}
-      <Field label="No. Kad Pengenalan">
-        <input
-          placeholder="901231125432"
-          value={ic} maxLength={12} inputMode="numeric"
-          onChange={e=>{setIc(e.target.value.replace(/\D/g,''));setErr('');}}
-          onKeyDown={e=>e.key==='Enter'&&submit()}
-          style={{fontSize:22,padding:'14px 16px',textAlign:'center',letterSpacing:4,borderColor:err?'var(--err)':'var(--border)'}}
-        />
-        <div style={{fontSize:12,color:'var(--dim)',textAlign:'center'}}>Masukkan 12 digit tanpa sempang</div>
-      </Field>
-
-      {err&&(
-        <div className="alert alert-err" style={{marginTop:12}}>
-          <i className="ti ti-alert-circle" style={{fontSize:16,marginTop:1,flexShrink:0}}/>
-          <span>{err}</span>
+      {!walkIn?<>
+        <Field label="No. Kad Pengenalan">
+          <input placeholder="901231125432" value={ic} maxLength={12} inputMode="numeric"
+            onChange={e=>{setIc(e.target.value.replace(/\D/g,''));setErr('');}}
+            onKeyDown={e=>e.key==='Enter'&&submit()}
+            style={{fontSize:22,padding:'14px 16px',textAlign:'center',letterSpacing:4,borderColor:err?'var(--err)':'var(--border)'}}/>
+          <div style={{fontSize:12,color:'var(--dim)',textAlign:'center'}}>Masukkan 12 digit tanpa sempang</div>
+        </Field>
+        {err&&<div className="alert alert-err" style={{marginTop:12}}><i className="ti ti-alert-circle" style={{fontSize:15,flexShrink:0}}/>{err}</div>}
+        <button className="btn btn-p btn-block" onClick={submit} style={{marginTop:16,padding:'14px',fontSize:16}} disabled={loading}>
+          {loading?<span style={{width:18,height:18,border:'2px solid rgba(255,255,255,.4)',borderTopColor:'#fff',borderRadius:'50%',animation:'spin .7s linear infinite'}}/>:<i className="ti ti-clipboard-check" style={{fontSize:18}}/>}
+          {loading?'Menyemak...':'Daftar Hadir'}
+        </button>
+      </>:<>
+        <div className="alert alert-warn" style={{marginBottom:14,flexDirection:'column',gap:4}}>
+          <div style={{fontWeight:600,display:'flex',alignItems:'center',gap:6}}><i className="ti ti-user-question" style={{fontSize:15}}/>No KP Tidak Dijumpai</div>
+          <div>No KP <strong>{ic}</strong> tidak ada dalam pangkalan data. Anda boleh hadir sebagai tetamu dengan memasukkan nama.</div>
         </div>
-      )}
-
-      <button className="btn btn-p btn-block" onClick={submit} style={{marginTop:16,padding:'14px',fontSize:16}}>
-        <i className="ti ti-clipboard-check" style={{fontSize:18}}/>Daftar Hadir
-      </button>
+        <Field label="Nama Penuh">
+          <input placeholder="Masukkan nama penuh anda" value={walkNama} onChange={e=>setWalkNama(e.target.value)}/>
+        </Field>
+        {err&&<div className="alert alert-err" style={{marginTop:10}}><i className="ti ti-alert-circle" style={{fontSize:15,flexShrink:0}}/>{err}</div>}
+        <button className="btn btn-p btn-block" onClick={submit} style={{marginTop:14,padding:'14px',fontSize:16}} disabled={loading||!walkNama.trim()}>
+          {loading?<span style={{width:18,height:18,border:'2px solid rgba(255,255,255,.4)',borderTopColor:'#fff',borderRadius:'50%',animation:'spin .7s linear infinite'}}/>:<i className="ti ti-clipboard-check" style={{fontSize:18}}/>}
+          Daftar Hadir (Tanpa Rekod)
+        </button>
+        <button className="btn btn-g btn-block" style={{marginTop:8}} onClick={()=>{setWalkIn(false);setWalkNama('');setErr('');}}>
+          <i className="ti ti-arrow-left" style={{fontSize:14}}/>Cuba No KP Lain
+        </button>
+      </>}
       {onBack&&<button onClick={onBack} style={{marginTop:10,width:'100%',background:'none',border:'none',cursor:'pointer',color:'var(--muted)',fontSize:13,padding:'6px'}}>Kembali</button>}
     </div>
   );
 }
 
 /* ══════════════════════════════
-   KAKITANGAN VIEW — mobile first
+   KAKITANGAN VIEW
 ══════════════════════════════ */
-function KakitanganView({staff,progs,att,svAt,onAdmin}){
+function KakitanganView({onAdmin}){
   const [screen,setScreen]=useState('home');
   const [prog,setProg]=useState(null);
 
   const handleScan=data=>{
     try{
-      const url=new URL(data);
-      const p=url.searchParams;
-      if(p.get('p')){
-        setProg({id:p.get('p'),nama:decodeURIComponent(p.get('nm')||''),tempat:decodeURIComponent(p.get('tp')||''),tarikh:p.get('dt')||'',hari:parseInt(p.get('hr')||'0')});
-        setScreen('attend');return;
-      }
+      const url=new URL(data);const p=url.searchParams;
+      if(p.get('p')){setProg({id:p.get('p'),nama:decodeURIComponent(p.get('nm')||''),tempat:decodeURIComponent(p.get('tp')||''),tarikh:p.get('dt')||'',hari:parseInt(p.get('hr')||'0')});setScreen('attend');return;}
     }catch{}
-    if(data.startsWith('HADIR:')){
-      const f=progs.find(p=>p.id===data.slice(6));
-      if(f){setProg(f);setScreen('attend');return;}
-    }
     setScreen('invalid');
   };
 
-  return(
-    <div style={{minHeight:'100vh',background:'#fff',display:'flex',flexDirection:'column'}}>
-      {/* Header */}
-      <div style={{background:`linear-gradient(135deg,${BARK} 0%,${BARK2} 100%)`,padding:'14px 20px 13px',display:'flex',alignItems:'center',gap:12,flexShrink:0}}>
-        <div style={{flex:1}}>
-          <div style={{fontSize:9,color:'rgba(255,255,255,.35)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:2}}>{SCHOOL}</div>
-          <div style={{fontSize:16,fontWeight:700,color:'#fff'}}>Daftar Kehadiran</div>
-        </div>
-        <button className="btn btn-dk" onClick={onAdmin}>
-          <i className="ti ti-shield-lock" style={{fontSize:13}}/>Admin
+  return <div style={{minHeight:'100vh',background:'#fff',display:'flex',flexDirection:'column'}}>
+    <SchoolBanner right={
+      <button className="btn btn-dk" onClick={onAdmin}>
+        <i className="ti ti-shield-lock" style={{fontSize:13}}/>Admin
+      </button>
+    }/>
+    <div style={{flex:1,overflowY:'auto'}}>
+      {screen==='home'&&<div style={{padding:'28px 20px 36px',animation:'fadeUp .3s ease',maxWidth:480,margin:'0 auto'}}>
+        <button onClick={()=>setScreen('scanning')} style={{width:'100%',border:'none',borderRadius:20,padding:'32px 24px',cursor:'pointer',textAlign:'center',display:'block',position:'relative',overflow:'hidden',background:`linear-gradient(145deg,${BG} 0%,#6B1020 60%,${BG} 100%)`,boxShadow:'0 10px 40px rgba(139,26,46,.45),0 3px 10px rgba(0,0,0,.2)',marginBottom:28}}>
+          <div style={{position:'absolute',top:'8%',right:'4%',width:130,height:130,borderRadius:'50%',background:'rgba(255,255,255,.05)'}}/>
+          <div style={{width:80,height:80,borderRadius:'50%',background:'rgba(255,255,255,.15)',border:'1.5px solid rgba(255,255,255,.2)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px',position:'relative'}}>
+            <i className="ti ti-qrcode-scan" style={{fontSize:38,color:'#fff'}}/>
+          </div>
+          <div style={{fontSize:21,fontWeight:700,color:'#fff',marginBottom:5,position:'relative'}}>Imbas Kod QR</div>
+          <div style={{fontSize:13,color:'rgba(255,255,255,.65)',position:'relative'}}>Buka kamera dan arahkan ke kod QR program</div>
         </button>
-      </div>
-
-      {/* Content */}
-      <div style={{flex:1,overflowY:'auto'}}>
-        {screen==='home'&&(
-          <div style={{padding:'28px 20px 36px',animation:'fadeUp .3s ease',maxWidth:480,margin:'0 auto'}}>
-            {/* Scan button */}
-            <button onClick={()=>setScreen('scanning')} style={{
-              width:'100%',border:'none',borderRadius:20,padding:'32px 24px',cursor:'pointer',
-              textAlign:'center',display:'block',position:'relative',overflow:'hidden',
-              background:`linear-gradient(145deg,${BG} 0%,#6B1020 60%,${BG} 100%)`,
-              boxShadow:'0 10px 40px rgba(139,26,46,.45),0 3px 10px rgba(0,0,0,.2)',
-              marginBottom:28,
-            }}>
-              <div style={{position:'absolute',top:'10%',right:'5%',width:120,height:120,borderRadius:'50%',background:'rgba(255,255,255,.05)'}}/>
-              <div style={{position:'absolute',bottom:'-15%',left:'10%',width:80,height:80,borderRadius:'50%',background:'rgba(255,255,255,.04)'}}/>
-              <div style={{width:80,height:80,borderRadius:'50%',background:'rgba(255,255,255,.15)',backdropFilter:'blur(4px)',border:'1.5px solid rgba(255,255,255,.2)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px',position:'relative'}}>
-                <i className="ti ti-qrcode-scan" style={{fontSize:38,color:'#fff'}}/>
+        <div className="card" style={{padding:'18px 20px'}}>
+          <div className="sec">Cara Pendaftaran</div>
+          {[{ic:'qrcode',t:'Dapatkan kod QR daripada pentadbir'},{ic:'scan',t:'Imbas dengan apl ini atau kamera telefon'},{ic:'id-badge',t:'Masukkan No. Kad Pengenalan anda'},{ic:'circle-check',t:'Kehadiran direkod secara automatik'}].map(({ic,t},i)=>(
+            <div key={i} style={{display:'flex',alignItems:'center',gap:12,marginBottom:i<3?12:0,padding:'8px 0',borderBottom:i<3?'1px solid var(--border2)':'none'}}>
+              <div style={{width:30,height:30,borderRadius:8,background:BGL,color:BG,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <i className={`ti ti-${ic}`} style={{fontSize:15}}/>
               </div>
-              <div style={{fontSize:21,fontWeight:700,color:'#fff',marginBottom:5,position:'relative'}}>Imbas Kod QR</div>
-              <div style={{fontSize:13,color:'rgba(255,255,255,.65)',position:'relative'}}>Buka kamera dan arahkan ke kod QR program</div>
-            </button>
-
-            {/* Steps */}
-            <div className="card" style={{padding:'18px 20px'}}>
-              <div className="sec">Cara Pendaftaran</div>
-              {[
-                {ic:'qrcode',t:'Dapatkan kod QR daripada pentadbir'},
-                {ic:'scan',t:'Imbas dengan apl ini atau kamera telefon anda'},
-                {ic:'id-badge',t:'Masukkan No. Kad Pengenalan anda'},
-                {ic:'circle-check',t:'Kehadiran direkod secara automatik'},
-              ].map(({ic,t},i)=>(
-                <div key={i} style={{display:'flex',alignItems:'center',gap:12,marginBottom:i<3?12:0,padding:'8px 0',borderBottom:i<3?'1px solid var(--border2)':'none'}}>
-                  <div style={{width:30,height:30,borderRadius:8,background:BGL,color:BG,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                    <i className={`ti ti-${ic}`} style={{fontSize:15}}/>
-                  </div>
-                  <div style={{fontSize:13,color:'var(--text)',fontWeight:500}}>{t}</div>
-                </div>
-              ))}
+              <div style={{fontSize:13,color:'var(--text)',fontWeight:500}}>{t}</div>
             </div>
-          </div>
-        )}
-
-        {screen==='scanning'&&(
-          <div style={{padding:'20px',animation:'fadeUp .2s ease'}}>
-            <button onClick={()=>setScreen('home')} className="btn btn-g btn-sm" style={{marginBottom:16}}>
-              <i className="ti ti-arrow-left" style={{fontSize:14}}/>Kembali
-            </button>
-            <div className="sec" style={{textAlign:'center',marginBottom:12}}>Arahkan ke kod QR program</div>
-            <QRScanner onScan={handleScan} onCancel={()=>setScreen('home')}/>
-          </div>
-        )}
-
-        {screen==='attend'&&prog&&(
-          <AttendanceForm prog={prog} staff={staff} att={att} svAt={svAt}
-            onBack={()=>{setScreen('home');setProg(null);}}
-            onNext={true}/>
-        )}
-
-        {screen==='invalid'&&(
-          <div style={{padding:'50px 24px',textAlign:'center',animation:'fadeUp .25s ease'}}>
-            <div style={{width:80,height:80,borderRadius:'50%',background:'#FEF2F2',color:'#B91C1C',display:'flex',alignItems:'center',justifyContent:'center',fontSize:40,margin:'0 auto 16px'}}>
-              <i className="ti ti-qrcode-off"/>
-            </div>
-            <div style={{fontSize:20,fontWeight:700,marginBottom:8}}>Kod QR Tidak Dikenali</div>
-            <div style={{fontSize:14,color:'var(--muted)',marginBottom:28,lineHeight:1.6}}>QR ini bukan untuk sistem kehadiran ini. Sila dapatkan kod QR yang betul daripada pentadbir.</div>
-            <button className="btn btn-p" onClick={()=>setScreen('home')}>Cuba Lagi</button>
-          </div>
-        )}
-      </div>
+          ))}
+        </div>
+      </div>}
+      {screen==='scanning'&&<div style={{padding:'20px',animation:'fadeUp .2s ease'}}>
+        <button className="btn btn-g btn-sm" onClick={()=>setScreen('home')} style={{marginBottom:14}}>
+          <i className="ti ti-arrow-left" style={{fontSize:14}}/>Kembali
+        </button>
+        <div className="sec" style={{textAlign:'center',marginBottom:12}}>Arahkan ke kod QR program</div>
+        <QRScanner onScan={handleScan} onCancel={()=>setScreen('home')}/>
+      </div>}
+      {screen==='attend'&&prog&&<AttendanceForm prog={prog} onBack={()=>{setScreen('home');setProg(null);}} onNext={true}/>}
+      {screen==='invalid'&&<div style={{padding:'50px 24px',textAlign:'center',animation:'fadeUp .25s ease'}}>
+        <div style={{width:80,height:80,borderRadius:'50%',background:'#FEF2F2',color:'#B91C1C',display:'flex',alignItems:'center',justifyContent:'center',fontSize:40,margin:'0 auto 16px'}}>
+          <i className="ti ti-qrcode-off"/>
+        </div>
+        <div style={{fontSize:20,fontWeight:700,marginBottom:8}}>Kod QR Tidak Dikenali</div>
+        <div style={{fontSize:14,color:'var(--muted)',marginBottom:28,lineHeight:1.6}}>Sila dapatkan kod QR yang betul daripada pentadbir.</div>
+        <button className="btn btn-p" onClick={()=>setScreen('home')}>Cuba Lagi</button>
+      </div>}
     </div>
-  );
+  </div>;
 }
 
 /* ══════════════════════════════
-   ADMIN PANEL — desktop first
+   ADMIN PANEL
 ══════════════════════════════ */
-function AdminPanel({staff,progs,att,svSt,svPr,svAt,pin,setPin,onBack}){
+function AdminPanel({pin,setPin,onBack}){
   const [tab,setTab]=useState('utama');
   const [sub,setSub]=useState(null);
   const [selP,setSelP]=useState(null);
-
-  /* Kakitangan form */
+  const [staff,setStaff]=useState([]);
+  const [progs,setProgs]=useState([]);
+  const [attMap,setAttMap]=useState({});
+  const [loading,setLoading]=useState(true);
+  const [dbErr,setDbErr]=useState('');
+  const [qrSel,setQrSel]=useState(null);
+  const [qrDataUrl,setQrDataUrl]=useState('');
   const [sfNama,setSfNama]=useState('');
   const [sfKP,setSfKP]=useState('');
   const [sfBah,setSfBah]=useState('0');
-  const [sErr,setSErr]=useState('');
-  const [sOk,setSOk]=useState('');
+  const [sErr,setSErr]=useState('');const [sOk,setSOk]=useState('');
+  const [pfNama,setPfNama]=useState('');const [pfTempat,setPfTempat]=useState('');
+  const [pfTarikh,setPfTarikh]=useState('');const [pfHari,setPfHari]=useState('1');
+  const [pErr,setPErr]=useState('');const [pOk,setPOk]=useState('');
+  const [repP,setRepP]=useState('');const [repData,setRepData]=useState([]);const [repLoading,setRepLoading]=useState(false);
+  const [sbUrl,setSbUrl]=useState(ls.get(SK.SB_URL)||'');
+  const [sbKey,setSbKey]=useState(ls.get(SK.SB_KEY)||'');
+  const [sbOk,setSbOk]=useState('');const [sbErr2,setSbErr2]=useState('');
+  const [nPin,setNPin]=useState('');const [pmErr,setPmErr]=useState('');const [pmOk,setPmOk]=useState('');
 
-  /* Program form */
-  const [pfNama,setPfNama]=useState('');
-  const [pfTempat,setPfTempat]=useState('');
-  const [pfTarikh,setPfTarikh]=useState('');
-  const [pfHari,setPfHari]=useState('1');
-  const [pErr,setPErr]=useState('');
-  const [pOk,setPOk]=useState('');
+  const loadData=useCallback(async()=>{
+    setLoading(true);setDbErr('');
+    try{
+      const [s,p]=await Promise.all([DB.getStaff(),DB.getProgs()]);
+      setStaff(s||[]);setProgs(p||[]);
+      const counts={};
+      await Promise.all((p||[]).map(async pg=>{
+        try{const att=await DB.getAtt(pg.id);counts[pg.id]=(att||[]).length;}catch{counts[pg.id]=0;}
+      }));
+      setAttMap(counts);
+    }catch(e){setDbErr(e.message);}
+    setLoading(false);
+  },[]);
 
-  /* Laporan */
-  const [repP,setRepP]=useState('');
-
-  /* QR tab */
-  const [qrSel,setQrSel]=useState(null);
-  const [qrLoading,setQrLoading]=useState(false);
-  const qrRef=useRef(null); // points to the rendered QRGen canvas wrapper
-
-  /* PIN settings */
-  const [nPin,setNPin]=useState('');
-  const [pmErr,setPmErr]=useState('');
-  const [pmOk,setPmOk]=useState('');
+  useEffect(()=>{loadData();},[]);
 
   const goTab=t=>{
-    setTab(t);setSub(null);setSelP(null);
-    setSErr('');setPErr('');setSOk('');setPOk('');
-    if(t==='qrkod'&&!qrSel){
-      const s=[...progs].sort((a,b)=>b.cAt-a.cAt);
-      if(s[0])setQrSel(s[0]);
-    }
+    setTab(t);setSub(null);setSelP(null);setSErr('');setPErr('');setSOk('');setPOk('');
+    if(t==='qrkod'&&progs.length>0&&!qrSel){setQrSel(progs[0]);setQrDataUrl('');}
   };
 
   const addSt=async()=>{
     if(!sfNama.trim()||!sfKP.trim())return setSErr('Sila isi semua ruangan');
-    if(sfKP.length!==12)return setSErr('No KP mestilah 12 digit (tanpa sempang)');
-    if(staff.find(s=>s.noKP===sfKP))return setSErr('No KP ini sudah didaftarkan dalam sistem');
-    await svSt([...staff,{id:gId(),nama:sfNama.trim(),noKP:sfKP,bah:+sfBah}]);
-    setSfNama('');setSfKP('');setSfBah('0');setSErr('');
-    setSOk('Kakitangan berjaya didaftarkan');setTimeout(()=>setSOk(''),3000);
+    if(sfKP.length!==12)return setSErr('No KP mestilah 12 digit');
+    setSErr('');
+    try{
+      await DB.addStaff({nama:sfNama.trim(),no_kp:sfKP,bahagian:+sfBah});
+      setSfNama('');setSfKP('');setSfBah('0');
+      setSOk('Kakitangan berjaya ditambah ke pangkalan data');setTimeout(()=>setSOk(''),4000);
+      const s=await DB.getStaff();setStaff(s||[]);
+    }catch(e){setSErr('Ralat: '+e.message);}
   };
-
+  const delSt=async id=>{try{await DB.delStaff(id);setStaff(s=>s.filter(x=>x.id!==id));}catch(e){alert('Gagal: '+e.message);}};
   const addPr=async()=>{
     if(!pfNama.trim()||!pfTempat.trim()||!pfTarikh)return setPErr('Sila lengkapkan semua ruangan');
-    await svPr([...progs,{id:gId(),nama:pfNama.trim(),tempat:pfTempat.trim(),tarikh:pfTarikh,hari:+pfHari,cAt:Date.now()}]);
-    setPfNama('');setPfTempat('');setPfTarikh('');setPfHari('1');setPErr('');
-    setPOk('Program berjaya ditambah');setTimeout(()=>setPOk(''),3000);
+    setPErr('');
+    try{
+      await DB.addProg({id:gId(),nama:pfNama.trim(),tempat:pfTempat.trim(),tarikh:pfTarikh,hari:+pfHari});
+      setPfNama('');setPfTempat('');setPfTarikh('');setPfHari('1');
+      setPOk('Program berjaya ditambah');setTimeout(()=>setPOk(''),3000);
+      const p=await DB.getProgs();setProgs(p||[]);
+    }catch(e){setPErr('Ralat: '+e.message);}
   };
-
-  const delSt=async id=>svSt(staff.filter(s=>s.id!==id));
   const delPr=async id=>{
-    await svPr(progs.filter(p=>p.id!==id));
-    await svAt(att.filter(a=>a.pId!==id));
-    if(qrSel?.id===id)setQrSel(null);
+    try{await DB.delProg(id);setProgs(p=>p.filter(x=>x.id!==id));if(qrSel?.id===id){setQrSel(null);setQrDataUrl('');}}
+    catch(e){alert('Gagal: '+e.message);}
   };
+  const saveSb=()=>{ls.set(SK.SB_URL,sbUrl.trim());ls.set(SK.SB_KEY,sbKey.trim());setSbOk('Disimpan. Memuat semula...');setSbErr2('');setTimeout(()=>{setSbOk('');loadData();},1500);};
+  const testSb=async()=>{setSbErr2('');setSbOk('');try{await DB.getStaff();setSbOk('Sambungan berjaya!');setTimeout(()=>setSbOk(''),3000);}catch(e){setSbErr2('Gagal: '+e.message);}};
+  const savePin=async()=>{if(nPin.length<4)return setPmErr('Min 4 digit');await setPin(nPin);setNPin('');setPmErr('');setPmOk('PIN dikemas kini');setTimeout(()=>setPmOk(''),3000);};
 
-  const savePin=async()=>{
-    if(nPin.length<4)return setPmErr('PIN mestilah sekurang-kurangnya 4 digit');
-    await setPin(nPin);setNPin('');setPmErr('');
-    setPmOk('PIN berjaya dikemas kini');setTimeout(()=>setPmOk(''),3000);
-  };
+  const Loader=()=><div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:'48px',gap:10}}>
+    <div style={{width:22,height:22,border:`3px solid ${BGL}`,borderTopColor:BG,borderRadius:'50%',animation:'spin .7s linear infinite'}}/>
+    <span style={{color:'var(--muted)',fontSize:14}}>Memuat data dari Supabase...</span>
+  </div>;
+  const Empty=({icon,msg})=><div style={{textAlign:'center',padding:'48px 24px',color:'var(--dim)'}}>
+    <i className={`ti ti-${icon}`} style={{fontSize:44,display:'block',marginBottom:12,color:'var(--border)'}}/>
+    <div style={{fontSize:14,color:'var(--muted)'}}>{msg}</div>
+  </div>;
 
-  /* Empty state component */
-  const Empty=({icon,msg})=>(
-    <div style={{textAlign:'center',padding:'48px 24px',color:'var(--dim)'}}>
-      <i className={`ti ti-${icon}`} style={{fontSize:44,display:'block',marginBottom:12,color:'var(--border)'}}/>
-      <div style={{fontSize:14,color:'var(--muted)'}}>{msg}</div>
-    </div>
-  );
-
-  /* ── Tab: UTAMA ── */
   const tabUtama=()=>{
-    const tod=new Date().toISOString().slice(0,10);
-    const rec=[...progs].sort((a,b)=>b.cAt-a.cAt).slice(0,8);
-    return(
-      <div style={{animation:'fadeUp .25s ease'}}>
-        <div style={{marginBottom:20}}>
-          <div style={{fontSize:20,fontWeight:700,marginBottom:3}}>Papan Pemuka</div>
-          <div style={{fontSize:13,color:'var(--muted)'}}>{new Date().toLocaleDateString('ms-MY',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div>
-        </div>
-
-        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,marginBottom:24}} className="stat-grid">
-          <StatCard icon="users" label="Kakitangan" value={staff.length} color={BG}/>
-          <StatCard icon="calendar-event" label="Program" value={progs.length} color="#5B1A6B"/>
-          <StatCard icon="clipboard-check" label="Rekod Hadir" value={att.length} color="#0C5A3D"/>
-          <StatCard icon="calendar-stats" label="Program Hari Ini" value={progs.filter(p=>p.tarikh===tod).length} color="#0C3070"/>
-        </div>
-
-        {rec.length>0?<>
-          <div className="sec">Program Terkini</div>
-          <div className="card-sh" style={{overflow:'hidden'}}>
-            <table className="tbl tbl-r">
-              <thead><tr>
-                <th style={{width:'35%'}}>Program</th>
-                <th style={{width:'20%'}}>Tempat</th>
-                <th style={{width:'25%'}}>Tarikh</th>
-                <th style={{width:80}}>Hadir</th>
-              </tr></thead>
-              <tbody>{rec.map(p=>{const cnt=att.filter(a=>a.pId===p.id).length;return(
-                <tr key={p.id} onClick={()=>{setSelP(p);setSub('rep');setTab('program');}}>
-                  <td><div style={{fontWeight:600,color:'var(--text)'}}>{p.nama}</div></td>
-                  <td style={{color:'var(--muted)'}}>{p.tempat}</td>
-                  <td style={{color:'var(--muted)'}}>{HR[p.hari]}, {fds(p.tarikh)}</td>
-                  <td><span style={{background:BGL,color:BGD,padding:'3px 10px',borderRadius:99,fontWeight:700,fontSize:12,whiteSpace:'nowrap'}}>{cnt} orang</span></td>
-                </tr>
-              );})}
-            </tbody></table>
-          </div>
-        </>:<Empty icon="calendar-off" msg="Tiada program. Tambah program baharu dalam tab Program."/>}
+    if(loading)return <Loader/>;
+    if(dbErr)return <div className="alert alert-err" style={{margin:'0 0 16px'}}><i className="ti ti-alert-circle" style={{fontSize:16,flexShrink:0}}/>
+      <div>Gagal sambung ke Supabase: <strong>{dbErr}</strong><br/><span style={{fontSize:12}}>Pergi ke Tetapan untuk konfigurasi Supabase.</span></div>
+    </div>;
+    const today=new Date().toISOString().slice(0,10);
+    const total=Object.values(attMap).reduce((s,v)=>s+v,0);
+    return <div style={{animation:'fadeUp .25s ease'}}>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,marginBottom:22}}>
+        <StatCard icon="users" label="Kakitangan" value={staff.length} color={BG}/>
+        <StatCard icon="calendar-event" label="Program" value={progs.length} color="#5B1A6B"/>
+        <StatCard icon="clipboard-check" label="Rekod Hadir" value={total} color="#0C5A3D"/>
+        <StatCard icon="calendar-stats" label="Hari Ini" value={progs.filter(p=>p.tarikh===today).length} color="#0C3070"/>
       </div>
-    );
+      {progs.length>0?<>
+        <div className="sec">Program Terkini</div>
+        <div className="card-sh" style={{overflow:'hidden'}}>
+          <table className="tbl"><thead><tr>
+            <th style={{width:'35%'}}>Program</th><th style={{width:'20%'}}>Tempat</th>
+            <th style={{width:'25%'}}>Tarikh</th><th style={{textAlign:'right'}}>Hadir</th>
+          </tr></thead>
+          <tbody>{[...progs].slice(0,8).map(p=>(
+            <tr key={p.id} onClick={()=>{setSelP(p);setSub('rep');setTab('program');}}>
+              <td><div style={{fontWeight:600}}>{p.nama}</div></td>
+              <td style={{color:'var(--muted)'}}>{p.tempat}</td>
+              <td style={{color:'var(--muted)'}}>{HR[p.hari]}, {fds(p.tarikh)}</td>
+              <td style={{textAlign:'right'}}><span style={{background:BGL,color:BGD,padding:'3px 10px',borderRadius:99,fontWeight:700,fontSize:12}}>{attMap[p.id]||0} org</span></td>
+            </tr>
+          ))}</tbody>
+          </table>
+        </div>
+      </>:<Empty icon="calendar-off" msg="Tiada program. Tambah dalam tab Program."/>}
+    </div>;
   };
 
-  /* ── Tab: KAKITANGAN ── */
-  const tabKakitangan=()=>(
-    <div style={{animation:'fadeUp .25s ease',display:'grid',gridTemplateColumns:'300px 1fr',gap:20,alignItems:'start'}} className="admin-grid">
-      {/* Form */}
-      <div className="card" style={{padding:20,position:'sticky',top:0}}>
-        <div style={{fontSize:14,fontWeight:700,marginBottom:4,color:'var(--text)'}}>Tambah Kakitangan</div>
-        <div style={{fontSize:12,color:'var(--muted)',marginBottom:16}}>Daftarkan kakitangan baru ke dalam sistem</div>
+  const tabKakitangan=()=>{
+    if(loading)return <Loader/>;
+    return <div style={{animation:'fadeUp .25s ease',display:'grid',gridTemplateColumns:'300px 1fr',gap:20,alignItems:'start'}}>
+      <div className="card" style={{padding:20}}>
+        <div style={{fontSize:14,fontWeight:700,marginBottom:3}}>Tambah Kakitangan</div>
+        <div style={{fontSize:12,color:'var(--muted)',marginBottom:16}}>Kakitangan yang tidak dijumpai semasa daftar hadir boleh ditambah di sini</div>
         <div style={{display:'flex',flexDirection:'column',gap:12}}>
-          <Field label="Nama Penuh">
-            <input placeholder="Cth: Ahmad Bin Hassan" value={sfNama} onChange={e=>setSfNama(e.target.value)}/>
-          </Field>
-          <Field label="No. Kad Pengenalan">
-            <input placeholder="12 digit tanpa sempang" value={sfKP} maxLength={12} onChange={e=>setSfKP(e.target.value.replace(/\D/g,''))}/>
-          </Field>
-          <Field label="Bahagian">
-            <select value={sfBah} onChange={e=>setSfBah(e.target.value)}>
-              {BAH.map((b,i)=><option key={i} value={i}>{b}</option>)}
-            </select>
-          </Field>
+          <Field label="Nama Penuh"><input placeholder="Cth: Ahmad Bin Hassan" value={sfNama} onChange={e=>setSfNama(e.target.value)}/></Field>
+          <Field label="No. Kad Pengenalan"><input placeholder="12 digit tanpa sempang" value={sfKP} maxLength={12} onChange={e=>setSfKP(e.target.value.replace(/\D/g,''))}/></Field>
+          <Field label="Bahagian"><select value={sfBah} onChange={e=>setSfBah(e.target.value)}>{BAH.map((b,i)=><option key={i} value={i}>{b}</option>)}</select></Field>
           {sErr&&<div className="alert alert-err"><i className="ti ti-alert-circle" style={{fontSize:14,flexShrink:0}}/>{sErr}</div>}
           {sOk&&<div className="alert alert-ok"><i className="ti ti-check" style={{fontSize:14,flexShrink:0}}/>{sOk}</div>}
-          <button className="btn btn-p btn-block" onClick={addSt}>
-            <i className="ti ti-user-plus" style={{fontSize:16}}/>Daftar Kakitangan
-          </button>
+          <button className="btn btn-p btn-block" onClick={addSt}><i className="ti ti-user-plus" style={{fontSize:16}}/>Tambah ke Pangkalan Data</button>
         </div>
       </div>
-
-      {/* List */}
       <div>
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
-          <div className="sec" style={{marginBottom:0}}>{staff.length} kakitangan berdaftar</div>
-        </div>
-        {staff.length===0?<div className="card-sh"><Empty icon="users" msg="Belum ada kakitangan berdaftar"/></div>
+        <div className="sec">{staff.length} kakitangan dalam pangkalan data Supabase</div>
+        {staff.length===0?<div className="card-sh"><Empty icon="users" msg="Belum ada kakitangan dalam pangkalan data."/></div>
         :<div className="card-sh" style={{overflow:'hidden'}}>
-          <table className="tbl">
-            <thead><tr>
-              <th style={{width:'42%'}}>Nama</th>
-              <th style={{width:'30%'}}>No. KP</th>
-              <th style={{width:'20%'}}>Bahagian</th>
-              <th style={{width:44,textAlign:'right'}}></th>
-            </tr></thead>
-            <tbody>{staff.map((s,i)=>(
-              <tr key={s.id} style={{cursor:'default'}}>
-                <td>
-                  <div style={{display:'flex',alignItems:'center',gap:10}}>
-                    <div style={{width:30,height:30,borderRadius:8,background:BGL,color:BGD,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,flexShrink:0}}>
-                      {s.nama.trim().split(' ').slice(0,2).map(n=>n[0]||'').join('').toUpperCase()||'?'}
-                    </div>
-                    <span style={{fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.nama}</span>
-                  </div>
-                </td>
-                <td style={{fontFamily:'monospace',fontSize:12,color:'var(--muted)'}}>{s.noKP}</td>
-                <td><Bdg l={BAH[s.bah]} i={s.bah}/></td>
-                <td style={{textAlign:'right'}}>
-                  <button className="btn-icon" onClick={()=>delSt(s.id)} title="Padam">
-                    <i className="ti ti-trash" style={{fontSize:15}}/>
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody></table>
+          <table className="tbl"><thead><tr>
+            <th style={{width:'42%'}}>Nama</th><th style={{width:'28%'}}>No. KP</th><th style={{width:'22%'}}>Bahagian</th><th style={{width:44}}></th>
+          </tr></thead>
+          <tbody>{staff.map((s,i)=>(
+            <tr key={s.id} style={{cursor:'default'}}>
+              <td><div style={{display:'flex',alignItems:'center',gap:9}}>
+                <div style={{width:30,height:30,borderRadius:8,background:BGL,color:BGD,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,flexShrink:0}}>
+                  {s.nama.trim().split(' ').slice(0,2).map(n=>n[0]||'').join('').toUpperCase()||'?'}
+                </div>
+                <span style={{fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.nama}</span>
+              </div></td>
+              <td style={{fontFamily:'monospace',fontSize:12,color:'var(--muted)'}}>{s.no_kp}</td>
+              <td><Bdg l={BAH[s.bahagian]} i={s.bahagian}/></td>
+              <td style={{textAlign:'right'}}><button className="btn-icon" onClick={()=>delSt(s.id)}><i className="ti ti-trash" style={{fontSize:14}}/></button></td>
+            </tr>
+          ))}</tbody>
+          </table>
         </div>}
       </div>
-    </div>
-  );
-
-  /* ── Program report sub-view ── */
-  const tabProgRep=()=>{
-    if(!selP)return null;
-    const recs=[...att.filter(a=>a.pId===selP.id)].sort((a,b)=>a.masa-b.masa);
-    return(
-      <div style={{animation:'fadeUp .2s ease'}}>
-        <button className="btn btn-g btn-sm" onClick={()=>setSub(null)} style={{marginBottom:16}}>
-          <i className="ti ti-arrow-left" style={{fontSize:14}}/>Kembali
-        </button>
-        <div style={{display:'grid',gridTemplateColumns:'200px 1fr',gap:16,alignItems:'start'}}>
-          <div>
-            <div style={{fontSize:16,fontWeight:700,marginBottom:3}}>{selP.nama}</div>
-            <div style={{fontSize:12,color:'var(--muted)',marginBottom:1,display:'flex',alignItems:'center',gap:5}}><i className="ti ti-map-pin" style={{fontSize:11}}/>{selP.tempat}</div>
-            <div style={{fontSize:12,color:'var(--muted)',marginBottom:16,display:'flex',alignItems:'center',gap:5}}><i className="ti ti-calendar" style={{fontSize:11}}/>{HR[selP.hari]}, {fd(selP.tarikh)}</div>
-            {[{l:'Jumlah Hadir',v:recs.length,bg:BGL,col:BG,tc:BGD},...BAH.map((b,i)=>({l:b,v:recs.filter(r=>r.bah===i).length,bg:'var(--page)',col:'var(--text)',tc:'var(--muted)'}))].map((x,i)=>(
-              <div key={i} className="card" style={{padding:'10px 14px',marginBottom:8,background:x.bg,borderColor:i===0?'rgba(139,26,46,.2)':'var(--border)'}}>
-                <div style={{fontSize:22,fontWeight:700,color:x.col}}>{x.v}</div>
-                <div style={{fontSize:11,color:x.tc,fontWeight:500}}>{x.l}</div>
-              </div>
-            ))}
-            <button className="btn btn-g btn-block btn-sm" onClick={()=>{setQrSel(selP);goTab('qrkod');}}>
-              <i className="ti ti-qrcode" style={{fontSize:14}}/>Jana Kod QR
-            </button>
-          </div>
-          {recs.length===0?<div className="card-sh"><Empty icon="users" msg="Tiada rekod kehadiran"/></div>
-          :<div className="card-sh" style={{overflow:'hidden'}}>
-            <table className="tbl">
-              <thead><tr>
-                <th style={{width:32}}>#</th>
-                <th>Nama</th>
-                <th style={{width:90}}>Bahagian</th>
-                <th style={{width:60,textAlign:'right'}}>Masa</th>
-              </tr></thead>
-              <tbody>{recs.map((r,i)=>(
-                <tr key={r.id} style={{cursor:'default'}}>
-                  <td style={{color:'var(--dim)',fontSize:11}}>{i+1}</td>
-                  <td>
-                    <div style={{fontWeight:600}}>{r.nama}</div>
-                    <div style={{fontSize:10,color:'var(--dim)',fontFamily:'monospace'}}>{r.noKP}</div>
-                  </td>
-                  <td>{r.bah>=0?<Bdg l={BAH[r.bah]} i={r.bah}/>:<span style={{fontSize:11,color:'var(--dim)'}}>—</span>}</td>
-                  <td style={{textAlign:'right',color:'var(--muted)',fontSize:12}}>{ft(r.masa)}</td>
-                </tr>
-              ))}
-            </tbody></table>
-          </div>}
-        </div>
-      </div>
-    );
+    </div>;
   };
 
-  /* ── Tab: PROGRAM ── */
+  const tabProgRep=()=>{
+    const [recs,setRecs]=useState([]);const [rl,setRl]=useState(true);
+    useEffect(()=>{if(selP)DB.getAtt(selP.id).then(r=>{setRecs(r||[]);setRl(false);}).catch(()=>setRl(false));},[]);
+    if(!selP)return null;
+    return <div style={{animation:'fadeUp .2s ease'}}>
+      <button className="btn btn-g btn-sm" onClick={()=>setSub(null)} style={{marginBottom:16}}><i className="ti ti-arrow-left" style={{fontSize:14}}/>Kembali</button>
+      <div style={{display:'grid',gridTemplateColumns:'200px 1fr',gap:16,alignItems:'start'}}>
+        <div>
+          <div style={{fontSize:16,fontWeight:700,marginBottom:3}}>{selP.nama}</div>
+          <div style={{fontSize:12,color:'var(--muted)',marginBottom:14}}>{selP.tempat} · {HR[selP.hari]}, {fd(selP.tarikh)}</div>
+          {[{l:'Jumlah Hadir',v:recs.length,bg:BGL,col:BG,tc:BGD},...BAH.map((b,i)=>({l:b,v:recs.filter(r=>r.bahagian===i||r.bahagian===String(i)).length,bg:'var(--page)',col:'var(--text)',tc:'var(--muted)'}))].map((x,i)=>(
+            <div key={i} className="card" style={{padding:'10px 14px',marginBottom:8,background:x.bg,borderColor:i===0?'rgba(139,26,46,.2)':'var(--border)'}}>
+              <div style={{fontSize:22,fontWeight:700,color:x.col}}>{x.v}</div>
+              <div style={{fontSize:11,color:x.tc,fontWeight:500}}>{x.l}</div>
+            </div>
+          ))}
+          <button className="btn btn-g btn-block btn-sm" onClick={()=>{setQrSel(selP);setQrDataUrl('');goTab('qrkod');}}>
+            <i className="ti ti-qrcode" style={{fontSize:14}}/>Jana Kod QR
+          </button>
+        </div>
+        {rl?<Loader/>:recs.length===0?<div className="card-sh"><Empty icon="users" msg="Tiada rekod kehadiran"/></div>
+        :<div className="card-sh" style={{overflow:'hidden'}}>
+          <table className="tbl"><thead><tr>
+            <th style={{width:32}}>#</th><th>Nama</th><th style={{width:90}}>Bahagian</th><th style={{width:60,textAlign:'right'}}>Masa</th>
+          </tr></thead>
+          <tbody>{recs.map((r,i)=>(
+            <tr key={r.id} style={{cursor:'default'}}>
+              <td style={{color:'var(--dim)',fontSize:11}}>{i+1}</td>
+              <td>
+                <div style={{fontWeight:600}}>{r.nama}</div>
+                <div style={{fontSize:10,color:'var(--dim)',fontFamily:'monospace'}}>{r.no_kp}</div>
+                {!r.verified&&<span style={{fontSize:9,color:'var(--warn)',background:'var(--warn-l)',padding:'1px 5px',borderRadius:99}}>tidak disahkan</span>}
+              </td>
+              <td>{r.bahagian!=null?<Bdg l={BAH[r.bahagian]} i={r.bahagian}/>:<span style={{fontSize:11,color:'var(--dim)'}}>—</span>}</td>
+              <td style={{textAlign:'right',color:'var(--muted)',fontSize:12}}>{ft(r.masa)}</td>
+            </tr>
+          ))}</tbody>
+          </table>
+        </div>}
+      </div>
+    </div>;
+  };
+
   const tabProgram=()=>{
     if(sub==='rep'&&selP)return tabProgRep();
-    const sorted=[...progs].sort((a,b)=>b.cAt-a.cAt);
-    return(
-      <div style={{animation:'fadeUp .25s ease',display:'grid',gridTemplateColumns:'300px 1fr',gap:20,alignItems:'start'}} className="admin-grid">
-        {/* Form */}
-        <div className="card" style={{padding:20,position:'sticky',top:0}}>
-          <div style={{fontSize:14,fontWeight:700,marginBottom:4}}>Tambah Program</div>
-          <div style={{fontSize:12,color:'var(--muted)',marginBottom:16}}>Cipta program baharu untuk rekod kehadiran</div>
-          <div style={{display:'flex',flexDirection:'column',gap:12}}>
-            <Field label="Nama Program">
-              <input placeholder="Cth: Kursus Pemantapan PdP" value={pfNama} onChange={e=>setPfNama(e.target.value)}/>
-            </Field>
-            <Field label="Tempat">
-              <input placeholder="Cth: Dewan Sekolah" value={pfTempat} onChange={e=>setPfTempat(e.target.value)}/>
-            </Field>
-            <Field label="Tarikh">
-              <input type="date" value={pfTarikh} onChange={e=>setPfTarikh(e.target.value)}/>
-            </Field>
-            <Field label="Hari">
-              <select value={pfHari} onChange={e=>setPfHari(e.target.value)}>
-                {HR.map((h,i)=><option key={i} value={i}>{h}</option>)}
-              </select>
-            </Field>
-            {pErr&&<div className="alert alert-err"><i className="ti ti-alert-circle" style={{fontSize:14,flexShrink:0}}/>{pErr}</div>}
-            {pOk&&<div className="alert alert-ok"><i className="ti ti-check" style={{fontSize:14,flexShrink:0}}/>{pOk}</div>}
-            <button className="btn btn-p btn-block" onClick={addPr}>
-              <i className="ti ti-plus" style={{fontSize:16}}/>Tambah Program
-            </button>
-          </div>
-        </div>
-        {/* List */}
-        <div>
-          <div className="sec">{progs.length} program</div>
-          {sorted.length===0?<div className="card-sh"><Empty icon="calendar" msg="Belum ada program. Tambah program baharu."/></div>
-          :<div className="card-sh" style={{overflow:'hidden'}}>
-            <table className="tbl">
-              <thead><tr>
-                <th style={{width:'30%'}}>Program</th>
-                <th style={{width:'20%'}}>Tempat</th>
-                <th style={{width:'22%'}}>Tarikh</th>
-                <th style={{width:72,textAlign:'center'}}>Hadir</th>
-                <th style={{width:110}}></th>
-              </tr></thead>
-              <tbody>{sorted.map(p=>{const cnt=att.filter(a=>a.pId===p.id).length;return(
-                <tr key={p.id}>
-                  <td><div style={{fontWeight:600}}>{p.nama}</div></td>
-                  <td style={{color:'var(--muted)'}}>{p.tempat}</td>
-                  <td style={{color:'var(--muted)',fontSize:12}}>{HR[p.hari]}, {fds(p.tarikh)}</td>
-                  <td style={{textAlign:'center'}}><span style={{background:BGL,color:BGD,padding:'3px 9px',borderRadius:99,fontWeight:700,fontSize:12}}>{cnt}</span></td>
-                  <td>
-                    <div style={{display:'flex',gap:4,justifyContent:'flex-end'}}>
-                      <button className="btn btn-g btn-sm" onClick={()=>{setQrSel(p);goTab('qrkod');}}>
-                        <i className="ti ti-qrcode" style={{fontSize:13}}/>QR
-                      </button>
-                      <button className="btn-icon" onClick={()=>{setSelP(p);setSub('rep');}} title="Senarai">
-                        <i className="ti ti-list" style={{fontSize:15}}/>
-                      </button>
-                      <button className="btn-icon" onClick={()=>delPr(p.id)} title="Padam">
-                        <i className="ti ti-trash" style={{fontSize:15}}/>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );})}
-            </tbody></table>
-          </div>}
+    if(loading)return <Loader/>;
+    const sorted=[...progs];
+    return <div style={{animation:'fadeUp .25s ease',display:'grid',gridTemplateColumns:'300px 1fr',gap:20,alignItems:'start'}}>
+      <div className="card" style={{padding:20}}>
+        <div style={{fontSize:14,fontWeight:700,marginBottom:3}}>Tambah Program</div>
+        <div style={{fontSize:12,color:'var(--muted)',marginBottom:16}}>Cipta program baharu untuk rekod kehadiran</div>
+        <div style={{display:'flex',flexDirection:'column',gap:12}}>
+          <Field label="Nama Program"><input placeholder="Cth: Kursus Pemantapan PdP" value={pfNama} onChange={e=>setPfNama(e.target.value)}/></Field>
+          <Field label="Tempat"><input placeholder="Cth: Dewan Sekolah" value={pfTempat} onChange={e=>setPfTempat(e.target.value)}/></Field>
+          <Field label="Tarikh"><input type="date" value={pfTarikh} onChange={e=>setPfTarikh(e.target.value)}/></Field>
+          <Field label="Hari"><select value={pfHari} onChange={e=>setPfHari(e.target.value)}>{HR.map((h,i)=><option key={i} value={i}>{h}</option>)}</select></Field>
+          {pErr&&<div className="alert alert-err"><i className="ti ti-alert-circle" style={{fontSize:14,flexShrink:0}}/>{pErr}</div>}
+          {pOk&&<div className="alert alert-ok"><i className="ti ti-check" style={{fontSize:14,flexShrink:0}}/>{pOk}</div>}
+          <button className="btn btn-p btn-block" onClick={addPr}><i className="ti ti-plus" style={{fontSize:16}}/>Tambah Program</button>
         </div>
       </div>
-    );
+      <div>
+        <div className="sec">{progs.length} program dalam Supabase</div>
+        {sorted.length===0?<div className="card-sh"><Empty icon="calendar" msg="Belum ada program."/></div>
+        :<div className="card-sh" style={{overflow:'hidden'}}>
+          <table className="tbl"><thead><tr>
+            <th style={{width:'28%'}}>Program</th><th style={{width:'20%'}}>Tempat</th>
+            <th style={{width:'22%'}}>Tarikh</th><th style={{width:70,textAlign:'center'}}>Hadir</th><th style={{width:100}}></th>
+          </tr></thead>
+          <tbody>{sorted.map(p=>(
+            <tr key={p.id}>
+              <td><div style={{fontWeight:600}}>{p.nama}</div></td>
+              <td style={{color:'var(--muted)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.tempat}</td>
+              <td style={{color:'var(--muted)',fontSize:12}}>{HR[p.hari]}, {fds(p.tarikh)}</td>
+              <td style={{textAlign:'center'}}><span style={{background:BGL,color:BGD,padding:'3px 9px',borderRadius:99,fontWeight:700,fontSize:12}}>{attMap[p.id]||0}</span></td>
+              <td><div style={{display:'flex',gap:4,justifyContent:'flex-end'}}>
+                <button className="btn btn-g btn-sm" onClick={()=>{setQrSel(p);setQrDataUrl('');goTab('qrkod');}}>
+                  <i className="ti ti-qrcode" style={{fontSize:13}}/>QR
+                </button>
+                <button className="btn-icon" onClick={()=>{setSelP(p);setSub('rep');}}><i className="ti ti-list" style={{fontSize:15}}/></button>
+                <button className="btn-icon" onClick={()=>delPr(p.id)}><i className="ti ti-trash" style={{fontSize:15}}/></button>
+              </div></td>
+            </tr>
+          ))}</tbody>
+          </table>
+        </div>}
+      </div>
+    </div>;
   };
 
-  /* ── Tab: JANA KOD QR ── */
   const tabQRKod=()=>{
-    const sorted=[...progs].sort((a,b)=>b.cAt-a.cAt);
+    const sorted=[...progs];
     const sel=qrSel||sorted[0]||null;
     const base=getBaseUrl();
     const qrUrl=sel?`${base}?p=${sel.id}&nm=${encodeURIComponent(sel.nama)}&tp=${encodeURIComponent(sel.tempat)}&dt=${sel.tarikh}&hr=${sel.hari}`:'';
-    const cnt=sel?att.filter(a=>a.pId===sel.id).length:0;
-
-    if(progs.length===0)return(
-      <div className="card-sh"><Empty icon="qrcode-off" msg="Tambah program dahulu sebelum menjana kod QR."/></div>
-    );
-
-    return(
-      <div style={{animation:'fadeUp .25s ease',display:'grid',gridTemplateColumns:'220px 1fr',gap:0,minHeight:480}}>
-        {/* Program list */}
-        <div style={{borderRight:'1px solid var(--border)',overflowY:'auto'}}>
-          <div style={{padding:'10px 14px 8px',borderBottom:'1px solid var(--border2)'}}>
-            <div className="sec" style={{marginBottom:0}}>Pilih Program</div>
-          </div>
-          {sorted.map(p=>{
-            const isSel=sel?.id===p.id;
-            const c2=att.filter(a=>a.pId===p.id).length;
-            return(
-              <div key={p.id} className={`pi${isSel?' on':''}`} onClick={()=>setQrSel(p)}>
-                <div style={{fontWeight:isSel?600:500,fontSize:13,color:isSel?BGD:'var(--text)',marginBottom:3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.nama}</div>
-                <div style={{fontSize:11,color:isSel?BGD:'var(--muted)'}}>{HR[p.hari]}, {fds(p.tarikh)}</div>
-                <div style={{fontSize:11,color:isSel?BG:'var(--dim)',marginTop:3,fontWeight:isSel?600:400}}>{c2} hadir</div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* QR display */}
-        {sel&&(
-          <div style={{padding:'0 0 28px 24px',display:'flex',flexDirection:'column',gap:16}}>
-            {/* Banner */}
-            <div style={{background:`linear-gradient(135deg,${BARK} 0%,#6b1020 100%)`,borderRadius:12,padding:'15px 18px',color:'#fff',position:'relative',overflow:'hidden'}}>
-              <div style={{position:'absolute',right:-20,top:-20,width:100,height:100,borderRadius:'50%',background:'rgba(255,255,255,.04)'}}/>
-              <div style={{fontSize:9,color:'rgba(255,255,255,.35)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:5}}>{SCHOOL}</div>
-              <div style={{fontSize:15,fontWeight:700,marginBottom:6,position:'relative'}}>{sel.nama}</div>
-              <div style={{display:'flex',flexWrap:'wrap',gap:12,fontSize:12,color:'rgba(255,255,255,.6)',position:'relative'}}>
-                <span><i className="ti ti-map-pin" style={{fontSize:11,marginRight:3}}/>{sel.tempat}</span>
-                <span><i className="ti ti-calendar" style={{fontSize:11,marginRight:3}}/>{HR[sel.hari]}, {fds(sel.tarikh)}</span>
-                <span style={{background:'rgba(255,255,255,.12)',borderRadius:99,padding:'2px 8px'}}>
-                  <i className="ti ti-users" style={{fontSize:11,marginRight:3}}/>{cnt} hadir
-                </span>
-              </div>
-            </div>
-
-            <div style={{display:'flex',gap:20,alignItems:'flex-start'}}>
-              {/* QR box */}
-              <div className="card-sh" style={{padding:20,textAlign:'center',flexShrink:0,background:'#fff'}}>
-                <QRGen data={qrUrl} size={200} wrapRef={qrRef}/>
-                <div style={{marginTop:12,padding:'8px 12px',background:'var(--page)',borderRadius:8,border:'1px solid var(--border2)'}}>
-                  <div style={{fontSize:9,color:'var(--dim)',marginBottom:3,fontWeight:600,textTransform:'uppercase',letterSpacing:'.05em'}}>ID Program</div>
-                  <code style={{fontSize:10,color:'var(--muted)',fontFamily:'monospace'}}>{sel.id}</code>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div style={{flex:1,minWidth:0}}>
-                {/* Info box */}
-                <div className="alert alert-info" style={{marginBottom:14,flexDirection:'column',gap:6}}>
-                  <div style={{fontWeight:600,display:'flex',alignItems:'center',gap:6}}><i className="ti ti-world" style={{fontSize:14}}/>Imbas dengan Mana-mana Apl</div>
-                  <div style={{fontSize:12,lineHeight:1.6}}>Kod QR ini mengandungi URL yang boleh diimbas terus oleh kamera telefon, WhatsApp, atau sebarang apl QR scanner — tanpa perlu buka apl ini dahulu.</div>
-                </div>
-
-                {/* Steps */}
-                <div className="card" style={{padding:'14px 16px',marginBottom:14}}>
-                  <div className="sec">Cara Penggunaan</div>
-                  {[['Paparkan atau cetak QR kod ini'],['Kakitangan imbas dengan kamera telefon'],['Laman web pendaftaran dibuka automatik'],['Masukkan No. KP untuk daftar hadir']].map(([t],i)=>(
-                    <div key={i} style={{display:'flex',gap:10,alignItems:'center',marginBottom:i<3?9:0,paddingBottom:i<3?9:0,borderBottom:i<3?'1px solid var(--border2)':'none'}}>
-                      <div style={{width:20,height:20,borderRadius:6,background:BG,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,flexShrink:0}}>{i+1}</div>
-                      <div style={{fontSize:12,color:'var(--text)'}}>{t}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Buttons */}
-                <div style={{display:'flex',flexDirection:'column',gap:9}}>
-                  <button className="btn btn-p btn-block" onClick={async()=>{
-                    setQrLoading(true);
-                    try{
-                      const canvas=await waitForQRCanvas(qrRef);
-                      downloadQR(sel,canvas);
-                    }catch(e){alert(e.message);}
-                    finally{setQrLoading(false);}
-                  }}>
-                    {qrLoading
-                      ?<span style={{width:16,height:16,border:'2px solid rgba(255,255,255,.4)',borderTopColor:'#fff',borderRadius:'50%',animation:'spin .7s linear infinite'}}/>
-                      :<i className="ti ti-download" style={{fontSize:16}}/>
-                    }
-                    {qrLoading?'Menjana QR...':'Muat Turun QR (PNG)'}
-                  </button>
-                  <button className="btn btn-o btn-block" onClick={async()=>{
-                    try{
-                      const canvas=await waitForQRCanvas(qrRef);
-                      printQR(sel,canvas);
-                    }catch(e){alert(e.message);}
-                  }}>
-                    <i className="ti ti-printer" style={{fontSize:16}}/>Cetak Kod QR
-                  </button>
-                  <button className="btn btn-g btn-block btn-sm" onClick={()=>{setSelP(sel);setSub('rep');setTab('program');}}>
-                    <i className="ti ti-clipboard-list" style={{fontSize:13}}/>Lihat Senarai Kehadiran
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+    if(progs.length===0)return <div className="card-sh"><Empty icon="qrcode-off" msg="Tambah program dahulu."/></div>;
+    return <div style={{animation:'fadeUp .25s ease',display:'grid',gridTemplateColumns:'215px 1fr',gap:0,minHeight:480}}>
+      <div style={{borderRight:'1px solid var(--border)',overflowY:'auto'}}>
+        <div style={{padding:'10px 14px 8px',borderBottom:'1px solid var(--border2)'}}><div className="sec">Pilih Program</div></div>
+        {sorted.map(p=>{
+          const isSel=sel?.id===p.id;
+          return <div key={p.id} className={`pi${isSel?' on':''}`} onClick={()=>{setQrSel(p);setQrDataUrl('');}}>
+            <div style={{fontWeight:isSel?600:500,fontSize:13,color:isSel?BGD:'var(--text)',marginBottom:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.nama}</div>
+            <div style={{fontSize:11,color:isSel?BGD:'var(--muted)'}}>{HR[p.hari]}, {fds(p.tarikh)}</div>
+            <div style={{fontSize:11,color:isSel?BG:'var(--dim)',marginTop:3,fontWeight:isSel?600:400}}>{attMap[p.id]||0} hadir</div>
+          </div>;
+        })}
       </div>
-    );
+      {sel&&<div style={{padding:'0 0 28px 22px',display:'flex',flexDirection:'column',gap:14}}>
+        <div style={{background:`linear-gradient(135deg,${BARK} 0%,#6b1020 100%)`,borderRadius:12,padding:'14px 18px',color:'#fff',position:'relative',overflow:'hidden'}}>
+          <div style={{position:'absolute',right:-20,top:-20,width:100,height:100,borderRadius:'50%',background:'rgba(255,255,255,.04)'}}/>
+          <div style={{fontSize:9,color:'rgba(255,255,255,.35)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:5}}>{SCHOOL}</div>
+          <div style={{fontSize:15,fontWeight:700,marginBottom:5,position:'relative'}}>{sel.nama}</div>
+          <div style={{display:'flex',flexWrap:'wrap',gap:12,fontSize:12,color:'rgba(255,255,255,.65)',position:'relative'}}>
+            <span>📍 {sel.tempat}</span>
+            <span>📅 {HR[sel.hari]}, {fds(sel.tarikh)}</span>
+            <span style={{background:'rgba(255,255,255,.12)',borderRadius:99,padding:'2px 8px'}}>👥 {attMap[sel.id]||0} hadir</span>
+          </div>
+        </div>
+        <div style={{display:'flex',gap:18,alignItems:'flex-start'}}>
+          <div className="card-sh" style={{padding:16,textAlign:'center',flexShrink:0}}>
+            <QRGen key={qrUrl} data={qrUrl} size={200} onDataUrl={du=>{setQrDataUrl(du);}}/>
+            {!qrDataUrl&&<div style={{fontSize:11,color:'var(--dim)',marginTop:8,display:'flex',alignItems:'center',justifyContent:'center',gap:5}}>
+              <span style={{width:12,height:12,border:'2px solid var(--dim)',borderTopColor:'transparent',borderRadius:'50%',animation:'spin .7s linear infinite'}}/>
+              Menjana QR...
+            </div>}
+            {qrDataUrl&&<div style={{marginTop:10,padding:'7px 10px',background:'var(--page)',borderRadius:7,border:'1px solid var(--border2)'}}>
+              <div style={{fontSize:9,color:'var(--dim)',marginBottom:2,fontWeight:600,textTransform:'uppercase',letterSpacing:'.05em'}}>ID Program</div>
+              <code style={{fontSize:10,color:'var(--muted)',fontFamily:'monospace'}}>{sel.id}</code>
+            </div>}
+          </div>
+          <div style={{flex:1,minWidth:0}}>
+            <div className="alert alert-info" style={{marginBottom:12,flexDirection:'column',gap:5}}>
+              <div style={{fontWeight:600,display:'flex',alignItems:'center',gap:6}}><i className="ti ti-world" style={{fontSize:14}}/>Imbas dengan Mana-mana Apl</div>
+              <div style={{fontSize:12,lineHeight:1.6}}>QR ini mengandungi URL — imbas dengan kamera telefon, WhatsApp, atau sebarang apl QR scanner tanpa perlu buka apl ini dahulu.</div>
+            </div>
+            <div className="card" style={{padding:'13px 15px',marginBottom:12}}>
+              <div className="sec">Cara Penggunaan</div>
+              {['Paparkan atau cetak QR kod ini','Kakitangan imbas dengan kamera telefon','Laman web pendaftaran dibuka automatik','Masukkan No. KP untuk daftar hadir'].map((t,i)=>(
+                <div key={i} style={{display:'flex',gap:9,alignItems:'center',marginBottom:i<3?8:0,paddingBottom:i<3?8:0,borderBottom:i<3?'1px solid var(--border2)':'none'}}>
+                  <div style={{width:19,height:19,borderRadius:6,background:BG,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,flexShrink:0}}>{i+1}</div>
+                  <div style={{fontSize:12,color:'var(--text)'}}>{t}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:8}}>
+              <button className="btn btn-p btn-block" onClick={()=>downloadQR(sel,qrDataUrl)} disabled={!qrDataUrl} style={{opacity:qrDataUrl?1:.5}}>
+                <i className="ti ti-download" style={{fontSize:16}}/>{qrDataUrl?'Muat Turun QR (PNG)':'Menjana QR...'}
+              </button>
+              <button className="btn btn-o btn-block" onClick={()=>printQR(sel,qrDataUrl)} disabled={!qrDataUrl} style={{opacity:qrDataUrl?1:.5}}>
+                <i className="ti ti-printer" style={{fontSize:16}}/>Cetak Kod QR
+              </button>
+              <button className="btn btn-g btn-block btn-sm" onClick={()=>{setSelP(sel);setSub('rep');setTab('program');}}>
+                <i className="ti ti-clipboard-list" style={{fontSize:13}}/>Lihat Senarai Kehadiran
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>}
+    </div>;
   };
 
-  /* ── Tab: LAPORAN ── */
   const tabLaporan=()=>{
     const cur=repP?progs.find(p=>p.id===repP):null;
-    const recs=cur?[...att.filter(a=>a.pId===cur.id)].sort((a,b)=>a.masa-b.masa):[];
-    return(
-      <div style={{animation:'fadeUp .25s ease'}}>
-        <div style={{marginBottom:16}}>
-          <label className="lbl" style={{marginBottom:6}}>Pilih Program</label>
-          <select value={repP} onChange={e=>setRepP(e.target.value)} style={{maxWidth:360}}>
-            <option value="">— Pilih program —</option>
-            {progs.map(p=><option key={p.id} value={p.id}>{p.nama} · {fds(p.tarikh)}</option>)}
-          </select>
-        </div>
-
-        {cur&&<div style={{display:'grid',gridTemplateColumns:'200px 1fr',gap:16,alignItems:'start'}}>
-          <div>
-            <div className="card" style={{padding:14,marginBottom:10}}>
-              <div style={{fontWeight:700,fontSize:14,marginBottom:4}}>{cur.nama}</div>
-              <div style={{fontSize:12,color:'var(--muted)',display:'flex',alignItems:'center',gap:5,marginBottom:3}}><i className="ti ti-map-pin" style={{fontSize:11}}/>{cur.tempat}</div>
-              <div style={{fontSize:12,color:'var(--muted)',display:'flex',alignItems:'center',gap:5}}><i className="ti ti-calendar" style={{fontSize:11}}/>{HR[cur.hari]}, {fd(cur.tarikh)}</div>
-            </div>
-            {[{l:'Jumlah Hadir',v:recs.length,bg:BGL,col:BG,tc:BGD},...BAH.map((b,i)=>({l:b,v:recs.filter(r=>r.bah===i).length,bg:'var(--page)',col:'var(--text)',tc:'var(--muted)'}))].map((x,i)=>(
-              <div key={i} className="card" style={{padding:'10px 14px',marginBottom:8,background:x.bg,borderColor:i===0?'rgba(139,26,46,.2)':'var(--border)'}}>
-                <div style={{fontSize:22,fontWeight:700,color:x.col}}>{x.v}</div>
-                <div style={{fontSize:11,color:x.tc,fontWeight:500}}>{x.l}</div>
-              </div>
-            ))}
-          </div>
-          {recs.length===0?<div className="card-sh"><Empty icon="users" msg="Tiada rekod kehadiran untuk program ini"/></div>
-          :<div className="card-sh" style={{overflow:'hidden'}}>
-            <table className="tbl">
-              <thead><tr>
-                <th style={{width:32}}>#</th>
-                <th>Nama / No. KP</th>
-                <th style={{width:100}}>Bahagian</th>
-                <th style={{width:60,textAlign:'right'}}>Masa</th>
-              </tr></thead>
-              <tbody>{recs.map((r,i)=>(
-                <tr key={r.id} style={{cursor:'default'}}>
-                  <td style={{color:'var(--dim)',fontSize:11}}>{i+1}</td>
-                  <td>
-                    <div style={{fontWeight:600}}>{r.nama}</div>
-                    <div style={{fontSize:10,color:'var(--dim)',fontFamily:'monospace'}}>{r.noKP}</div>
-                  </td>
-                  <td>{r.bah>=0?<Bdg l={BAH[r.bah]} i={r.bah}/>:<span style={{fontSize:11,color:'var(--dim)'}}>—</span>}</td>
-                  <td style={{textAlign:'right',color:'var(--muted)',fontSize:12}}>{ft(r.masa)}</td>
-                </tr>
-              ))}
-            </tbody></table>
-          </div>}
-        </div>}
-        {!cur&&<div className="card-sh"><Empty icon="chart-bar" msg="Pilih program untuk melihat laporan kehadiran"/></div>}
+    const loadRep=async pid=>{setRepLoading(true);try{const r=await DB.getAtt(pid);setRepData(r||[]);}catch{setRepData([]);}setRepLoading(false);};
+    return <div style={{animation:'fadeUp .25s ease'}}>
+      <div style={{marginBottom:14}}>
+        <label className="lbl" style={{marginBottom:6}}>Pilih Program</label>
+        <select value={repP} onChange={e=>{setRepP(e.target.value);if(e.target.value)loadRep(e.target.value);}} style={{maxWidth:360}}>
+          <option value="">— Pilih program —</option>
+          {progs.map(p=><option key={p.id} value={p.id}>{p.nama} · {fds(p.tarikh)}</option>)}
+        </select>
       </div>
-    );
+      {cur&&<div style={{display:'grid',gridTemplateColumns:'200px 1fr',gap:14,alignItems:'start'}}>
+        <div>
+          <div className="card" style={{padding:13,marginBottom:10}}>
+            <div style={{fontWeight:700,fontSize:14,marginBottom:3}}>{cur.nama}</div>
+            <div style={{fontSize:12,color:'var(--muted)',marginBottom:1}}>📍 {cur.tempat}</div>
+            <div style={{fontSize:12,color:'var(--muted)'}}>📅 {HR[cur.hari]}, {fd(cur.tarikh)}</div>
+          </div>
+          {[{l:'Jumlah',v:repData.length,bg:BGL,col:BG,tc:BGD},...BAH.map((b,i)=>({l:b,v:repData.filter(r=>r.bahagian===i||r.bahagian===String(i)).length,bg:'var(--page)',col:'var(--text)',tc:'var(--muted)'}))].map((x,i)=>(
+            <div key={i} className="card" style={{padding:'9px 12px',marginBottom:7,background:x.bg,borderColor:i===0?'rgba(139,26,46,.2)':'var(--border)'}}>
+              <div style={{fontSize:21,fontWeight:700,color:x.col}}>{x.v}</div>
+              <div style={{fontSize:11,color:x.tc,fontWeight:500}}>{x.l}</div>
+            </div>
+          ))}
+        </div>
+        {repLoading?<Loader/>:repData.length===0?<div className="card-sh"><Empty icon="users" msg="Tiada rekod kehadiran"/></div>
+        :<div className="card-sh" style={{overflow:'hidden'}}>
+          <table className="tbl"><thead><tr>
+            <th style={{width:32}}>#</th><th>Nama</th><th style={{width:90}}>Bahagian</th><th style={{width:60,textAlign:'right'}}>Masa</th>
+          </tr></thead>
+          <tbody>{repData.map((r,i)=>(
+            <tr key={r.id} style={{cursor:'default'}}>
+              <td style={{color:'var(--dim)',fontSize:11}}>{i+1}</td>
+              <td><div style={{fontWeight:600}}>{r.nama}</div><div style={{fontSize:10,color:'var(--dim)',fontFamily:'monospace'}}>{r.no_kp}</div></td>
+              <td>{r.bahagian!=null?<Bdg l={BAH[r.bahagian]} i={r.bahagian}/>:<span style={{fontSize:11,color:'var(--dim)'}}>—</span>}</td>
+              <td style={{textAlign:'right',color:'var(--muted)',fontSize:12}}>{ft(r.masa)}</td>
+            </tr>
+          ))}</tbody>
+          </table>
+        </div>}
+      </div>}
+      {!cur&&<div className="card-sh"><Empty icon="chart-bar" msg="Pilih program untuk lihat laporan"/></div>}
+    </div>;
   };
 
-  /* ── Tab: TETAPAN ── */
-  const tabTetapan=()=>(
-    <div style={{animation:'fadeUp .25s ease',maxWidth:500}}>
-      <div className="card" style={{padding:20,marginBottom:14}}>
-        <div style={{fontSize:15,fontWeight:700,marginBottom:4}}>Keselamatan</div>
-        <div style={{fontSize:13,color:'var(--muted)',marginBottom:16}}>Tukar PIN yang digunakan untuk log masuk ke panel admin. PIN lalai ialah <strong>1234</strong>.</div>
-        <Field label="PIN Baharu (4–8 digit)">
-          <input type="password" placeholder="Masukkan PIN baharu" value={nPin} maxLength={8} onChange={e=>setNPin(e.target.value.replace(/\D/g,''))}/>
+  const SQL_SCHEMA=`CREATE TABLE kakitangan (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  nama text NOT NULL,
+  no_kp text UNIQUE NOT NULL,
+  bahagian integer NOT NULL DEFAULT 1,
+  created_at timestamptz DEFAULT now()
+);
+CREATE TABLE program (
+  id text PRIMARY KEY,
+  nama text NOT NULL,
+  tempat text NOT NULL,
+  tarikh date NOT NULL,
+  hari integer NOT NULL DEFAULT 1,
+  created_at timestamptz DEFAULT now()
+);
+CREATE TABLE kehadiran (
+  id text PRIMARY KEY,
+  program_id text REFERENCES program(id) ON DELETE CASCADE,
+  kakitangan_id uuid REFERENCES kakitangan(id),
+  no_kp text NOT NULL,
+  nama text NOT NULL,
+  bahagian integer,
+  masa timestamptz DEFAULT now(),
+  verified boolean DEFAULT false
+);
+-- Lumpuhkan RLS untuk akses mudah
+ALTER TABLE kakitangan DISABLE ROW LEVEL SECURITY;
+ALTER TABLE program DISABLE ROW LEVEL SECURITY;
+ALTER TABLE kehadiran DISABLE ROW LEVEL SECURITY;`;
+
+  const tabTetapan=()=><div style={{animation:'fadeUp .25s ease',maxWidth:540}}>
+    <div className="card" style={{padding:20,marginBottom:14}}>
+      <div style={{fontSize:15,fontWeight:700,marginBottom:4}}>Konfigurasi Supabase</div>
+      <div style={{fontSize:13,color:'var(--muted)',marginBottom:14}}>Sambungkan apl ke pangkalan data Supabase untuk menyimpan data kakitangan, program, dan rekod kehadiran.</div>
+      <div style={{display:'flex',flexDirection:'column',gap:12}}>
+        <Field label="Project URL" hint="Dapatkan dari: Supabase → Settings → API → Project URL">
+          <input placeholder="https://xxxx.supabase.co" value={sbUrl} onChange={e=>setSbUrl(e.target.value)}/>
         </Field>
-        {pmErr&&<div className="alert alert-err" style={{marginTop:10}}><i className="ti ti-alert-circle" style={{fontSize:14,flexShrink:0}}/>{pmErr}</div>}
-        {pmOk&&<div className="alert alert-ok" style={{marginTop:10}}><i className="ti ti-check" style={{fontSize:14,flexShrink:0}}/>{pmOk}</div>}
-        <button className="btn btn-p" style={{marginTop:12}} onClick={savePin}>
-          <i className="ti ti-lock" style={{fontSize:15}}/>Simpan PIN Baharu
-        </button>
-      </div>
-      <div className="card" style={{padding:20}}>
-        <div style={{fontSize:15,fontWeight:700,marginBottom:4}}>Keluar dari Panel Admin</div>
-        <div style={{fontSize:13,color:'var(--muted)',marginBottom:14}}>Kembali ke skrin daftar kehadiran kakitangan.</div>
-        <button className="btn btn-g" onClick={onBack}>
-          <i className="ti ti-arrow-left" style={{fontSize:15}}/>Kembali ke Skrin Kakitangan
-        </button>
+        <Field label="Anon / Public Key" hint="Dapatkan dari: Supabase → Settings → API → Project API Keys (anon public)">
+          <input type="password" placeholder="eyJhbGciOiJIUzI1NiIs..." value={sbKey} onChange={e=>setSbKey(e.target.value)}/>
+        </Field>
+        {sbErr2&&<div className="alert alert-err"><i className="ti ti-alert-circle" style={{fontSize:14,flexShrink:0}}/>{sbErr2}</div>}
+        {sbOk&&<div className="alert alert-ok"><i className="ti ti-check" style={{fontSize:14,flexShrink:0}}/>{sbOk}</div>}
+        <div style={{display:'flex',gap:8}}>
+          <button className="btn btn-p" style={{flex:1}} onClick={saveSb}><i className="ti ti-device-floppy" style={{fontSize:15}}/>Simpan Konfigurasi</button>
+          <button className="btn btn-o" onClick={testSb}><i className="ti ti-plug" style={{fontSize:15}}/>Uji Sambungan</button>
+        </div>
       </div>
     </div>
-  );
+    <div className="card" style={{padding:20,marginBottom:14}}>
+      <div style={{fontSize:15,fontWeight:700,marginBottom:4}}>SQL Schema Supabase</div>
+      <div style={{fontSize:13,color:'var(--muted)',marginBottom:12}}>Jalankan SQL berikut dalam Supabase SQL Editor untuk mencipta jadual yang diperlukan:</div>
+      <pre style={{fontSize:11,background:BARK,color:'#c8e6c9',padding:'12px 14px',borderRadius:8,overflowX:'auto',lineHeight:1.6,whiteSpace:'pre'}}>{SQL_SCHEMA}</pre>
+    </div>
+    <div className="card" style={{padding:18,marginBottom:14}}>
+      <div style={{fontSize:15,fontWeight:700,marginBottom:4}}>PIN Admin</div>
+      <div style={{fontSize:13,color:'var(--muted)',marginBottom:12}}>PIN lalai: <strong>1234</strong>. Tukar selepas log masuk pertama.</div>
+      <div style={{display:'flex',gap:8}}>
+        <input type="password" placeholder="PIN baharu (4–8 digit)" value={nPin} maxLength={8} onChange={e=>setNPin(e.target.value.replace(/\D/g,''))} style={{flex:1}}/>
+        <button className="btn btn-p" onClick={savePin}><i className="ti ti-lock" style={{fontSize:15}}/>Simpan</button>
+      </div>
+      {pmErr&&<div className="alert alert-err" style={{marginTop:9}}><i className="ti ti-alert-circle" style={{fontSize:14,flexShrink:0}}/>{pmErr}</div>}
+      {pmOk&&<div className="alert alert-ok" style={{marginTop:9}}><i className="ti ti-check" style={{fontSize:14,flexShrink:0}}/>{pmOk}</div>}
+    </div>
+    <div className="card" style={{padding:18}}>
+      <div style={{fontSize:15,fontWeight:700,marginBottom:4}}>Kembali ke Daftar Kehadiran</div>
+      <button className="btn btn-g" onClick={onBack}><i className="ti ti-arrow-left" style={{fontSize:15}}/>Keluar dari Panel Admin</button>
+    </div>
+  </div>;
 
   const renderTab=()=>{
     switch(tab){
@@ -1084,161 +975,122 @@ function AdminPanel({staff,progs,att,svSt,svPr,svAt,pin,setPin,onBack}){
     {id:'laporan',ic:'chart-bar',l:'Laporan'},
     {id:'tetapan',ic:'settings',l:'Tetapan'},
   ];
-  const hdrTitle=sub==='rep'&&selP?`Kehadiran — ${selP.nama}`:{utama:'Papan Pemuka',kakitangan:'Kakitangan',program:'Program',qrkod:'Jana Kod QR',laporan:'Laporan',tetapan:'Tetapan'}[tab];
+  const hdrTitle=sub==='rep'&&selP?`Kehadiran \u2014 ${selP.nama}`:{utama:'Papan Pemuka',kakitangan:'Kakitangan',program:'Program',qrkod:'Jana Kod QR',laporan:'Laporan',tetapan:'Tetapan'}[tab];
 
-  return(
-    <div style={{display:'flex',minHeight:'100vh'}}>
-      {/* Sidebar */}
-      <div style={{width:200,flexShrink:0,background:`linear-gradient(180deg,${BARK} 0%,#200408 100%)`,display:'flex',flexDirection:'column',minHeight:'100vh',borderRight:'1px solid rgba(255,255,255,.05)'}}>
-        {/* Brand */}
-        <div style={{padding:'18px 14px 14px',borderBottom:'1px solid rgba(255,255,255,.06)'}}>
-          <div style={{fontSize:9,color:'rgba(255,255,255,.28)',letterSpacing:'.09em',textTransform:'uppercase',marginBottom:4}}>{SCHOOL}</div>
-          <div style={{fontSize:13,fontWeight:700,color:'#fff',lineHeight:1.35}}>Sistem Kehadiran Program</div>
-          <div style={{marginTop:8,display:'inline-flex',alignItems:'center',gap:5,background:'rgba(255,255,255,.08)',borderRadius:6,padding:'3px 9px',border:'1px solid rgba(255,255,255,.08)'}}>
-            <i className="ti ti-shield-check" style={{fontSize:11,color:BGL}}/>
-            <span style={{fontSize:10,color:BGL,fontWeight:600}}>ADMIN</span>
+  return <div style={{display:'flex',minHeight:'100vh'}}>
+    {/* Sidebar */}
+    <div style={{width:200,flexShrink:0,background:`linear-gradient(180deg,${BARK} 0%,#200408 100%)`,display:'flex',flexDirection:'column',minHeight:'100vh',borderRight:'1px solid rgba(255,255,255,.05)'}}>
+      {/* Prominent school branding in sidebar */}
+      <div style={{padding:'14px',borderBottom:'1px solid rgba(255,255,255,.07)'}}>
+        <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:8}}>
+          <div style={{width:34,height:34,borderRadius:9,background:'rgba(255,255,255,.1)',border:'1px solid rgba(255,255,255,.14)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+            <i className="ti ti-school" style={{fontSize:18,color:'rgba(255,255,255,.85)'}}/>
+          </div>
+          <div>
+            <div style={{fontSize:9,color:'rgba(255,255,255,.3)',letterSpacing:'.06em',textTransform:'uppercase',lineHeight:1.4}}>SMK Haji Abdul<br/>Rahman Limbong</div>
           </div>
         </div>
-
-        {/* Nav */}
-        <div style={{padding:'10px 8px',flex:1}}>
-          {NAVS.map(n=>(
-            <button key={n.id} className={`nav${tab===n.id?' on':''}${n.id==='qrkod'?' qr':''}`} onClick={()=>goTab(n.id)}>
-              <i className={`ti ti-${n.ic}`} style={{fontSize:17,flexShrink:0}}/>
-              <span style={{flex:1}}>{n.l}</span>
-              {n.id==='qrkod'&&<span style={{background:BG,color:'#fff',fontSize:9,fontWeight:700,padding:'2px 6px',borderRadius:99}}>QR</span>}
-            </button>
-          ))}
-        </div>
-
-        {/* Footer */}
-        <div style={{padding:'10px 8px',borderTop:'1px solid rgba(255,255,255,.05)'}}>
-          <button className="nav" onClick={onBack}>
-            <i className="ti ti-arrow-left" style={{fontSize:16}}/>
-            <span>Keluar Admin</span>
-          </button>
+        <div style={{fontSize:10,fontWeight:600,color:'rgba(255,255,255,.7)',lineHeight:1.3,marginBottom:8}}>Sistem Kehadiran Program</div>
+        <div style={{display:'inline-flex',alignItems:'center',gap:4,background:'rgba(255,255,255,.08)',borderRadius:5,padding:'3px 8px',border:'1px solid rgba(255,255,255,.08)'}}>
+          <i className="ti ti-shield-check" style={{fontSize:10,color:BGL}}/>
+          <span style={{fontSize:10,color:BGL,fontWeight:600}}>ADMIN</span>
         </div>
       </div>
-
-      {/* Main content */}
-      <div style={{flex:1,minWidth:0,display:'flex',flexDirection:'column',background:'var(--page)'}}>
-        {/* Top bar */}
-        <div style={{padding:'12px 22px',borderBottom:'1px solid var(--border)',background:'#fff',display:'flex',alignItems:'center',justifyContent:'space-between',boxShadow:'var(--sh1)'}}>
-          <div style={{fontSize:15,fontWeight:700,color:'var(--text)'}}>{hdrTitle}</div>
-          <div style={{fontSize:11,color:'var(--dim)',fontWeight:500}}>
-            {new Date().toLocaleDateString('ms-MY',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}
-          </div>
-        </div>
-        {/* Content */}
-        <div style={{padding:'20px 22px 36px',flex:1,overflowY:'auto'}}>{renderTab()}</div>
+      <div style={{padding:'9px 8px',flex:1}}>
+        {NAVS.map(n=>(
+          <button key={n.id} className={`nav${tab===n.id?' on':''}${n.id==='qrkod'?' qr':''}`} onClick={()=>goTab(n.id)}>
+            <i className={`ti ti-${n.ic}`} style={{fontSize:17,flexShrink:0}}/>
+            <span style={{flex:1}}>{n.l}</span>
+            {n.id==='qrkod'&&<span style={{background:BG,color:'#fff',fontSize:9,fontWeight:700,padding:'2px 6px',borderRadius:99}}>QR</span>}
+          </button>
+        ))}
+      </div>
+      <div style={{padding:'9px 8px',borderTop:'1px solid rgba(255,255,255,.05)'}}>
+        <button className="nav" onClick={onBack}><i className="ti ti-arrow-left" style={{fontSize:16}}/>Keluar Admin</button>
       </div>
     </div>
-  );
+    {/* Content */}
+    <div style={{flex:1,minWidth:0,display:'flex',flexDirection:'column',background:'var(--page)'}}>
+      <div style={{padding:'12px 22px',borderBottom:'1px solid var(--border)',background:'#fff',display:'flex',alignItems:'center',justifyContent:'space-between',boxShadow:'var(--sh1)'}}>
+        <div style={{fontSize:15,fontWeight:700}}>{hdrTitle}</div>
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          {dbErr&&<span style={{fontSize:11,color:'var(--err)',background:'var(--err-l)',padding:'3px 9px',borderRadius:99,border:'1px solid #FECACA'}}>⚠ Supabase Error</span>}
+          <div style={{fontSize:11,color:'var(--dim)',fontWeight:500}}>{new Date().toLocaleDateString('ms-MY',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div>
+        </div>
+      </div>
+      <div style={{padding:'20px 22px 36px',flex:1,overflowY:'auto'}}>{renderTab()}</div>
+    </div>
+  </div>;
 }
 
-/* ════════════════════
+/* ════════
    ROOT
-════════════════════ */
+════════ */
 function App(){
   const [mode,setMode]=useState(null);
-  const [staff,setStaff]=useState([]);
-  const [progs,setProgs]=useState([]);
-  const [att,setAtt]=useState([]);
   const [pin,setPin]=useState(DEF_PIN);
   const [pinIn,setPinIn]=useState('');
   const [pinErr,setPinErr]=useState('');
   const [directProg,setDirectProg]=useState(null);
 
   useEffect(()=>{
-    (async()=>{
-      await ld(SK.ST,setStaff);await ld(SK.PR,setProgs);await ld(SK.AT,setAtt);
-      try{const v=localStorage.getItem(SK.PIN);if(v)setPin(JSON.parse(v));}catch{}
-      const dp=getProgramFromURL();
-      if(dp?.id){setDirectProg(dp);setMode('direct');}
-      else{setMode('kakitangan');}
-    })();
+    const p=ls.get(SK.PIN);if(p)setPin(p);
+    const dp=getProgramFromURL();
+    if(dp?.id){setDirectProg(dp);setMode('direct');}
+    else setMode('kakitangan');
   },[]);
 
-  const svSt=async d=>{setStaff(d);await sv(SK.ST,d);};
-  const svPr=async d=>{setProgs(d);await sv(SK.PR,d);};
-  const svAt=async d=>{setAtt(d);await sv(SK.AT,d);};
-  const updPin=async p=>{setPin(p);await sv(SK.PIN,p);};
-
+  const updPin=p=>{setPin(p);ls.set(SK.PIN,p);};
   const tryAdmin=()=>{
-    if(pinIn===pin){setPinIn('');setPinErr('');setMode('admin');}
+    if(pinIn===pin){setMode('admin');setPinIn('');setPinErr('');}
     else{setPinErr('PIN tidak sah. Sila cuba lagi.');setPinIn('');}
   };
 
-  /* Loading */
-  if(!mode)return(
-    <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',minHeight:'100vh',gap:14,background:'#fff'}}>
-      <div style={{width:36,height:36,border:`3px solid ${BGL}`,borderTopColor:BG,borderRadius:'50%',animation:'spin .7s linear infinite'}}/>
-      <div style={{fontSize:14,color:'var(--muted)',fontWeight:500}}>Memuatkan sistem...</div>
-    </div>
-  );
+  if(!mode)return <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',minHeight:'100vh',gap:14,background:'#fff'}}>
+    <div style={{width:36,height:36,border:`3px solid ${BGL}`,borderTopColor:BG,borderRadius:'50%',animation:'spin .7s linear infinite'}}/>
+    <div style={{fontSize:14,color:'var(--muted)',fontWeight:500}}>Memuatkan sistem...</div>
+  </div>;
 
-  /* Direct attendance (from URL / any QR scanner) */
-  if(mode==='direct'&&directProg)return(
-    <div style={{minHeight:'100vh',background:'#fff',maxWidth:480,margin:'0 auto',boxShadow:'0 0 40px rgba(0,0,0,.08)'}}>
-      <div style={{background:`linear-gradient(135deg,${BARK} 0%,${BARK2} 100%)`,padding:'14px 20px 13px'}}>
-        <div style={{fontSize:9,color:'rgba(255,255,255,.35)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:2}}>{SCHOOL}</div>
-        <div style={{fontSize:16,fontWeight:700,color:'#fff'}}>Daftar Kehadiran</div>
-      </div>
-      <AttendanceForm prog={directProg} staff={staff} att={att} svAt={svAt}
-        onBack={()=>{window.history.replaceState({},'',window.location.pathname);setMode('kakitangan');}}
-        onNext={true}/>
-    </div>
-  );
+  if(mode==='direct'&&directProg)return <div style={{minHeight:'100vh',background:'#fff',maxWidth:480,margin:'0 auto',boxShadow:'0 0 40px rgba(0,0,0,.08)'}}>
+    <SchoolBanner/>
+    <AttendanceForm prog={directProg} onBack={()=>{window.history.replaceState({},'',window.location.pathname);setMode('kakitangan');}} onNext={true}/>
+  </div>;
 
-  /* PIN entry */
-  if(mode==='pin')return(
-    <div style={{minHeight:'100vh',background:'var(--page)',display:'flex',alignItems:'center',justifyContent:'center',padding:20}}>
-      <div style={{background:'#fff',borderRadius:20,padding:'32px 28px',maxWidth:380,width:'100%',boxShadow:'var(--sh3)',border:'1px solid var(--border)'}}>
-        <div style={{textAlign:'center',marginBottom:24}}>
-          <div style={{width:58,height:58,borderRadius:16,background:BGL,color:BG,display:'flex',alignItems:'center',justifyContent:'center',fontSize:28,margin:'0 auto 14px',border:'1px solid rgba(139,26,46,.15)'}}>
-            <i className="ti ti-shield-lock"/>
-          </div>
-          <div style={{fontSize:20,fontWeight:700,marginBottom:4}}>Log Masuk Admin</div>
-          <div style={{fontSize:13,color:'var(--muted)'}}>Masukkan PIN untuk akses panel pengurusan</div>
+  if(mode==='pin')return <div style={{minHeight:'100vh',background:'var(--page)',display:'flex',alignItems:'center',justifyContent:'center',padding:20}}>
+    <div style={{background:'#fff',borderRadius:20,padding:'32px 28px',maxWidth:380,width:'100%',boxShadow:'var(--sh3)',border:'1px solid var(--border)',animation:'fadeUp .25s ease'}}>
+      {/* Prominent school name on PIN screen */}
+      <div style={{textAlign:'center',marginBottom:26}}>
+        <div style={{width:68,height:68,borderRadius:18,background:`linear-gradient(135deg,${BARK} 0%,#6b1020 100%)`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:34,margin:'0 auto 14px',color:'#fff',boxShadow:'0 4px 20px rgba(45,5,16,.3)'}}>
+          <i className="ti ti-school"/>
         </div>
-
-        <Field label="PIN Admin">
-          <input type="password" inputMode="numeric" placeholder="● ● ● ●"
-            value={pinIn} maxLength={8}
-            onChange={e=>{setPinIn(e.target.value.replace(/\D/g,''));setPinErr('');}}
-            onKeyDown={e=>e.key==='Enter'&&tryAdmin()}
-            style={{fontSize:28,padding:'14px 18px',textAlign:'center',letterSpacing:8,borderColor:pinErr?'var(--err)':'var(--border)'}}
-          />
-        </Field>
-
-        {pinErr&&<div className="alert alert-err" style={{marginTop:10}}><i className="ti ti-alert-circle" style={{fontSize:14,flexShrink:0}}/>{pinErr}</div>}
-
-        <button className="btn btn-p btn-block" style={{marginTop:14,padding:'13px',fontSize:15}} onClick={tryAdmin}>
-          <i className="ti ti-login" style={{fontSize:18}}/>Log Masuk
-        </button>
-        <button onClick={()=>{setMode('kakitangan');setPinIn('');setPinErr('');}}
-          style={{marginTop:10,width:'100%',background:'none',border:'none',cursor:'pointer',color:'var(--muted)',fontSize:13,padding:'6px'}}>
-          ← Kembali ke Daftar Kehadiran
-        </button>
-        <div style={{textAlign:'center',marginTop:8,fontSize:11,color:'var(--dim)'}}>PIN lalai: <strong style={{color:'var(--muted)'}}>1234</strong></div>
+        <div style={{fontSize:10,color:'var(--dim)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:5}}>Kementerian Pendidikan Malaysia</div>
+        <div style={{fontSize:16,fontWeight:800,color:BGD,lineHeight:1.3,marginBottom:5}}>{SCHOOL}</div>
+        <div style={{fontSize:12,color:'var(--muted)',fontWeight:500}}>Sistem Kehadiran Program · Log Masuk Admin</div>
       </div>
+      <Field label="PIN Admin">
+        <input type="password" inputMode="numeric" placeholder="\u25cf \u25cf \u25cf \u25cf" value={pinIn} maxLength={8}
+          onChange={e=>{setPinIn(e.target.value.replace(/\D/g,''));setPinErr('');}}
+          onKeyDown={e=>e.key==='Enter'&&tryAdmin()}
+          style={{fontSize:28,padding:'14px 18px',textAlign:'center',letterSpacing:8,borderColor:pinErr?'var(--err)':'var(--border)'}}/>
+      </Field>
+      {pinErr&&<div className="alert alert-err" style={{marginTop:9}}><i className="ti ti-alert-circle" style={{fontSize:14,flexShrink:0}}/>{pinErr}</div>}
+      <button className="btn btn-p btn-block" style={{marginTop:14,padding:'13px',fontSize:15}} onClick={tryAdmin}>
+        <i className="ti ti-login" style={{fontSize:18}}/>Log Masuk
+      </button>
+      <button onClick={()=>{setMode('kakitangan');setPinIn('');setPinErr('');}} style={{marginTop:10,width:'100%',background:'none',border:'none',cursor:'pointer',color:'var(--muted)',fontSize:13,padding:'6px'}}>
+        \u2190 Kembali ke Daftar Kehadiran
+      </button>
+      <div style={{textAlign:'center',marginTop:8,fontSize:11,color:'var(--dim)'}}>PIN lalai: <strong style={{color:'var(--muted)'}}>1234</strong></div>
     </div>
-  );
+  </div>;
 
-  /* Admin panel */
-  if(mode==='admin')return(
-    <AdminPanel staff={staff} progs={progs} att={att} svSt={svSt} svPr={svPr} svAt={svAt}
-      pin={pin} setPin={updPin} onBack={()=>setMode('kakitangan')}/>
-  );
+  if(mode==='admin')return <AdminPanel pin={pin} setPin={updPin} onBack={()=>setMode('kakitangan')}/>;
 
-  /* Kakitangan (default) */
-  return(
-    <KakitanganView staff={staff} progs={progs} att={att} svAt={svAt}
-      onAdmin={()=>{setPinIn('');setPinErr('');setMode('pin');}}/>
-  );
+  return <KakitanganView onAdmin={()=>{setPinIn('');setPinErr('');setMode('pin');}}/>;
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+
 </script>
 </body>
 </html>
