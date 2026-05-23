@@ -170,116 +170,87 @@ function StatCard({icon,label,value,color}){
   );
 }
 
-/* ── QR Generation (canvas-based, reliable) ── */
-function getQRDataURL(url){
-  return new Promise((resolve,reject)=>{
-    const tryRender=(attempt)=>{
-      if(!window.QRCode){
-        if(attempt<40){setTimeout(()=>tryRender(attempt+1),150);}
-        else{reject(new Error('QRCode library not loaded'));}
-        return;
-      }
-      const canvas=document.createElement('canvas');
-      window.QRCode.toCanvas(canvas,url,{
-        width:320,margin:2,color:{dark:BARK,light:'#ffffff'},
-        errorCorrectionLevel:'M',
-      },(err)=>{
-        if(err)reject(err);
-        else resolve(canvas.toDataURL('image/png'));
-      });
-    };
-    tryRender(0);
-  });
-}
-
-/* QR display component */
-function QRGen({data,size=200}){
-  const ref=useRef();
+/* ── QR display — exposes its canvas via wrapRef ── */
+function QRGen({data,size=200,wrapRef}){
+  const localRef=useRef();
+  const ref=wrapRef||localRef;
   useEffect(()=>{
     if(!data)return;
     let tries=0;
     function render(){
       if(!ref.current)return;
-      if(!window.QRCode){if(++tries<40)setTimeout(render,150);return;}
+      if(!window.QRCode){if(++tries<50)setTimeout(render,200);return;}
       ref.current.innerHTML='';
       const c=document.createElement('canvas');
       ref.current.appendChild(c);
-      window.QRCode.toCanvas(c,data,{width:size,margin:2,color:{dark:BARK,light:'#fff'},errorCorrectionLevel:'M'},()=>{});
+      window.QRCode.toCanvas(c,data,{width:size,margin:2,color:{dark:BARK,light:'#fff'}},()=>{});
     }
     render();
   },[data,size]);
   return<div ref={ref} style={{lineHeight:0,display:'flex',alignItems:'center',justifyContent:'center'}}/>;
 }
 
-/* Download branded PNG */
-async function downloadQR(prog,qrUrl){
-  let du;
-  try{du=await getQRDataURL(qrUrl);}
-  catch(e){alert('Gagal menjana QR: '+e.message+'\nSila muat semula halaman dan cuba lagi.');return;}
-  const img=new Image();
-  img.onload=()=>{
-    const W=480,H=620,pad=28;
-    const c=document.createElement('canvas');c.width=W;c.height=H;
-    const x=c.getContext('2d');
-
-    /* Background */
-    x.fillStyle='#fff';x.fillRect(0,0,W,H);
-
-    /* Header gradient */
-    const grad=x.createLinearGradient(0,0,W,80);
-    grad.addColorStop(0,BARK);grad.addColorStop(1,'#6b1020');
-    x.fillStyle=grad;x.fillRect(0,0,W,82);
-
-    /* Header text */
-    x.fillStyle='rgba(255,255,255,.45)';x.font='600 9px Arial';x.textAlign='center';
-    x.letterSpacing='0.08em';x.fillText(SCHOOL.toUpperCase(),W/2,20);
-    x.fillStyle='#fff';x.font='bold 15px Arial';x.fillText('SISTEM KEHADIRAN PROGRAM',W/2,44);
-    x.fillStyle='rgba(255,255,255,.35)';x.font='500 10px Arial';
-    x.fillText('Imbas kod QR untuk mendaftar kehadiran',W/2,62);
-
-    /* QR area */
-    const qs=290,qx=(W-qs)/2,qy=98;
-    x.fillStyle='#f9f3f4';x.beginPath();x.roundRect(qx-14,qy-14,qs+28,qs+28,12);x.fill();
-    x.drawImage(img,qx,qy,qs,qs);
-
-    /* Accent bar */
-    x.fillStyle=BG;x.fillRect(qx,qy+qs+10,qs,3);
-
-    /* Info section */
-    const iy=qy+qs+28;
-    x.fillStyle='#1A0A0D';x.font='bold 17px Arial';x.textAlign='center';
-    const nm=prog.nama.length>40?prog.nama.slice(0,37)+'…':prog.nama;
-    x.fillText(nm,W/2,iy+8);
-    x.fillStyle='#7A4555';x.font='500 13px Arial';
-    x.fillText(prog.tempat,W/2,iy+30);
-    x.fillText(`${HR[prog.hari]}, ${fd(prog.tarikh)}`,W/2,iy+50);
-
-    /* Divider */
-    x.strokeStyle='#EDD8DC';x.setLineDash([4,4]);x.lineWidth=1;
-    x.beginPath();x.moveTo(pad,iy+66);x.lineTo(W-pad,iy+66);x.stroke();x.setLineDash([]);
-
-    /* Instruction */
-    x.fillStyle='#B8909A';x.font='10px Arial';
-    x.fillText('Imbas dengan kamera telefon atau mana-mana apl QR scanner',W/2,iy+84);
-
-    /* Footer bar */
-    x.fillStyle=BG;x.fillRect(0,H-7,W,7);
-
-    /* Border */
-    x.strokeStyle='#EDD8DC';x.lineWidth=1;x.setLineDash([]);x.strokeRect(.5,.5,W-1,H-1);
-
-    const a=document.createElement('a');
-    a.download=`QR-${prog.nama.replace(/\s+/g,'-')}.png`;
-    a.href=c.toDataURL('image/png');a.click();
-  };
-  img.src=du;
+/* Poll the on-screen QRGen canvas until it has pixels (width > 0).
+   This is the most reliable approach — we read from the canvas
+   that is already rendered in the DOM, not an off-screen one. */
+function waitForQRCanvas(wrapRef){
+  return new Promise((resolve,reject)=>{
+    let tries=0;
+    function check(){
+      const canvas=wrapRef.current?.querySelector('canvas');
+      if(canvas&&canvas.width>0&&canvas.height>0){resolve(canvas);return;}
+      if(++tries>80){reject(new Error('QR gagal dirender. Sila muat semula halaman dan cuba lagi.'));return;}
+      setTimeout(check,100);
+    }
+    check();
+  });
 }
 
-/* Print QR */
-async function printQR(prog,qrUrl){
-  let du;
-  try{du=await getQRDataURL(qrUrl);}
-  catch(e){alert('Gagal menjana QR untuk cetak: '+e.message);return;}
+/* Download branded PNG — reads pixels from the already-rendered on-screen canvas */
+function downloadQR(prog,srcCanvas){
+  const W=480,H=620,pad=28;
+  const c=document.createElement('canvas');c.width=W;c.height=H;
+  const x=c.getContext('2d');
+  /* Background */
+  x.fillStyle='#fff';x.fillRect(0,0,W,H);
+  /* Header */
+  const grad=x.createLinearGradient(0,0,W,82);
+  grad.addColorStop(0,BARK);grad.addColorStop(1,'#6b1020');
+  x.fillStyle=grad;x.fillRect(0,0,W,82);
+  x.fillStyle='rgba(255,255,255,.45)';x.font='600 9px Arial';x.textAlign='center';
+  x.fillText(SCHOOL.toUpperCase(),W/2,20);
+  x.fillStyle='#fff';x.font='bold 15px Arial';x.fillText('SISTEM KEHADIRAN PROGRAM',W/2,44);
+  x.fillStyle='rgba(255,255,255,.35)';x.font='10px Arial';
+  x.fillText('Imbas kod QR untuk mendaftar kehadiran',W/2,62);
+  /* QR */
+  const qs=280,qx=(W-qs)/2,qy=98;
+  x.fillStyle='#f9f3f4';x.beginPath();x.roundRect(qx-14,qy-14,qs+28,qs+28,12);x.fill();
+  x.drawImage(srcCanvas,qx,qy,qs,qs);
+  /* Accent */
+  x.fillStyle=BG;x.fillRect(qx,qy+qs+10,qs,3);
+  /* Info */
+  const iy=qy+qs+28;
+  x.fillStyle='#1A0A0D';x.font='bold 17px Arial';x.textAlign='center';
+  x.fillText(prog.nama.length>40?prog.nama.slice(0,37)+'…':prog.nama,W/2,iy+8);
+  x.fillStyle='#7A4555';x.font='13px Arial';
+  x.fillText(prog.tempat,W/2,iy+30);
+  x.fillText(`${HR[prog.hari]}, ${fd(prog.tarikh)}`,W/2,iy+50);
+  x.strokeStyle='#EDD8DC';x.setLineDash([4,4]);x.lineWidth=1;
+  x.beginPath();x.moveTo(pad,iy+66);x.lineTo(W-pad,iy+66);x.stroke();x.setLineDash([]);
+  x.fillStyle='#B8909A';x.font='10px Arial';
+  x.fillText('Imbas dengan kamera telefon atau mana-mana apl QR scanner',W/2,iy+84);
+  /* Footer */
+  x.fillStyle=BG;x.fillRect(0,H-7,W,7);
+  x.strokeStyle='#EDD8DC';x.lineWidth=1;x.strokeRect(.5,.5,W-1,H-1);
+  /* Download */
+  const a=document.createElement('a');
+  a.download=`QR-${prog.nama.replace(/\s+/g,'-')}.png`;
+  a.href=c.toDataURL('image/png');a.click();
+}
+
+/* Print QR — reads from the already-rendered on-screen canvas */
+function printQR(prog,srcCanvas){
+  const du=srcCanvas.toDataURL('image/png');
   const w=window.open('','_blank','width=560,height=760');
   if(!w){alert('Sila benarkan pop-up untuk fungsi cetak.');return;}
   w.document.write(`<!DOCTYPE html><html><head><title>QR — ${prog.nama}</title>
@@ -600,6 +571,7 @@ function AdminPanel({staff,progs,att,svSt,svPr,svAt,pin,setPin,onBack}){
   /* QR tab */
   const [qrSel,setQrSel]=useState(null);
   const [qrLoading,setQrLoading]=useState(false);
+  const qrRef=useRef(null); // points to the rendered QRGen canvas wrapper
 
   /* PIN settings */
   const [nPin,setNPin]=useState('');
@@ -937,7 +909,7 @@ function AdminPanel({staff,progs,att,svSt,svPr,svAt,pin,setPin,onBack}){
             <div style={{display:'flex',gap:20,alignItems:'flex-start'}}>
               {/* QR box */}
               <div className="card-sh" style={{padding:20,textAlign:'center',flexShrink:0,background:'#fff'}}>
-                <QRGen data={qrUrl} size={200}/>
+                <QRGen data={qrUrl} size={200} wrapRef={qrRef}/>
                 <div style={{marginTop:12,padding:'8px 12px',background:'var(--page)',borderRadius:8,border:'1px solid var(--border2)'}}>
                   <div style={{fontSize:9,color:'var(--dim)',marginBottom:3,fontWeight:600,textTransform:'uppercase',letterSpacing:'.05em'}}>ID Program</div>
                   <code style={{fontSize:10,color:'var(--muted)',fontFamily:'monospace'}}>{sel.id}</code>
@@ -965,11 +937,26 @@ function AdminPanel({staff,progs,att,svSt,svPr,svAt,pin,setPin,onBack}){
 
                 {/* Buttons */}
                 <div style={{display:'flex',flexDirection:'column',gap:9}}>
-                  <button className="btn btn-p btn-block" onClick={async()=>{setQrLoading(true);await downloadQR(sel,qrUrl);setQrLoading(false);}}>
-                    {qrLoading?<span style={{width:16,height:16,border:'2px solid rgba(255,255,255,.4)',borderTopColor:'#fff',borderRadius:'50%',animation:'spin .7s linear infinite'}}/>:<i className="ti ti-download" style={{fontSize:16}}/>}
+                  <button className="btn btn-p btn-block" onClick={async()=>{
+                    setQrLoading(true);
+                    try{
+                      const canvas=await waitForQRCanvas(qrRef);
+                      downloadQR(sel,canvas);
+                    }catch(e){alert(e.message);}
+                    finally{setQrLoading(false);}
+                  }}>
+                    {qrLoading
+                      ?<span style={{width:16,height:16,border:'2px solid rgba(255,255,255,.4)',borderTopColor:'#fff',borderRadius:'50%',animation:'spin .7s linear infinite'}}/>
+                      :<i className="ti ti-download" style={{fontSize:16}}/>
+                    }
                     {qrLoading?'Menjana QR...':'Muat Turun QR (PNG)'}
                   </button>
-                  <button className="btn btn-o btn-block" onClick={()=>printQR(sel,qrUrl)}>
+                  <button className="btn btn-o btn-block" onClick={async()=>{
+                    try{
+                      const canvas=await waitForQRCanvas(qrRef);
+                      printQR(sel,canvas);
+                    }catch(e){alert(e.message);}
+                  }}>
                     <i className="ti ti-printer" style={{fontSize:16}}/>Cetak Kod QR
                   </button>
                   <button className="btn btn-g btn-block btn-sm" onClick={()=>{setSelP(sel);setSub('rep');setTab('program');}}>
