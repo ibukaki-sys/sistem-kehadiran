@@ -4,7 +4,6 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Sistem Kehadiran Program — SMK Haji Abdul Rahman Limbong</title>
-  <meta name="description" content="Sistem digital untuk merekod kehadiran kakitangan sekolah melalui QR kod"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.33.0/dist/tabler-icons.min.css"/>
   <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -16,199 +15,113 @@
     body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f7;color:#1d1d1f;min-height:100vh}
     #root{max-width:960px;margin:0 auto;background:#fff;min-height:100vh;box-shadow:0 0 40px rgba(0,0,0,.08)}
     input,select,button{font-family:inherit}
-    input,select{display:block;width:100%;padding:9px 11px;border-radius:8px;border:1px solid #d1d5db;background:#f9fafb;font-size:14px;color:#1d1d1f;outline:none;transition:border .15s}
+    input,select{display:block;width:100%;padding:9px 11px;border-radius:8px;border:1px solid #d1d5db;background:#f9fafb;font-size:14px;color:#1d1d1f;outline:none;transition:border .15s,box-shadow .15s}
     input:focus,select:focus{border-color:#1D9E75;background:#fff;box-shadow:0 0 0 3px rgba(29,158,117,.1)}
     @keyframes spin{to{transform:rotate(360deg)}}
     @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
     @keyframes popIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
     .hr:hover{background:#f5f5f7!important;cursor:pointer}
     .ni:hover{background:rgba(255,255,255,.09)!important}
-    .pc:hover{border-color:#1D9E75!important;box-shadow:0 4px 20px rgba(29,158,117,.12)!important}
-    @media print{
-      body{background:#fff}
-      #root{box-shadow:none;max-width:100%}
-      .no-print{display:none!important}
-    }
   </style>
 </head>
 <body>
 <div id="root"></div>
 <script type="text/babel">
-const {useState,useEffect,useRef,useCallback}=React;
-const T='#1D9E75',TL='#E1F5EE',TD='#0F6E56';
-const NV='#1e3a5f';
+const {useState,useEffect,useRef}=React;
+const T='#1D9E75',TL='#E1F5EE',TD='#0F6E56',NV='#1e3a5f';
 const BL='#E6F1FB',BD='#0C447C';
 const BAH=['Pengurusan','Guru','Pentadbiran'];
 const HR=['Ahad','Isnin','Selasa','Rabu','Khamis','Jumaat','Sabtu'];
 const BC=[{bg:'#E6F1FB',col:'#0C447C'},{bg:'#E1F5EE',col:'#0F6E56'},{bg:'#FAEEDA',col:'#633806'}];
-const SK={ST:'smk_st_v1',PR:'smk_pr_v1',AT:'smk_at_v1',PIN:'smk_pin_v1'};
-const DEF_PIN='1234';
+const SK={ST:'smk_st2',PR:'smk_pr2',AT:'smk_at2',PIN:'smk_pin2'};
 const SCHOOL='SMK Haji Abdul Rahman Limbong';
+const DEF_PIN='1234';
 
 const gId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6).toUpperCase();
 async function ld(k,s){try{const v=localStorage.getItem(k);if(v){s(JSON.parse(v));return true;}return false;}catch{return false;}}
-async function sv(k,d){try{localStorage.setItem(k,JSON.stringify(d));}catch(e){console.warn('Storage penuh:',e);}}
-
+async function sv(k,d){try{localStorage.setItem(k,JSON.stringify(d));}catch{}}
 const fd=d=>new Date(d+'T00:00').toLocaleDateString('ms-MY',{day:'2-digit',month:'long',year:'numeric'});
 const fds=d=>new Date(d+'T00:00').toLocaleDateString('ms-MY',{day:'2-digit',month:'short',year:'numeric'});
 const ft=ts=>new Date(ts).toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit'});
 
-function Bdg({l,i}){const c=BC[i%3];return(
-  <span style={{background:c.bg,color:c.col,fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:99,whiteSpace:'nowrap'}}>{l}</span>
-);}
+function Bdg({l,i}){const c=BC[i%3];return<span style={{background:c.bg,color:c.col,fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:99,whiteSpace:'nowrap'}}>{l}</span>;}
 
-// ─── QRGen: renders QR into a div, canvas accessible via wrapRef ───
-function QRGen({data,size=200,wrapRef}){
+/* QRGen — renders QR canvas into a wrapper div */
+function QRGen({data,size=220,wrapRef}){
   const localRef=useRef();
   const ref=wrapRef||localRef;
   useEffect(()=>{
     if(!ref.current||!window.QRCode||!data)return;
     ref.current.innerHTML='';
-    window.QRCode.toCanvas(
-      document.createElement('canvas'), // dummy
-      data,{width:size,margin:2,color:{dark:'#085041',light:'#ffffff'}},
-      ()=>{}
-    );
-    // Use toDataURL approach for reliable rendering
-    ref.current.innerHTML='';
     const c=document.createElement('canvas');
     ref.current.appendChild(c);
-    window.QRCode.toCanvas(c,data,{width:size,margin:2,color:{dark:'#085041',light:'#ffffff'}},()=>{});
+    window.QRCode.toCanvas(c,data,{width:size,margin:2,color:{dark:'#085041',light:'#fff'}},()=>{});
   },[data,size]);
-  return <div ref={ref} style={{lineHeight:0}}/>;
+  return<div ref={ref} style={{lineHeight:0}}/>;
 }
 
-// ─── Download: styled PNG with school branding ───
-function downloadQRImage(prog,qrWrapEl){
-  const canvas=qrWrapEl?.querySelector('canvas');
+/* Download branded PNG */
+function downloadQR(prog,wrapEl){
+  const canvas=wrapEl?.querySelector('canvas');
   if(!canvas){alert('QR belum dijana. Sila tunggu sebentar.');return;}
-  const W=440,H=560;
-  const c=document.createElement('canvas');
-  c.width=W;c.height=H;
-  const ctx=c.getContext('2d');
-  // White bg
-  ctx.fillStyle='#ffffff';
-  ctx.fillRect(0,0,W,H);
-  // Navy header
-  ctx.fillStyle='#1e3a5f';
-  ctx.fillRect(0,0,W,70);
-  // Header text
-  ctx.fillStyle='rgba(255,255,255,.5)';
-  ctx.font='10px Arial';
-  ctx.textAlign='center';
+  const W=440,H=560,ctx=(c=>(c.width=W,c.height=H,c))(document.createElement('canvas')).getContext('2d');
+  const c=ctx.canvas;
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle=NV;ctx.fillRect(0,0,W,70);
+  ctx.fillStyle='rgba(255,255,255,.5)';ctx.font='10px Arial';ctx.textAlign='center';
   ctx.fillText(SCHOOL.toUpperCase(),W/2,22);
-  ctx.fillStyle='#ffffff';
-  ctx.font='bold 14px Arial';
-  ctx.fillText('SISTEM KEHADIRAN PROGRAM',W/2,46);
-  ctx.fillStyle='rgba(255,255,255,.35)';
-  ctx.font='10px Arial';
-  ctx.fillText('Scan kod QR untuk daftar kehadiran',W/2,62);
-  // QR image
-  const qSize=280;
-  const qX=(W-qSize)/2;
-  ctx.drawImage(canvas,qX,86,qSize,qSize);
-  // Teal accent bar between QR and info
-  ctx.fillStyle=T;
-  ctx.fillRect(qX,86+qSize+8,qSize,3);
-  // Info section bg
-  ctx.fillStyle='#f9fafb';
-  ctx.fillRect(0,86+qSize+20,W,H-(86+qSize+20));
-  // Program name
-  ctx.fillStyle='#111827';
-  ctx.font='bold 16px Arial';
-  ctx.textAlign='center';
-  const nm=prog.nama.length>38?prog.nama.slice(0,35)+'…':prog.nama;
-  ctx.fillText(nm,W/2,86+qSize+50);
-  // Venue
-  ctx.fillStyle='#6b7280';
-  ctx.font='12px Arial';
-  ctx.fillText(prog.tempat,W/2,86+qSize+72);
-  // Date
-  const ds=`${HR[prog.hari]}, ${fd(prog.tarikh)}`;
-  ctx.fillText(ds,W/2,86+qSize+92);
-  // Dotted separator
-  ctx.setLineDash([3,3]);
-  ctx.strokeStyle='#d1d5db';
-  ctx.lineWidth=1;
-  ctx.beginPath();
-  ctx.moveTo(40,86+qSize+108);
-  ctx.lineTo(W-40,86+qSize+108);
-  ctx.stroke();
-  ctx.setLineDash([]);
-  // Bottom instruction
-  ctx.fillStyle='#9ca3af';
-  ctx.font='10px Arial';
-  ctx.fillText('Imbas menggunakan apl Sistem Kehadiran Program',W/2,86+qSize+128);
-  // Green footer
-  ctx.fillStyle=T;
-  ctx.fillRect(0,H-6,W,6);
-  // Border
-  ctx.strokeStyle='#e5e7eb';
-  ctx.lineWidth=1;
-  ctx.strokeRect(.5,.5,W-1,H-1);
-
-  const link=document.createElement('a');
-  link.download=`QR-${prog.nama.replace(/\s+/g,'-')}.png`;
-  link.href=c.toDataURL('image/png');
-  link.click();
+  ctx.fillStyle='#fff';ctx.font='bold 14px Arial';ctx.fillText('SISTEM KEHADIRAN PROGRAM',W/2,46);
+  ctx.fillStyle='rgba(255,255,255,.35)';ctx.font='10px Arial';ctx.fillText('Scan kod QR untuk daftar kehadiran',W/2,62);
+  const qs=280,qx=(W-qs)/2;ctx.drawImage(canvas,qx,86,qs,qs);
+  ctx.fillStyle=T;ctx.fillRect(qx,86+qs+8,qs,3);
+  ctx.fillStyle='#f9fafb';ctx.fillRect(0,86+qs+20,W,H-(86+qs+20));
+  ctx.fillStyle='#111827';ctx.font='bold 16px Arial';ctx.textAlign='center';
+  ctx.fillText(prog.nama.length>38?prog.nama.slice(0,35)+'…':prog.nama,W/2,86+qs+52);
+  ctx.fillStyle='#6b7280';ctx.font='12px Arial';
+  ctx.fillText(prog.tempat,W/2,86+qs+74);
+  ctx.fillText(`${HR[prog.hari]}, ${fd(prog.tarikh)}`,W/2,86+qs+94);
+  ctx.setLineDash([3,3]);ctx.strokeStyle='#d1d5db';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(40,86+qs+110);ctx.lineTo(W-40,86+qs+110);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#9ca3af';ctx.font='10px Arial';
+  ctx.fillText('Imbas menggunakan apl Sistem Kehadiran Program',W/2,86+qs+130);
+  ctx.fillStyle=T;ctx.fillRect(0,H-6,W,6);
+  ctx.strokeStyle='#e5e7eb';ctx.lineWidth=1;ctx.strokeRect(.5,.5,W-1,H-1);
+  const a=document.createElement('a');
+  a.download=`QR-${prog.nama.replace(/\s+/g,'-')}.png`;a.href=c.toDataURL('image/png');a.click();
 }
 
-// ─── Print: opens print window ───
-function printQR(prog,qrWrapEl){
-  const canvas=qrWrapEl?.querySelector('canvas');
-  if(!canvas){alert('QR belum dijana. Sila tunggu sebentar.');return;}
+/* Print QR */
+function printQR(prog,wrapEl){
+  const canvas=wrapEl?.querySelector('canvas');
+  if(!canvas)return;
   const dataUrl=canvas.toDataURL('image/png');
-  const w=window.open('','_blank','width=500,height=700');
-  w.document.write(`<!DOCTYPE html><html><head>
-    <title>QR — ${prog.nama}</title>
-    <style>
-      *{margin:0;padding:0;box-sizing:border-box}
-      body{font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f5f5f5;padding:20px}
-      .card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.12);width:360px;text-align:center}
-      .hdr{background:#1e3a5f;padding:18px 20px 14px}
-      .hdr .sch{font-size:10px;color:rgba(255,255,255,.5);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
-      .hdr .ttl{font-size:14px;font-weight:700;color:#fff}
-      .qr-wrap{padding:20px 20px 4px;display:flex;justify-content:center}
-      .qr-wrap img{width:220px;height:220px;display:block}
-      .bar{height:3px;background:#1D9E75;margin:0 20px}
-      .info{padding:16px 20px 20px;background:#f9fafb}
-      .info h2{font-size:15px;font-weight:700;color:#111827;margin-bottom:4px}
-      .info p{font-size:12px;color:#6b7280;margin:2px 0}
-      .info .note{font-size:10px;color:#9ca3af;margin-top:10px;padding-top:10px;border-top:1px dashed #e5e7eb}
-      .footer{background:#1D9E75;height:5px}
-      @media print{body{background:#fff;padding:0}button{display:none}}
-    </style>
-  </head><body>
-    <div class="card">
-      <div class="hdr">
-        <div class="sch">${SCHOOL}</div>
-        <div class="ttl">SISTEM KEHADIRAN PROGRAM</div>
-      </div>
-      <div class="qr-wrap"><img src="${dataUrl}" alt="QR Code"/></div>
-      <div class="bar"></div>
-      <div class="info">
-        <h2>${prog.nama}</h2>
-        <p>${prog.tempat}</p>
-        <p>${HR[prog.hari]}, ${fd(prog.tarikh)}</p>
-        <p class="note">Imbas kod QR ini menggunakan apl Sistem Kehadiran Program untuk mendaftar kehadiran</p>
-      </div>
-      <div class="footer"></div>
-    </div>
-    <script>setTimeout(()=>window.print(),400)<\/script>
-  </body></html>`);
+  const w=window.open('','_blank','width=520,height=720');
+  w.document.write(`<!DOCTYPE html><html><head><title>QR — ${prog.nama}</title>
+  <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f5f5f5;padding:20px}
+  .card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.12);width:360px;text-align:center}
+  .hdr{background:#1e3a5f;padding:18px 20px 14px}.sch{font-size:10px;color:rgba(255,255,255,.5);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+  .ttl{font-size:14px;font-weight:700;color:#fff}.qw{padding:20px 20px 4px;display:flex;justify-content:center}
+  .qw img{width:220px;height:220px;display:block}.bar{height:3px;background:#1D9E75;margin:0 20px}
+  .inf{padding:16px 20px 20px;background:#f9fafb}.inf h2{font-size:15px;font-weight:700;color:#111827;margin-bottom:4px}
+  .inf p{font-size:12px;color:#6b7280;margin:2px 0}.nt{font-size:10px;color:#9ca3af;margin-top:10px;padding-top:10px;border-top:1px dashed #e5e7eb}
+  .ft{background:#1D9E75;height:5px}@media print{body{background:#fff;padding:0}}</style>
+  </head><body><div class="card"><div class="hdr"><div class="sch">${SCHOOL}</div><div class="ttl">SISTEM KEHADIRAN PROGRAM</div></div>
+  <div class="qw"><img src="${dataUrl}"/></div><div class="bar"></div>
+  <div class="inf"><h2>${prog.nama}</h2><p>${prog.tempat}</p><p>${HR[prog.hari]}, ${fd(prog.tarikh)}</p>
+  <p class="nt">Imbas kod QR ini menggunakan apl Sistem Kehadiran Program untuk mendaftar kehadiran</p></div>
+  <div class="ft"></div></div><script>setTimeout(()=>window.print(),400)<\/script></body></html>`);
   w.document.close();
 }
 
-// ─── QR Scanner ───
+/* QR Scanner */
 function QRScanner({onScan,onCancel}){
   const vR=useRef(),cR=useRef(),rafR=useRef(),stR=useRef();
   const [st,setSt]=useState('init');
   useEffect(()=>{
     (async()=>{
       try{const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
-        stR.current=s;if(vR.current){vR.current.srcObject=s;await vR.current.play();setSt('ok');tick();}}
-      catch{setSt('err');}
+        stR.current=s;if(vR.current){vR.current.srcObject=s;await vR.current.play();setSt('ok');tick();}
+      }catch{setSt('err');}
     })();
     return()=>{cancelAnimationFrame(rafR.current);stR.current?.getTracks().forEach(t=>t.stop());};
   },[]);
@@ -232,7 +145,7 @@ function QRScanner({onScan,onCancel}){
       {st==='err'&&<div style={{padding:32,textAlign:'center'}}>
         <i className="ti ti-camera-off" style={{fontSize:40,color:'#9ca3af',display:'block',marginBottom:10}}/>
         <div style={{fontSize:14,color:'#6b7280'}}>Kamera tidak boleh diakses.</div>
-        <div style={{fontSize:13,color:'#9ca3af',marginTop:4}}>Pilih program secara manual di bawah.</div>
+        <div style={{fontSize:13,color:'#9ca3af',marginTop:4}}>Pilih program secara manual.</div>
       </div>}
       {st==='ok'&&<div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',width:190,height:190,border:`3px solid ${T}`,borderRadius:14,pointerEvents:'none'}}/>}
       <button onClick={onCancel} style={{marginTop:12,width:'100%',background:'#f3f4f6',border:'none',padding:'13px',borderRadius:11,cursor:'pointer',fontSize:14,color:'#374151',fontWeight:500}}>Batal</button>
@@ -240,54 +153,84 @@ function QRScanner({onScan,onCancel}){
   );
 }
 
-/* ═══════════════════════════════════════════
-   ADMIN PANEL — DESKTOP FIRST
-═══════════════════════════════════════════ */
+/* ═══════════════════════════════════════
+   ADMIN PANEL
+   FIX: tab contents rendered as plain
+   function calls, NOT as JSX components,
+   so React never unmounts them on re-render
+   → inputs keep focus while typing
+═══════════════════════════════════════ */
 function AdminPanel({staff,progs,att,svSt,svPr,svAt,pin,setPin,onLogout}){
   const [tab,setTab]=useState('utama');
   const [sub,setSub]=useState(null);
   const [selP,setSelP]=useState(null);
-  const [sf,setSf]=useState({nama:'',noKP:'',bah:'0'});
-  const [pf,setPf]=useState({nama:'',tempat:'',tarikh:'',hari:'1'});
-  const [sErr,setSErr]=useState('');const [sOk,setSOk]=useState('');
-  const [pErr,setPErr]=useState('');const [pOk,setPOk]=useState('');
+
+  /* kakitangan form */
+  const [sfNama,setSfNama]=useState('');
+  const [sfKP,setSfKP]=useState('');
+  const [sfBah,setSfBah]=useState('0');
+  const [sErr,setSErr]=useState('');
+  const [sOk,setSOk]=useState('');
+
+  /* program form */
+  const [pfNama,setPfNama]=useState('');
+  const [pfTempat,setPfTempat]=useState('');
+  const [pfTarikh,setPfTarikh]=useState('');
+  const [pfHari,setPfHari]=useState('1');
+  const [pErr,setPErr]=useState('');
+  const [pOk,setPOk]=useState('');
+
+  /* laporan */
   const [repP,setRepP]=useState('');
-  const [nPin,setNPin]=useState('');const [pmOk,setPmOk]=useState('');const [pmErr,setPmErr]=useState('');
-  // QR tab state
+
+  /* QR tab */
   const [qrSel,setQrSel]=useState(null);
   const qrWrapRef=useRef(null);
 
-  const goTab=t=>{setTab(t);setSub(null);setSelP(null);setSErr('');setPErr('');setSOk('');setPOk('');};
+  /* PIN */
+  const [nPin,setNPin]=useState('');
+  const [pmErr,setPmErr]=useState('');
+  const [pmOk,setPmOk]=useState('');
+
+  const goTab=t=>{
+    setTab(t);setSub(null);setSelP(null);
+    setSErr('');setPErr('');setSOk('');setPOk('');
+    if(t==='qrkod'&&!qrSel){
+      const sorted=[...progs].sort((a,b)=>b.cAt-a.cAt);
+      if(sorted[0])setQrSel(sorted[0]);
+    }
+  };
 
   const addSt=async()=>{
-    if(!sf.nama.trim()||!sf.noKP.trim())return setSErr('Sila isi semua ruangan');
-    if(sf.noKP.length!==12)return setSErr('No KP mestilah 12 digit');
-    if(staff.find(s=>s.noKP===sf.noKP))return setSErr('No KP sudah didaftarkan');
-    await svSt([...staff,{id:gId(),nama:sf.nama.trim(),noKP:sf.noKP,bah:+sf.bah}]);
-    setSf({nama:'',noKP:'',bah:'0'});setSErr('');setSOk('Kakitangan berjaya didaftarkan!');
-    setTimeout(()=>setSOk(''),3000);
-  };
-  const addPr=async()=>{
-    if(!pf.nama.trim()||!pf.tempat.trim()||!pf.tarikh)return setPErr('Sila isi semua ruangan');
-    await svPr([...progs,{id:gId(),nama:pf.nama.trim(),tempat:pf.tempat.trim(),tarikh:pf.tarikh,hari:+pf.hari,cAt:Date.now()}]);
-    setPf({nama:'',tempat:'',tarikh:'',hari:'1'});setPErr('');setPOk('Program berjaya ditambah!');
-    setTimeout(()=>setPOk(''),3000);
-  };
-  const delSt=async id=>svSt(staff.filter(s=>s.id!==id));
-  const delPr=async id=>{await svPr(progs.filter(p=>p.id!==id));await svAt(att.filter(a=>a.pId!==id));if(qrSel?.id===id)setQrSel(null);};
-  const doPin=async()=>{
-    if(nPin.length<4)return setPmErr('PIN mestilah sekurang-kurangnya 4 digit');
-    await setPin(nPin);setNPin('');setPmErr('');setPmOk('PIN berjaya dikemas kini!');
-    setTimeout(()=>setPmOk(''),3000);
+    if(!sfNama.trim()||!sfKP.trim())return setSErr('Sila isi semua ruangan');
+    if(sfKP.length!==12)return setSErr('No KP mestilah 12 digit');
+    if(staff.find(s=>s.noKP===sfKP))return setSErr('No KP sudah didaftarkan');
+    await svSt([...staff,{id:gId(),nama:sfNama.trim(),noKP:sfKP,bah:+sfBah}]);
+    setSfNama('');setSfKP('');setSfBah('0');setSErr('');
+    setSOk('Kakitangan berjaya didaftarkan!');setTimeout(()=>setSOk(''),3000);
   };
 
-  const sIn=(ph,val,ch,ex={})=><input placeholder={ph} value={val} onChange={ch} style={{...ex}}/>;
-  const sSel=(val,ch,kids)=><select value={val} onChange={ch}>{kids}</select>;
-  const iBtn=(fn,ic,l,c=T,outline=false)=>(
-    <button onClick={fn} style={{display:'flex',alignItems:'center',gap:6,background:outline?'transparent':c,color:outline?c:'#fff',border:`1.5px solid ${c}`,padding:'8px 14px',borderRadius:8,cursor:'pointer',fontWeight:600,fontSize:13,whiteSpace:'nowrap'}}>
-      <i className={`ti ti-${ic}`}/>{l}
-    </button>
-  );
+  const addPr=async()=>{
+    if(!pfNama.trim()||!pfTempat.trim()||!pfTarikh)return setPErr('Sila isi semua ruangan');
+    await svPr([...progs,{id:gId(),nama:pfNama.trim(),tempat:pfTempat.trim(),tarikh:pfTarikh,hari:+pfHari,cAt:Date.now()}]);
+    setPfNama('');setPfTempat('');setPfTarikh('');setPfHari('1');setPErr('');
+    setPOk('Program berjaya ditambah!');setTimeout(()=>setPOk(''),3000);
+  };
+
+  const delSt=async id=>svSt(staff.filter(s=>s.id!==id));
+  const delPr=async id=>{
+    await svPr(progs.filter(p=>p.id!==id));
+    await svAt(att.filter(a=>a.pId!==id));
+    if(qrSel?.id===id)setQrSel(null);
+  };
+
+  const savePin=async()=>{
+    if(nPin.length<4)return setPmErr('PIN mestilah sekurang-kurangnya 4 digit');
+    await setPin(nPin);setNPin('');setPmErr('');
+    setPmOk('PIN berjaya dikemas kini!');setTimeout(()=>setPmOk(''),3000);
+  };
+
+  /* shared UI helpers */
   const sLbl=tx=><div style={{fontSize:11,fontWeight:600,color:'#6b7280',textTransform:'uppercase',letterSpacing:'.06em',marginBottom:9}}>{tx}</div>;
   const stCard=(ic,l,v,c)=>(
     <div style={{background:'#f9fafb',borderRadius:10,padding:'12px 14px',display:'flex',alignItems:'center',gap:10,border:'1px solid #e5e7eb'}}>
@@ -295,19 +238,10 @@ function AdminPanel({staff,progs,att,svSt,svPr,svAt,pin,setPin,onLogout}){
       <div><div style={{fontSize:21,fontWeight:700,lineHeight:1.1,color:'#111827'}}>{v}</div><div style={{fontSize:11,color:'#6b7280',marginTop:1}}>{l}</div></div>
     </div>
   );
+  const row=(items)=><div style={{display:'flex',gap:8,justifyContent:'flex-end'}}>{items}</div>;
 
-  const NAVS=[
-    {id:'utama',ic:'layout-dashboard',l:'Papan Pemuka'},
-    {id:'kakitangan',ic:'users',l:'Kakitangan'},
-    {id:'program',ic:'calendar',l:'Program'},
-    {id:'qrkod',ic:'qrcode',l:'Jana Kod QR'},
-    {id:'laporan',ic:'chart-bar',l:'Laporan'},
-    {id:'tetapan',ic:'settings',l:'Tetapan'},
-  ];
-  const tabLabel={utama:'Papan Pemuka',kakitangan:'Kakitangan',program:'Program',qrkod:'Jana Kod QR',laporan:'Laporan',tetapan:'Tetapan'};
-
-  /* ── Utama ── */
-  function Utama(){
+  /* ── TAB: UTAMA ── */
+  const tabUtama=()=>{
     const tod=new Date().toISOString().slice(0,10);
     const rec=[...progs].sort((a,b)=>b.cAt-a.cAt).slice(0,8);
     return(
@@ -350,66 +284,69 @@ function AdminPanel({staff,progs,att,svSt,svPr,svAt,pin,setPin,onLogout}){
         </div>}
       </div>
     );
-  }
+  };
 
-  /* ── Kakitangan ── */
-  function Kakitangan(){
-    return(
-      <div style={{animation:'fadeUp .2s ease',display:'grid',gridTemplateColumns:'290px 1fr',gap:18,alignItems:'start'}}>
-        <div style={{background:'#fff',border:'1px solid #e5e7eb',borderRadius:10,padding:16}}>
-          <div style={{fontSize:13,fontWeight:600,marginBottom:13,paddingBottom:10,borderBottom:'1px solid #f3f4f6',color:'#374151'}}>Tambah Kakitangan Baharu</div>
-          <div style={{display:'flex',flexDirection:'column',gap:9}}>
-            {sIn('Nama penuh',sf.nama,e=>setSf(f=>({...f,nama:e.target.value})))}
-            {sIn('No. KP (12 digit, tanpa sempang)',sf.noKP,e=>setSf(f=>({...f,noKP:e.target.value.replace(/\D/g,'')})),{maxLength:12})}
-            {sSel(sf.bah,e=>setSf(f=>({...f,bah:e.target.value})),BAH.map((b,i)=><option key={i} value={i}>{b}</option>))}
-            {sErr&&<div style={{fontSize:12,color:'#dc2626'}}>{sErr}</div>}
-            {sOk&&<div style={{fontSize:12,color:T}}>{sOk}</div>}
-            {iBtn(addSt,'user-plus','Daftar Kakitangan')}
-          </div>
-        </div>
-        <div>
-          {sLbl(`${staff.length} Kakitangan Berdaftar`)}
-          {staff.length===0
-            ?<div style={{textAlign:'center',padding:'36px',color:'#9ca3af',border:'1px solid #e5e7eb',borderRadius:10}}>
-              <i className="ti ti-users" style={{fontSize:34,display:'block',marginBottom:8}}/>Tiada kakitangan berdaftar
-            </div>
-            :<div style={{border:'1px solid #e5e7eb',borderRadius:10,overflow:'hidden'}}>
-              <table style={{width:'100%',borderCollapse:'collapse',fontSize:13,tableLayout:'fixed'}}>
-                <thead><tr style={{background:'#f9fafb'}}>
-                  <th style={{padding:'8px 12px',textAlign:'left',fontWeight:600,fontSize:11,color:'#6b7280',width:'38%'}}>Nama</th>
-                  <th style={{padding:'8px 12px',textAlign:'left',fontWeight:600,fontSize:11,color:'#6b7280',width:'30%'}}>No. KP</th>
-                  <th style={{padding:'8px 12px',textAlign:'left',fontWeight:600,fontSize:11,color:'#6b7280',width:'22%'}}>Bahagian</th>
-                  <th style={{padding:'8px 12px',width:'10%'}}></th>
-                </tr></thead>
-                <tbody>{staff.map((s,i)=>(
-                  <tr key={s.id} className="hr" style={{borderTop:i>0?'1px solid #f3f4f6':'none'}}>
-                    <td style={{padding:'9px 12px'}}>
-                      <div style={{display:'flex',alignItems:'center',gap:8}}>
-                        <div style={{width:28,height:28,borderRadius:'50%',background:TL,color:TD,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,flexShrink:0}}>
-                          {s.nama.trim().split(' ').slice(0,2).map(n=>n[0]||'').join('').toUpperCase()||'?'}
-                        </div>
-                        <span style={{fontWeight:500,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',color:'#111827'}}>{s.nama}</span>
-                      </div>
-                    </td>
-                    <td style={{padding:'9px 12px',color:'#6b7280',fontFamily:'monospace',fontSize:12}}>{s.noKP}</td>
-                    <td style={{padding:'9px 12px'}}><Bdg l={BAH[s.bah]} i={s.bah}/></td>
-                    <td style={{padding:'9px 12px',textAlign:'center'}}>
-                      <button onClick={()=>delSt(s.id)} style={{background:'none',border:'none',cursor:'pointer',color:'#9ca3af',padding:3}} title="Padam">
-                        <i className="ti ti-trash" style={{fontSize:14}}/>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody></table>
-            </div>
-          }
+  /* ── TAB: KAKITANGAN ── */
+  const tabKakitangan=()=>(
+    <div style={{animation:'fadeUp .2s ease',display:'grid',gridTemplateColumns:'290px 1fr',gap:18,alignItems:'start'}}>
+      <div style={{background:'#fff',border:'1px solid #e5e7eb',borderRadius:10,padding:16}}>
+        <div style={{fontSize:13,fontWeight:600,marginBottom:13,paddingBottom:10,borderBottom:'1px solid #f3f4f6',color:'#374151'}}>Tambah Kakitangan Baharu</div>
+        <div style={{display:'flex',flexDirection:'column',gap:9}}>
+          <input placeholder="Nama penuh" value={sfNama} onChange={e=>setSfNama(e.target.value)}/>
+          <input placeholder="No. KP (12 digit, tanpa sempang)" value={sfKP} maxLength={12}
+            onChange={e=>setSfKP(e.target.value.replace(/\D/g,''))}/>
+          <select value={sfBah} onChange={e=>setSfBah(e.target.value)}>
+            {BAH.map((b,i)=><option key={i} value={i}>{b}</option>)}
+          </select>
+          {sErr&&<div style={{fontSize:12,color:'#dc2626'}}>{sErr}</div>}
+          {sOk&&<div style={{fontSize:12,color:T,fontWeight:500}}>{sOk}</div>}
+          <button onClick={addSt} style={{background:T,color:'#fff',border:'none',padding:'10px 14px',borderRadius:8,cursor:'pointer',fontWeight:600,fontSize:14,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
+            <i className="ti ti-user-plus"/>Daftar Kakitangan
+          </button>
         </div>
       </div>
-    );
-  }
+      <div>
+        {sLbl(`${staff.length} Kakitangan Berdaftar`)}
+        {staff.length===0
+          ?<div style={{textAlign:'center',padding:'36px',color:'#9ca3af',border:'1px solid #e5e7eb',borderRadius:10}}>
+            <i className="ti ti-users" style={{fontSize:34,display:'block',marginBottom:8}}/>Tiada kakitangan berdaftar
+          </div>
+          :<div style={{border:'1px solid #e5e7eb',borderRadius:10,overflow:'hidden'}}>
+            <table style={{width:'100%',borderCollapse:'collapse',fontSize:13,tableLayout:'fixed'}}>
+              <thead><tr style={{background:'#f9fafb'}}>
+                <th style={{padding:'8px 12px',textAlign:'left',fontWeight:600,fontSize:11,color:'#6b7280',width:'38%'}}>Nama</th>
+                <th style={{padding:'8px 12px',textAlign:'left',fontWeight:600,fontSize:11,color:'#6b7280',width:'30%'}}>No. KP</th>
+                <th style={{padding:'8px 12px',textAlign:'left',fontWeight:600,fontSize:11,color:'#6b7280',width:'22%'}}>Bahagian</th>
+                <th style={{padding:'8px 12px',width:'10%'}}></th>
+              </tr></thead>
+              <tbody>{staff.map((s,i)=>(
+                <tr key={s.id} className="hr" style={{borderTop:i>0?'1px solid #f3f4f6':'none'}}>
+                  <td style={{padding:'9px 12px'}}>
+                    <div style={{display:'flex',alignItems:'center',gap:8}}>
+                      <div style={{width:28,height:28,borderRadius:'50%',background:TL,color:TD,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,flexShrink:0}}>
+                        {s.nama.trim().split(' ').slice(0,2).map(n=>n[0]||'').join('').toUpperCase()||'?'}
+                      </div>
+                      <span style={{fontWeight:500,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',color:'#111827'}}>{s.nama}</span>
+                    </div>
+                  </td>
+                  <td style={{padding:'9px 12px',color:'#6b7280',fontFamily:'monospace',fontSize:12}}>{s.noKP}</td>
+                  <td style={{padding:'9px 12px'}}><Bdg l={BAH[s.bah]} i={s.bah}/></td>
+                  <td style={{padding:'9px 12px',textAlign:'center'}}>
+                    <button onClick={()=>delSt(s.id)} style={{background:'none',border:'none',cursor:'pointer',color:'#9ca3af',padding:3}}>
+                      <i className="ti ti-trash" style={{fontSize:14}}/>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody></table>
+          </div>
+        }
+      </div>
+    </div>
+  );
 
-  /* ── Program ── */
-  function ProgRep(){
+  /* ── TAB: PROGRAM ── */
+  const tabProgRep=()=>{
     if(!selP)return null;
     const recs=[...att.filter(a=>a.pId===selP.id)].sort((a,b)=>a.masa-b.masa);
     return(
@@ -458,23 +395,27 @@ function AdminPanel({staff,progs,att,svSt,svPr,svAt,pin,setPin,onLogout}){
         </div>
       </div>
     );
-  }
+  };
 
-  function Program(){
-    if(sub==='rep'&&selP)return <ProgRep/>;
+  const tabProgram=()=>{
+    if(sub==='rep'&&selP)return tabProgRep();
     const sorted=[...progs].sort((a,b)=>b.cAt-a.cAt);
     return(
       <div style={{animation:'fadeUp .2s ease',display:'grid',gridTemplateColumns:'290px 1fr',gap:18,alignItems:'start'}}>
         <div style={{background:'#fff',border:'1px solid #e5e7eb',borderRadius:10,padding:16}}>
           <div style={{fontSize:13,fontWeight:600,marginBottom:13,paddingBottom:10,borderBottom:'1px solid #f3f4f6',color:'#374151'}}>Tambah Program Baharu</div>
           <div style={{display:'flex',flexDirection:'column',gap:9}}>
-            {sIn('Nama program',pf.nama,e=>setPf(f=>({...f,nama:e.target.value})))}
-            {sIn('Tempat',pf.tempat,e=>setPf(f=>({...f,tempat:e.target.value})))}
-            <input type="date" value={pf.tarikh} onChange={e=>setPf(f=>({...f,tarikh:e.target.value}))}/>
-            {sSel(pf.hari,e=>setPf(f=>({...f,hari:e.target.value})),HR.map((h,i)=><option key={i} value={i}>{h}</option>))}
+            <input placeholder="Nama program" value={pfNama} onChange={e=>setPfNama(e.target.value)}/>
+            <input placeholder="Tempat" value={pfTempat} onChange={e=>setPfTempat(e.target.value)}/>
+            <input type="date" value={pfTarikh} onChange={e=>setPfTarikh(e.target.value)}/>
+            <select value={pfHari} onChange={e=>setPfHari(e.target.value)}>
+              {HR.map((h,i)=><option key={i} value={i}>{h}</option>)}
+            </select>
             {pErr&&<div style={{fontSize:12,color:'#dc2626'}}>{pErr}</div>}
-            {pOk&&<div style={{fontSize:12,color:T}}>{pOk}</div>}
-            {iBtn(addPr,'plus','Tambah Program')}
+            {pOk&&<div style={{fontSize:12,color:T,fontWeight:500}}>{pOk}</div>}
+            <button onClick={addPr} style={{background:T,color:'#fff',border:'none',padding:'10px 14px',borderRadius:8,cursor:'pointer',fontWeight:600,fontSize:14,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
+              <i className="ti ti-plus"/>Tambah Program
+            </button>
           </div>
         </div>
         <div>
@@ -486,11 +427,11 @@ function AdminPanel({staff,progs,att,svSt,svPr,svAt,pin,setPin,onLogout}){
             :<div style={{border:'1px solid #e5e7eb',borderRadius:10,overflow:'hidden'}}>
               <table style={{width:'100%',borderCollapse:'collapse',fontSize:13,tableLayout:'fixed'}}>
                 <thead><tr style={{background:'#f9fafb'}}>
-                  <th style={{padding:'8px 11px',textAlign:'left',fontWeight:600,fontSize:11,color:'#6b7280',width:'26%'}}>Program</th>
-                  <th style={{padding:'8px 11px',textAlign:'left',fontWeight:600,fontSize:11,color:'#6b7280',width:'20%'}}>Tempat</th>
-                  <th style={{padding:'8px 11px',textAlign:'left',fontWeight:600,fontSize:11,color:'#6b7280',width:'22%'}}>Tarikh</th>
+                  <th style={{padding:'8px 11px',textAlign:'left',fontWeight:600,fontSize:11,color:'#6b7280',width:'27%'}}>Program</th>
+                  <th style={{padding:'8px 11px',textAlign:'left',fontWeight:600,fontSize:11,color:'#6b7280',width:'21%'}}>Tempat</th>
+                  <th style={{padding:'8px 11px',textAlign:'left',fontWeight:600,fontSize:11,color:'#6b7280',width:'23%'}}>Tarikh</th>
                   <th style={{padding:'8px 11px',textAlign:'center',fontWeight:600,fontSize:11,color:'#6b7280',width:52}}>Hadir</th>
-                  <th style={{padding:'8px 11px',width:104}}></th>
+                  <th style={{padding:'8px 11px',width:100}}></th>
                 </tr></thead>
                 <tbody>{sorted.map((p,i)=>{const cnt=att.filter(a=>a.pId===p.id).length;return(
                   <tr key={p.id} className="hr" style={{borderTop:i>0?'1px solid #f3f4f6':'none'}}>
@@ -521,19 +462,14 @@ function AdminPanel({staff,progs,att,svSt,svPr,svAt,pin,setPin,onLogout}){
         </div>
       </div>
     );
-  }
+  };
 
-  /* ── JANA KOD QR TAB ── */
-  function QRKod(){
+  /* ── TAB: JANA KOD QR ── */
+  const tabQRKod=()=>{
     const sorted=[...progs].sort((a,b)=>b.cAt-a.cAt);
     const selected=qrSel||sorted[0]||null;
     const qrData=selected?`HADIR:${selected.id}`:null;
     const cnt=selected?att.filter(a=>a.pId===selected.id).length:0;
-
-    // auto-select first when tab opens
-    useEffect(()=>{
-      if(!qrSel&&sorted.length>0)setQrSel(sorted[0]);
-    },[]);
 
     if(progs.length===0)return(
       <div style={{textAlign:'center',padding:'60px 0',color:'#9ca3af',animation:'fadeUp .2s ease'}}>
@@ -547,73 +483,58 @@ function AdminPanel({staff,progs,att,svSt,svPr,svAt,pin,setPin,onLogout}){
     );
 
     return(
-      <div style={{animation:'fadeUp .2s ease',display:'grid',gridTemplateColumns:'230px 1fr',gap:0,minHeight:480}}>
-        {/* Left: program list */}
-        <div style={{borderRight:'1px solid #e5e7eb',paddingRight:0}}>
-          <div style={{padding:'0 14px 10px',fontSize:11,fontWeight:600,color:'#6b7280',textTransform:'uppercase',letterSpacing:'.06em'}}>
-            Pilih Program
-          </div>
-          <div style={{overflowY:'auto',maxHeight:500}}>
-            {sorted.map(p=>{
-              const isSel=selected?.id===p.id;
-              const c2=att.filter(a=>a.pId===p.id).length;
-              return(
-                <div key={p.id} onClick={()=>setQrSel(p)}
-                  style={{padding:'11px 14px',cursor:'pointer',borderLeft:`3px solid ${isSel?T:'transparent'}`,background:isSel?TL:'transparent',transition:'all .15s',borderBottom:'1px solid #f3f4f6'}}>
-                  <div style={{fontWeight:isSel?600:500,fontSize:13,color:isSel?TD:'#111827',marginBottom:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.nama}</div>
-                  <div style={{fontSize:11,color:isSel?TD:'#9ca3af'}}>{HR[p.hari]}, {fds(p.tarikh)}</div>
-                  <div style={{fontSize:11,color:isSel?T:'#9ca3af',marginTop:2,fontWeight:isSel?600:400}}>{c2} hadir</div>
-                </div>
-              );
-            })}
-          </div>
+      <div style={{animation:'fadeUp .2s ease',display:'grid',gridTemplateColumns:'210px 1fr',gap:0,minHeight:420}}>
+        {/* Program list */}
+        <div style={{borderRight:'1px solid #e5e7eb'}}>
+          <div style={{padding:'10px 14px 8px',fontSize:11,fontWeight:600,color:'#6b7280',textTransform:'uppercase',letterSpacing:'.06em',borderBottom:'1px solid #f3f4f6'}}>Pilih Program</div>
+          {sorted.map(p=>{
+            const isSel=selected?.id===p.id;
+            const c2=att.filter(a=>a.pId===p.id).length;
+            return(
+              <div key={p.id} onClick={()=>setQrSel(p)}
+                style={{padding:'11px 14px',cursor:'pointer',borderLeft:`3px solid ${isSel?T:'transparent'}`,background:isSel?TL:'transparent',transition:'all .12s',borderBottom:'1px solid #f3f4f6'}}>
+                <div style={{fontWeight:isSel?600:500,fontSize:13,color:isSel?TD:'#111827',marginBottom:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.nama}</div>
+                <div style={{fontSize:11,color:isSel?TD:'#9ca3af',marginBottom:1}}>{HR[p.hari]}, {fds(p.tarikh)}</div>
+                <div style={{fontSize:11,color:isSel?T:'#9ca3af',fontWeight:isSel?600:400}}>{c2} hadir</div>
+              </div>
+            );
+          })}
         </div>
-
-        {/* Right: QR display panel */}
+        {/* QR display */}
         {selected&&(
-          <div style={{padding:'0 0 0 24px',display:'flex',flexDirection:'column',gap:16}}>
-            {/* Program info banner */}
-            <div style={{background:`linear-gradient(135deg,${NV} 0%,#2d5a8e 100%)`,borderRadius:12,padding:'16px 18px',color:'#fff'}}>
-              <div style={{fontSize:10,color:'rgba(255,255,255,.5)',letterSpacing:'.07em',textTransform:'uppercase',marginBottom:4}}>{SCHOOL}</div>
-              <div style={{fontSize:16,fontWeight:700,marginBottom:5}}>{selected.nama}</div>
-              <div style={{display:'flex',gap:14,fontSize:12,color:'rgba(255,255,255,.7)'}}>
+          <div style={{padding:'0 0 24px 22px'}}>
+            {/* Banner */}
+            <div style={{background:`linear-gradient(135deg,${NV} 0%,#2d5a8e 100%)`,borderRadius:12,padding:'14px 18px',color:'#fff',marginBottom:16}}>
+              <div style={{fontSize:9,color:'rgba(255,255,255,.45)',letterSpacing:'.07em',textTransform:'uppercase',marginBottom:4}}>{SCHOOL}</div>
+              <div style={{fontSize:15,fontWeight:700,marginBottom:5}}>{selected.nama}</div>
+              <div style={{display:'flex',gap:12,flexWrap:'wrap',fontSize:12,color:'rgba(255,255,255,.7)'}}>
                 <span><i className="ti ti-map-pin" style={{fontSize:11,marginRight:3}}/>{selected.tempat}</span>
                 <span><i className="ti ti-calendar" style={{fontSize:11,marginRight:3}}/>{HR[selected.hari]}, {fds(selected.tarikh)}</span>
                 <span><i className="ti ti-users" style={{fontSize:11,marginRight:3}}/>{cnt} hadir</span>
               </div>
             </div>
-
-            {/* QR Code */}
-            <div style={{display:'flex',gap:20,alignItems:'flex-start'}}>
-              <div style={{background:'#fff',border:'1px solid #e5e7eb',borderRadius:14,padding:18,display:'inline-block',boxShadow:'0 4px 20px rgba(0,0,0,.06)',flexShrink:0}}>
-                <QRGen data={qrData} size={220} wrapRef={qrWrapRef}/>
-                <div style={{marginTop:10,textAlign:'center'}}>
-                  <div style={{fontSize:10,color:'#9ca3af',marginBottom:2}}>ID Program</div>
-                  <code style={{fontSize:10,background:'#f3f4f6',padding:'2px 7px',borderRadius:4,color:'#374151'}}>{selected.id}</code>
+            <div style={{display:'flex',gap:18,alignItems:'flex-start'}}>
+              {/* QR box */}
+              <div style={{background:'#fff',border:'1px solid #e5e7eb',borderRadius:14,padding:16,textAlign:'center',boxShadow:'0 4px 20px rgba(0,0,0,.06)',flexShrink:0}}>
+                <QRGen data={qrData} size={200} wrapRef={qrWrapRef}/>
+                <div style={{marginTop:10}}>
+                  <div style={{fontSize:9,color:'#9ca3af',marginBottom:2}}>ID Program</div>
+                  <code style={{fontSize:9,background:'#f3f4f6',padding:'2px 7px',borderRadius:4,color:'#374151'}}>{selected.id}</code>
                 </div>
               </div>
-
-              {/* Instructions + Actions */}
-              <div style={{flex:1}}>
-                <div style={{background:'#f9fafb',border:'1px solid #e5e7eb',borderRadius:10,padding:'14px 16px',marginBottom:12}}>
-                  <div style={{fontSize:12,fontWeight:600,color:'#374151',marginBottom:8}}>Cara Penggunaan</div>
-                  {[
-                    ['1','Buka apl pada telefon kakitangan'],
-                    ['2','Pilih peranan Kakitangan'],
-                    ['3','Tekan butang Imbas Kod QR'],
-                    ['4','Arahkan kamera ke kod QR ini'],
-                    ['5','Masukkan No. KP untuk daftar hadir'],
-                  ].map(([n,t])=>(
-                    <div key={n} style={{display:'flex',gap:9,alignItems:'flex-start',marginBottom:7}}>
-                      <div style={{width:20,height:20,borderRadius:'50%',background:T,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,flexShrink:0}}>{n}</div>
-                      <div style={{fontSize:12,color:'#374151',paddingTop:1}}>{t}</div>
+              {/* Info + actions */}
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{background:'#f9fafb',border:'1px solid #e5e7eb',borderRadius:10,padding:'13px 15px',marginBottom:12}}>
+                  <div style={{fontSize:12,fontWeight:600,color:'#374151',marginBottom:9}}>Cara Penggunaan</div>
+                  {[['1','Buka apl pada telefon kakitangan'],['2','Pilih peranan Kakitangan'],['3','Tekan butang Imbas Kod QR'],['4','Arahkan kamera ke kod QR ini'],['5','Masukkan No. KP untuk daftar hadir']].map(([n,txt])=>(
+                    <div key={n} style={{display:'flex',gap:8,alignItems:'flex-start',marginBottom:7}}>
+                      <div style={{width:19,height:19,borderRadius:'50%',background:T,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,flexShrink:0}}>{n}</div>
+                      <div style={{fontSize:12,color:'#374151',paddingTop:1}}>{txt}</div>
                     </div>
                   ))}
                 </div>
-
-                {/* Action buttons */}
                 <div style={{display:'flex',flexDirection:'column',gap:8}}>
-                  <button onClick={()=>downloadQRImage(selected,qrWrapRef.current)}
+                  <button onClick={()=>downloadQR(selected,qrWrapRef.current)}
                     style={{width:'100%',background:T,color:'#fff',border:'none',padding:'11px 16px',borderRadius:9,cursor:'pointer',fontWeight:600,fontSize:14,display:'flex',alignItems:'center',justifyContent:'center',gap:7,boxShadow:'0 2px 12px rgba(29,158,117,.25)'}}>
                     <i className="ti ti-download" style={{fontSize:17}}/>Muat Turun QR (PNG)
                   </button>
@@ -626,10 +547,9 @@ function AdminPanel({staff,progs,att,svSt,svPr,svAt,pin,setPin,onLogout}){
                     <i className="ti ti-clipboard-list"/>Lihat Senarai Kehadiran
                   </button>
                 </div>
-
-                <div style={{marginTop:12,fontSize:11,color:'#9ca3af',lineHeight:1.5}}>
+                <div style={{marginTop:11,fontSize:11,color:'#9ca3af',lineHeight:1.6,padding:'10px 12px',background:'#f9fafb',borderRadius:8,border:'1px solid #e5e7eb'}}>
                   <i className="ti ti-info-circle" style={{marginRight:4}}/>
-                  Fail PNG yang dimuat turun mengandungi QR kod berserta maklumat program dan nama sekolah — sesuai untuk dicetak atau dikongsi.
+                  PNG yang dimuat turun mengandungi QR kod berserta maklumat program dan nama sekolah — sesuai untuk dicetak atau dikongsi.
                 </div>
               </div>
             </div>
@@ -637,10 +557,10 @@ function AdminPanel({staff,progs,att,svSt,svPr,svAt,pin,setPin,onLogout}){
         )}
       </div>
     );
-  }
+  };
 
-  /* ── Laporan ── */
-  function Laporan(){
+  /* ── TAB: LAPORAN ── */
+  const tabLaporan=()=>{
     const cur=repP?progs.find(p=>p.id===repP):null;
     const recs=cur?[...att.filter(a=>a.pId===cur.id)].sort((a,b)=>a.masa-b.masa):[];
     return(
@@ -667,7 +587,7 @@ function AdminPanel({staff,progs,att,svSt,svPr,svAt,pin,setPin,onLogout}){
           </div>
           <div style={{border:'1px solid #e5e7eb',borderRadius:10,overflow:'hidden'}}>
             {recs.length===0
-              ?<div style={{padding:28,textAlign:'center',color:'#9ca3af'}}>Tiada rekod kehadiran untuk program ini</div>
+              ?<div style={{padding:28,textAlign:'center',color:'#9ca3af'}}>Tiada rekod kehadiran</div>
               :<table style={{width:'100%',borderCollapse:'collapse',fontSize:13,tableLayout:'fixed'}}>
                 <thead><tr style={{background:'#f9fafb'}}>
                   <th style={{padding:'7px 10px',textAlign:'left',fontWeight:600,fontSize:11,color:'#6b7280',width:28}}>#</th>
@@ -694,43 +614,65 @@ function AdminPanel({staff,progs,att,svSt,svPr,svAt,pin,setPin,onLogout}){
         </div>}
       </div>
     );
-  }
+  };
 
-  /* ── Tetapan ── */
-  function Tetapan(){
-    return(
-      <div style={{animation:'fadeUp .2s ease',maxWidth:480}}>
-        <div style={{background:'#fff',border:'1px solid #e5e7eb',borderRadius:10,padding:18,marginBottom:12}}>
-          <div style={{fontSize:14,fontWeight:600,marginBottom:4,color:'#111827'}}>Tukar PIN Admin</div>
-          <div style={{fontSize:13,color:'#6b7280',marginBottom:12}}>PIN digunakan untuk melindungi akses ke panel admin. PIN lalai ialah <strong>1234</strong>.</div>
-          <div style={{display:'flex',gap:8}}>
-            <input type="password" placeholder="PIN baharu (4–8 digit)" value={nPin} maxLength={8} onChange={e=>setNPin(e.target.value.replace(/\D/g,''))} style={{flex:1}}/>
-            {iBtn(doPin,'lock','Simpan')}
-          </div>
-          {pmErr&&<div style={{fontSize:12,color:'#dc2626',marginTop:7}}>{pmErr}</div>}
-          {pmOk&&<div style={{fontSize:12,color:T,marginTop:7}}>{pmOk}</div>}
-        </div>
-        <div style={{background:'#fff',border:'1px solid #e5e7eb',borderRadius:10,padding:18}}>
-          <div style={{fontSize:14,fontWeight:600,marginBottom:4,color:'#111827'}}>Log Keluar Admin</div>
-          <div style={{fontSize:13,color:'#6b7280',marginBottom:12}}>Kembali ke skrin pemilihan peranan.</div>
-          <button onClick={onLogout} style={{display:'flex',alignItems:'center',gap:6,background:'#FEF2F2',color:'#991B1B',border:'1px solid #FECACA',padding:'8px 14px',borderRadius:8,cursor:'pointer',fontWeight:500,fontSize:13}}>
-            <i className="ti ti-logout"/>Log Keluar
+  /* ── TAB: TETAPAN ── */
+  const tabTetapan=()=>(
+    <div style={{animation:'fadeUp .2s ease',maxWidth:480}}>
+      <div style={{background:'#fff',border:'1px solid #e5e7eb',borderRadius:10,padding:18,marginBottom:12}}>
+        <div style={{fontSize:14,fontWeight:600,marginBottom:4,color:'#111827'}}>Tukar PIN Admin</div>
+        <div style={{fontSize:13,color:'#6b7280',marginBottom:12}}>PIN lalai ialah <strong>1234</strong>. Tukar selepas log masuk pertama.</div>
+        <div style={{display:'flex',gap:8}}>
+          <input type="password" placeholder="PIN baharu (4–8 digit)" value={nPin} maxLength={8} onChange={e=>setNPin(e.target.value.replace(/\D/g,''))} style={{flex:1}}/>
+          <button onClick={savePin} style={{background:T,color:'#fff',border:'none',padding:'9px 14px',borderRadius:8,cursor:'pointer',fontWeight:600,fontSize:13,display:'flex',alignItems:'center',gap:5,whiteSpace:'nowrap'}}>
+            <i className="ti ti-lock"/>Simpan
           </button>
         </div>
+        {pmErr&&<div style={{fontSize:12,color:'#dc2626',marginTop:7}}>{pmErr}</div>}
+        {pmOk&&<div style={{fontSize:12,color:T,marginTop:7,fontWeight:500}}>{pmOk}</div>}
       </div>
-    );
-  }
+      <div style={{background:'#fff',border:'1px solid #e5e7eb',borderRadius:10,padding:18}}>
+        <div style={{fontSize:14,fontWeight:600,marginBottom:4,color:'#111827'}}>Log Keluar Admin</div>
+        <div style={{fontSize:13,color:'#6b7280',marginBottom:12}}>Kembali ke skrin pemilihan peranan.</div>
+        <button onClick={onLogout} style={{display:'flex',alignItems:'center',gap:6,background:'#FEF2F2',color:'#991B1B',border:'1px solid #FECACA',padding:'8px 14px',borderRadius:8,cursor:'pointer',fontWeight:500,fontSize:13}}>
+          <i className="ti ti-logout"/>Log Keluar
+        </button>
+      </div>
+    </div>
+  );
 
-  const renderTab=()=>{switch(tab){case'utama':return<Utama/>;case'kakitangan':return<Kakitangan/>;case'program':return<Program/>;case'qrkod':return<QRKod/>;case'laporan':return<Laporan/>;case'tetapan':return<Tetapan/>;default:return<Utama/>;}}
-  const hdrTitle=sub==='rep'?`Kehadiran — ${selP?.nama||''}`:tabLabel[tab]||'';
+  /* Render active tab — called as FUNCTIONS not JSX components
+     This prevents React from treating them as new component types
+     on each render, which would cause inputs to lose focus */
+  const renderTab=()=>{
+    switch(tab){
+      case 'utama':      return tabUtama();
+      case 'kakitangan': return tabKakitangan();
+      case 'program':    return tabProgram();
+      case 'qrkod':      return tabQRKod();
+      case 'laporan':    return tabLaporan();
+      case 'tetapan':    return tabTetapan();
+      default:           return tabUtama();
+    }
+  };
+
+  const NAVS=[
+    {id:'utama',    ic:'layout-dashboard', l:'Papan Pemuka'},
+    {id:'kakitangan',ic:'users',           l:'Kakitangan'},
+    {id:'program',  ic:'calendar',         l:'Program'},
+    {id:'qrkod',    ic:'qrcode',           l:'Jana Kod QR'},
+    {id:'laporan',  ic:'chart-bar',        l:'Laporan'},
+    {id:'tetapan',  ic:'settings',         l:'Tetapan'},
+  ];
+  const hdrTitle=sub==='rep'?`Kehadiran — ${selP?.nama||''}`:
+    {utama:'Papan Pemuka',kakitangan:'Kakitangan',program:'Program',qrkod:'Jana Kod QR',laporan:'Laporan',tetapan:'Tetapan'}[tab];
 
   return(
     <div style={{display:'flex',minHeight:'100vh'}}>
-      {/* Sidebar */}
       <div style={{width:196,flexShrink:0,background:NV,display:'flex',flexDirection:'column',minHeight:'100vh'}}>
         <div style={{padding:'16px 14px 13px',borderBottom:'1px solid rgba(255,255,255,.08)'}}>
-          <div style={{fontSize:9,color:'rgba(255,255,255,.35)',letterSpacing:'.07em',textTransform:'uppercase'}}>SMK Haji Abdul Rahman Limbong</div>
-          <div style={{fontSize:13,fontWeight:600,color:'#fff',marginTop:2,lineHeight:1.3}}>Sistem Kehadiran Program</div>
+          <div style={{fontSize:9,color:'rgba(255,255,255,.35)',letterSpacing:'.07em',textTransform:'uppercase'}}>{SCHOOL}</div>
+          <div style={{fontSize:12,fontWeight:600,color:'#fff',marginTop:2,lineHeight:1.3}}>Sistem Kehadiran Program</div>
           <div style={{marginTop:7,display:'inline-flex',alignItems:'center',gap:4,background:'rgba(255,255,255,.11)',borderRadius:5,padding:'3px 7px'}}>
             <i className="ti ti-shield-check" style={{fontSize:10,color:'rgba(255,255,255,.6)'}}/>
             <span style={{fontSize:10,color:'rgba(255,255,255,.6)',fontWeight:600}}>ADMIN</span>
@@ -741,8 +683,8 @@ function AdminPanel({staff,progs,att,svSt,svPr,svAt,pin,setPin,onLogout}){
             <button key={n.id} className="ni" onClick={()=>goTab(n.id)}
               style={{width:'100%',display:'flex',alignItems:'center',gap:8,background:tab===n.id?(n.id==='qrkod'?`${T}22`:'rgba(255,255,255,.13)'):'none',border:'none',borderRadius:7,padding:'9px 10px',cursor:'pointer',marginBottom:2,color:tab===n.id?(n.id==='qrkod'?TL:'#fff'):'rgba(255,255,255,.48)',textAlign:'left',fontSize:13,fontWeight:tab===n.id?600:400,borderLeft:tab===n.id&&n.id==='qrkod'?`2px solid ${T}`:'2px solid transparent'}}>
               <i className={`ti ti-${n.ic}`} style={{fontSize:17,flexShrink:0}}/>
-              {n.l}
-              {n.id==='qrkod'&&<span style={{marginLeft:'auto',background:T,color:'#fff',fontSize:9,fontWeight:700,padding:'1px 5px',borderRadius:99}}>QR</span>}
+              <span style={{flex:1}}>{n.l}</span>
+              {n.id==='qrkod'&&<span style={{background:T,color:'#fff',fontSize:9,fontWeight:700,padding:'1px 5px',borderRadius:99}}>QR</span>}
             </button>
           ))}
         </div>
@@ -752,7 +694,6 @@ function AdminPanel({staff,progs,att,svSt,svPr,svAt,pin,setPin,onLogout}){
           </button>
         </div>
       </div>
-      {/* Content */}
       <div style={{flex:1,minWidth:0,display:'flex',flexDirection:'column'}}>
         <div style={{padding:'11px 20px',borderBottom:'1px solid #e5e7eb',background:'#fff',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
           <div style={{fontSize:14,fontWeight:600,color:'#111827'}}>{hdrTitle}</div>
@@ -783,18 +724,17 @@ function UserPanel({staff,progs,att,svAt,onLogout}){
     const s=staff.find(s=>s.noKP===ic.trim());
     if(!s)return setIcR({t:'nf'});
     if(att.find(a=>a.pId===scanPr.id&&a.sId===s.id))return setIcR({t:'dup',nama:s.nama});
-    const rec={id:gId(),pId:scanPr.id,sId:s.id,nama:s.nama,bah:s.bah,noKP:s.noKP,masa:Date.now()};
-    await svAt([...att,rec]);
+    await svAt([...att,{id:gId(),pId:scanPr.id,sId:s.id,nama:s.nama,bah:s.bah,noKP:s.noKP,masa:Date.now()}]);
     setIcR({t:'ok',nama:s.nama,bah:s.bah});setScanM('done');
   };
 
-  const MHdr=({title,back})=>(
+  const MH=({title,back})=>(
     <div style={{background:T,padding:'14px 16px 13px',display:'flex',alignItems:'center',gap:10}}>
       {back&&<button onClick={back} style={{background:'rgba(255,255,255,.18)',border:'none',borderRadius:8,width:36,height:36,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#fff',flexShrink:0}}>
         <i className="ti ti-arrow-left" style={{fontSize:18}}/>
       </button>}
       <div style={{flex:1}}>
-        <div style={{fontSize:9,color:'rgba(255,255,255,.55)',letterSpacing:'.07em',textTransform:'uppercase'}}>SMK Haji Abdul Rahman Limbong</div>
+        <div style={{fontSize:9,color:'rgba(255,255,255,.55)',letterSpacing:'.07em',textTransform:'uppercase'}}>{SCHOOL}</div>
         <div style={{fontSize:16,fontWeight:600,color:'#fff',marginTop:1}}>{title}</div>
       </div>
       <button onClick={onLogout} style={{background:'rgba(255,255,255,.15)',border:'none',borderRadius:7,padding:'5px 10px',cursor:'pointer',color:'rgba(255,255,255,.75)',fontSize:11,display:'flex',alignItems:'center',gap:4,flexShrink:0}}>
@@ -803,13 +743,13 @@ function UserPanel({staff,progs,att,svAt,onLogout}){
     </div>
   );
 
-  if(scanM==='scanning')return(<div><MHdr title="Imbas Kod QR" back={()=>setScanM('idle')}/>
+  if(scanM==='scanning')return(<div><MH title="Imbas Kod QR" back={()=>setScanM('idle')}/>
     <div style={{padding:'18px 16px'}}>
       <div style={{fontSize:14,color:'#6b7280',marginBottom:14,textAlign:'center'}}>Arahkan kamera ke kod QR program</div>
       <QRScanner onScan={doScan} onCancel={()=>setScanM('idle')}/>
     </div></div>);
 
-  if(scanM==='verify'&&scanPr)return(<div><MHdr title="Daftar Kehadiran" back={()=>setScanM('idle')}/>
+  if(scanM==='verify'&&scanPr)return(<div><MH title="Daftar Kehadiran" back={()=>setScanM('idle')}/>
     <div style={{padding:'20px 16px'}}>
       <div style={{background:TL,borderRadius:14,padding:'15px',marginBottom:22,border:`1px solid ${T}30`}}>
         <div style={{fontWeight:600,color:TD,fontSize:16,marginBottom:2}}>{scanPr.nama}</div>
@@ -828,14 +768,14 @@ function UserPanel({staff,progs,att,svAt,onLogout}){
         Daftar Hadir
       </button>
       {icR?.t==='nf'&&<div style={{background:'#FEF2F2',color:'#991B1B',padding:'13px 15px',borderRadius:12,fontSize:14,textAlign:'center',border:'1px solid #FECACA'}}>
-        <i className="ti ti-alert-circle" style={{fontSize:20,display:'block',margin:'0 auto 5px'}}/>No KP tidak dijumpai dalam sistem.
+        <i className="ti ti-alert-circle" style={{fontSize:20,display:'block',margin:'0 auto 5px'}}/>No KP tidak dijumpai dalam sistem. Hubungi pentadbir.
       </div>}
       {icR?.t==='dup'&&<div style={{background:'#FFFBEB',color:'#92400E',padding:'13px 15px',borderRadius:12,fontSize:14,textAlign:'center',border:'1px solid #FDE68A'}}>
         <i className="ti ti-alert-triangle" style={{fontSize:20,display:'block',margin:'0 auto 5px'}}/>{icR.nama} sudah mendaftar hadir.
       </div>}
     </div></div>);
 
-  if(scanM==='done'&&icR?.t==='ok')return(<div><MHdr title="Kehadiran Direkod"/>
+  if(scanM==='done'&&icR?.t==='ok')return(<div><MH title="Kehadiran Direkod"/>
     <div style={{padding:'32px 18px 24px',textAlign:'center',animation:'popIn .35s ease'}}>
       <div style={{width:86,height:86,borderRadius:'50%',background:TL,color:T,display:'flex',alignItems:'center',justifyContent:'center',fontSize:46,margin:'0 auto 18px',border:`2px solid ${T}30`}}>
         <i className="ti ti-check"/>
@@ -853,7 +793,7 @@ function UserPanel({staff,progs,att,svAt,onLogout}){
       <button onClick={()=>setScanM('idle')} style={{width:'100%',background:'none',border:'none',color:'#9ca3af',padding:'9px',cursor:'pointer',fontSize:14}}>Pilih Program Lain</button>
     </div></div>);
 
-  if(scanM==='qerr')return(<div><MHdr title="Ralat QR" back={()=>setScanM('idle')}/>
+  if(scanM==='qerr')return(<div><MH title="Ralat QR" back={()=>setScanM('idle')}/>
     <div style={{padding:'40px 20px',textAlign:'center'}}>
       <i className="ti ti-qrcode-off" style={{fontSize:56,color:'#EF4444',display:'block',marginBottom:12}}/>
       <div style={{fontWeight:600,fontSize:19,marginBottom:7,color:'#111827'}}>Kod QR Tidak Sah</div>
@@ -861,7 +801,7 @@ function UserPanel({staff,progs,att,svAt,onLogout}){
       <button onClick={()=>setScanM('idle')} style={{background:T,color:'#fff',border:'none',padding:'13px 30px',borderRadius:12,cursor:'pointer',fontSize:15,fontWeight:600}}>Cuba Lagi</button>
     </div></div>);
 
-  return(<div><MHdr title="Daftar Kehadiran"/>
+  return(<div><MH title="Daftar Kehadiran"/>
     <div style={{padding:'20px 16px 32px'}}>
       <button onClick={()=>setScanM('scanning')} style={{width:'100%',background:T,border:'none',borderRadius:18,padding:'26px 18px',cursor:'pointer',textAlign:'center',marginBottom:18,display:'block',boxShadow:'0 4px 20px rgba(29,158,117,.3)'}}>
         <i className="ti ti-scan" style={{fontSize:50,color:'#fff',display:'block',margin:'0 auto 9px'}}/>
@@ -893,9 +833,9 @@ function UserPanel({staff,progs,att,svAt,onLogout}){
     </div></div>);
 }
 
-/* ═══════════════════════
-   ROOT — LANDING + AUTH
-═══════════════════════ */
+/* ════════════════════
+   ROOT
+════════════════════ */
 function App(){
   const [role,setRole]=useState(null);
   const [staff,setStaff]=useState([]);
@@ -931,8 +871,8 @@ function App(){
     </div>
   );
 
-  if(role==='admin')return <AdminPanel staff={staff} progs={progs} att={att} svSt={svSt} svPr={svPr} svAt={svAt} pin={pin} setPin={updPin} onLogout={()=>setRole(null)}/>;
-  if(role==='user')return <UserPanel staff={staff} progs={progs} att={att} svAt={svAt} onLogout={()=>setRole(null)}/>;
+  if(role==='admin')return<AdminPanel staff={staff} progs={progs} att={att} svSt={svSt} svPr={svPr} svAt={svAt} pin={pin} setPin={updPin} onLogout={()=>setRole(null)}/>;
+  if(role==='user')return<UserPanel staff={staff} progs={progs} att={att} svAt={svAt} onLogout={()=>setRole(null)}/>;
 
   return(
     <div style={{minHeight:'100vh'}}>
