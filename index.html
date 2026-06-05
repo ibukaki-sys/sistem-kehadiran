@@ -135,7 +135,7 @@ function checkValidity(prog){
 }
 
 /* ── Google Sheets API ── */
-const GS_URL='https://script.google.com/macros/s/AKfycbwEQh-QK0-DhhM0vywbqxysB4-lgtCdABM2XgIrNYA2hljOi8KZV8B56XBzBy6BtsU/exec';
+const GS_URL='https://script.google.com/macros/s/AKfycbyL3ZHTiO4lGjQcBIpfn0THttq8FUMLtsN67WQRWSRxs_Xsdmx8PHcGOBkaZCyn97U/exec';
 async function gsReq(params){
   const full=GS_URL+'?'+new URLSearchParams(params).toString();
   const res=await fetch(full,{redirect:'follow'});
