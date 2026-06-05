@@ -66,7 +66,7 @@ const gId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6).toUp
 const ls={get:k=>{try{return localStorage.getItem(k)}catch{return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch{}}};
 
 /* ── Google Sheets API ── */
-const GS_URL='https://script.google.com/macros/s/AKfycbw72mNwXqpr1REs3P5vk_DWveyrCNzokwYTb-emwqCJwWx_OiicHx1g8gyeUa8u2UA/exec';
+const GS_URL='https://script.google.com/macros/s/AKfycbydALULXe87-2bV27gg6ldHV_nluUX4Ppg6S0-8qMdWMdFLqMmiqNPl34azmEp522g/exec';
 
 async function gsReq(params){
   const full=GS_URL+'?'+new URLSearchParams(params).toString();
@@ -191,6 +191,76 @@ function QRGen({data,size,onDU}){
   return<div ref={ref} style={{lineHeight:0,display:'flex',alignItems:'center',justifyContent:'center'}}/>;
 }
 
+
+/* ── Print Laporan Kehadiran ── */
+function printLaporan(prog,data){
+  const pm1=parseTime(prog.masa_mula),pm2=parseTime(prog.masa_tamat),jam=calcJam(pm1,pm2);
+  const jumlah=data.length;
+  const byBah=BAH.map((b,i)=>({nama:b,count:data.filter(r=>r.bahagian===i||r.bahagian===String(i)).length}));
+  const rows=data.map((r,i)=>`<tr>
+    <td>${i+1}</td>
+    <td>${r.nama||''}</td>
+    <td>${r.no_kp||''}</td>
+    <td>${r.bahagian!=null&&r.bahagian!==''?BAH[+r.bahagian]||'—':'—'}</td>
+    <td>${r.masa?new Date(r.masa).toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit'}):''}</td>
+    <td>${String(r.verified)==='false'?'Tetamu':'\u2713'}</td>
+  </tr>`).join('');
+  const w=window.open('','_blank','width=900,height=700');
+  if(!w){alert('Sila benarkan pop-up.');return;}
+  w.document.write(`<!DOCTYPE html><html><head><title>Laporan Kehadiran</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:Arial,sans-serif;font-size:12px;color:#1a0a0d;background:#fff;padding:20px}
+    .hdr{background:linear-gradient(135deg,#2D0510,#6b1020);color:#fff;padding:16px 20px;border-radius:8px;margin-bottom:16px}
+    .kpm{font-size:9px;opacity:.5;letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
+    .sch{font-size:16px;font-weight:800;margin-bottom:2px}
+    .sys{font-size:10px;opacity:.5}
+    .info{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+    .info-box{border:1px solid #EDD8DC;border-radius:6px;padding:10px 14px;background:#FDF0F2}
+    .info-box .lbl{font-size:9px;font-weight:700;color:#7A4555;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+    .info-box .val{font-size:13px;font-weight:600;color:#1A0A0D}
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+    .stat{border:1px solid #EDD8DC;border-radius:6px;padding:10px;text-align:center}
+    .stat .n{font-size:22px;font-weight:700;color:#8B1A2E}
+    .stat .l{font-size:9px;color:#7A4555;text-transform:uppercase;letter-spacing:.05em}
+    table{width:100%;border-collapse:collapse;font-size:11px}
+    thead tr{background:#FDF0F2}
+    th{padding:8px 10px;text-align:left;font-size:9px;font-weight:700;color:#7A4555;text-transform:uppercase;letter-spacing:.06em;border-bottom:2px solid #EDD8DC}
+    td{padding:7px 10px;border-bottom:1px solid #F7EDEF}
+    tr:nth-child(even) td{background:#fdf9f9}
+    .ft{margin-top:16px;padding-top:10px;border-top:1px solid #EDD8DC;font-size:9px;color:#C09AA8;display:flex;justify-content:space-between}
+    @media print{body{padding:10px}.no-print{display:none}}
+  </style></head><body>
+  <div class="hdr">
+    <div class="kpm">Kementerian Pendidikan Malaysia</div>
+    <div class="sch">SMK Haji Abdul Rahman Limbong</div>
+    <div class="sys">Laporan Kehadiran Program</div>
+  </div>
+  <div class="info">
+    <div class="info-box"><div class="lbl">Program</div><div class="val">${prog.nama}</div></div>
+    <div class="info-box"><div class="lbl">Tempat</div><div class="val">${prog.tempat}</div></div>
+    <div class="info-box"><div class="lbl">Tarikh</div><div class="val">${['Ahad','Isnin','Selasa','Rabu','Khamis','Jumaat','Sabtu'][prog.hari]}, ${fd(prog.tarikh)}</div></div>
+    <div class="info-box"><div class="lbl">Masa${jam?' ('+jam+')':''}</div><div class="val">${pm1&&pm2?pm1+' — '+pm2:'—'}</div></div>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="n">${jumlah}</div><div class="l">Jumlah Hadir</div></div>
+    ${byBah.map(b=>'<div class="stat"><div class="n">'+b.count+'</div><div class="l">'+b.nama+'</div></div>').join('')}
+  </div>
+  <table>
+    <thead><tr><th style="width:36px">#</th><th>Nama</th><th style="width:120px">No. KP</th><th style="width:90px">Bahagian</th><th style="width:70px">Masa Hadir</th><th style="width:70px">Status</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div class="ft">
+    <span>Dicetak: ${new Date().toLocaleString('ms-MY',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
+    <span>Jumlah: ${jumlah} kakitangan</span>
+  </div>
+  <div class="no-print" style="margin-top:16px;text-align:center">
+    <button onclick="window.print()" style="background:#8B1A2E;color:#fff;border:none;padding:10px 24px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600">&#128438; Cetak / Simpan PDF</button>
+  </div>
+  <\u0073cript>setTimeout(()=>window.print(),600)</\u0073cript>
+  </body></html>`);
+  w.document.close();
+}
 /* ── Download/Print QR ── */
 function dlQR(prog,du){
   if(!du){alert('QR belum siap.');return;}
@@ -670,6 +740,11 @@ function Admin({pin,setPin,onBack}){
           <td>{r.bahagian!=null&&r.bahagian!==''?<Bdg l={BAH[+r.bahagian]} i={+r.bahagian}/>:<span style={{fontSize:11,color:'var(--dim)'}}>—</span>}</td>
           <td style={{textAlign:'right',color:'var(--muted)',fontSize:12}}>{r.masa?ft(r.masa):''}</td>
         </tr>)}</tbody></table></div>}
+      </div>}
+      {cur&&rData.length>0&&<div style={{marginTop:12,display:'flex',justifyContent:'flex-end'}}>
+        <button className="btn btn-p" onClick={()=>printLaporan(cur,rData)}>
+          <i className="ti ti-printer" style={{fontSize:15}}/>Cetak Laporan
+        </button>
       </div>}
       {!cur&&<div className="card-sh"><Mty icon="chart-bar" msg="Pilih program untuk lihat laporan"/></div>}
     </div>;
