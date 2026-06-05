@@ -96,7 +96,7 @@ const BC=[
   {bg:'#FDF0F2',col:'#5C001A',dot:'#8B1A2E'},
   {bg:'#E8EEF8',col:'#0C2F7A',dot:'#2355C4'},
 ];
-const SK={PIN:'smk_pin5',SB_URL:'smk_sb_url',SB_KEY:'smk_sb_key'};
+const SK={PIN:'smk_pin5'};
 const SCHOOL='SMK Haji Abdul Rahman Limbong';
 const DEF_PIN='1234';
 const gId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6).toUpperCase();
@@ -106,32 +106,31 @@ const ft=ts=>new Date(ts).toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-d
 const ls={get:k=>{try{return localStorage.getItem(k)}catch{return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch{}}};
 
 /* ── Supabase minimal REST client ── */
-const SB_URL='https://vuasovjmxpejjywlnith.supabase.co';
-const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ1YXNvdmpteHBlamp5d2xuaXRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1MzMyOTUsImV4cCI6MjA5NTEwOTI5NX0._ZBfJKnKpGXCMJyANumvE1HYtoK97rjv0NmN4Sw2w0Q';
+/* ── Google Sheets via Apps Script ── */
+const GS_URL='https://script.google.com/macros/s/AKfycbwEQh-QK0-DhhM0vywbqxysB4-lgtCdABM2XgIrNYA2hljOi8KZV8B56XBzBy6BtsU/exec';
 
-async function sbReq(table,query='',opts={}){
-  const url=SB_URL;
-  const key=SB_KEY;
-  const res=await fetch(`${url}/rest/v1/${table}${query}`,{
-    method:opts.method||'GET',
-    headers:{'apikey':key,'Authorization':`Bearer ${key}`,'Content-Type':'application/json','Prefer':'return=representation',...(opts.headers||{})},
-    body:opts.body!=null?JSON.stringify(opts.body):undefined,
-  });
-  if(!res.ok){const t=await res.text();throw new Error(`${res.status}: ${t}`);}
-  if(res.status===204)return[];
-  return res.json();
+async function gsReq(params){
+  const url=GS_URL;
+  const full=url+'?'+new URLSearchParams(params).toString();
+  const res=await fetch(full,{redirect:'follow'});
+  if(!res.ok)throw new Error('Ralat rangkaian: '+res.status);
+  const data=await res.json();
+  if(data.error)throw new Error(data.error);
+  return data;
 }
 const DB={
-  getStaff:()=>sbReq('kakitangan','?order=nama.asc'),
-  addStaff:d=>sbReq('kakitangan','',{method:'POST',body:d}),
-  delStaff:id=>sbReq('kakitangan',`?id=eq.${id}`,{method:'DELETE'}),
-  findByKP:kp=>sbReq('kakitangan',`?no_kp=eq.${encodeURIComponent(kp)}`),
-  getProgs:()=>sbReq('program','?order=created_at.desc'),
-  addProg:d=>sbReq('program','',{method:'POST',body:d}),
-  delProg:id=>sbReq('program',`?id=eq.${id}`,{method:'DELETE'}),
-  getAtt:pid=>sbReq('kehadiran',`?program_id=eq.${pid}&order=masa.asc`),
-  checkDup:(pid,kp)=>sbReq('kehadiran',`?program_id=eq.${pid}&no_kp=eq.${encodeURIComponent(kp)}`),
-  addAtt:d=>sbReq('kehadiran','',{method:'POST',body:d}),
+  getStaff:()=>gsReq({action:'getKakitangan'}),
+  addStaff:d=>gsReq({action:'addKakitangan',id:d.id||'',nama:d.nama,no_kp:d.no_kp,bahagian:d.bahagian}),
+  delStaff:id=>gsReq({action:'delKakitangan',id}),
+  findByKP:kp=>gsReq({action:'findByKP',no_kp:kp}),
+  getProgs:()=>gsReq({action:'getProgram'}),
+  addProg:d=>gsReq({action:'addProgram',id:d.id,nama:d.nama,tempat:d.tempat,tarikh:d.tarikh,hari:d.hari}),
+  delProg:id=>gsReq({action:'delProgram',id}),
+  getAtt:pid=>gsReq({action:'getKehadiran',program_id:pid}),
+  checkDup:(pid,kp)=>gsReq({action:'checkDup',program_id:pid,no_kp:kp}),
+  addAtt:d=>gsReq({action:'addKehadiran',id:d.id,program_id:d.program_id,
+    kakitangan_id:d.kakitangan_id||'',no_kp:d.no_kp,nama:d.nama,
+    bahagian:d.bahagian!=null?d.bahagian:'',verified:String(d.verified)}),
 };
 
 function getProgramFromURL(){
@@ -539,194 +538,8 @@ function AdminPanel({pin,setPin,onBack}){
   const [pfTarikh,setPfTarikh]=useState('');const [pfHari,setPfHari]=useState('1');
   const [pErr,setPErr]=useState('');const [pOk,setPOk]=useState('');
   const [repP,setRepP]=useState('');const [repData,setRepData]=useState([]);const [repLoading,setRepLoading]=useState(false);
-  const [sbUrl,setSbUrl]=useState(ls.get(SK.SB_URL)||'');
-  const [sbKey,setSbKey]=useState(ls.get(SK.SB_KEY)||'');
-  const [sbOk,setSbOk]=useState('');const [sbErr2,setSbErr2]=useState('');
-  const [nPin,setNPin]=useState('');const [pmErr,setPmErr]=useState('');const [pmOk,setPmOk]=useState('');
-
-  const loadData=useCallback(async()=>{
-    setLoading(true);setDbErr('');
-    try{
-      const [s,p]=await Promise.all([DB.getStaff(),DB.getProgs()]);
-      setStaff(s||[]);setProgs(p||[]);
-      const counts={};
-      await Promise.all((p||[]).map(async pg=>{
-        try{const att=await DB.getAtt(pg.id);counts[pg.id]=(att||[]).length;}catch{counts[pg.id]=0;}
-      }));
-      setAttMap(counts);
-    }catch(e){setDbErr(e.message);}
-    setLoading(false);
-  },[]);
-
-  useEffect(()=>{loadData();},[]);
-
-  const goTab=t=>{
-    setTab(t);setSub(null);setSelP(null);setSErr('');setPErr('');setSOk('');setPOk('');
-    if(t==='qrkod'&&progs.length>0&&!qrSel){setQrSel(progs[0]);setQrDataUrl('');}
-  };
-
-  const addSt=async()=>{
-    if(!sfNama.trim()||!sfKP.trim())return setSErr('Sila isi semua ruangan');
-    if(sfKP.length!==12)return setSErr('No KP mestilah 12 digit');
-    setSErr('');
-    try{
-      await DB.addStaff({nama:sfNama.trim(),no_kp:sfKP,bahagian:+sfBah});
-      setSfNama('');setSfKP('');setSfBah('0');
-      setSOk('Kakitangan berjaya ditambah ke pangkalan data');setTimeout(()=>setSOk(''),4000);
-      const s=await DB.getStaff();setStaff(s||[]);
-    }catch(e){setSErr('Ralat: '+e.message);}
-  };
-  const delSt=async id=>{try{await DB.delStaff(id);setStaff(s=>s.filter(x=>x.id!==id));}catch(e){alert('Gagal: '+e.message);}};
-  const addPr=async()=>{
-    if(!pfNama.trim()||!pfTempat.trim()||!pfTarikh)return setPErr('Sila lengkapkan semua ruangan');
-    setPErr('');
-    try{
-      await DB.addProg({id:gId(),nama:pfNama.trim(),tempat:pfTempat.trim(),tarikh:pfTarikh,hari:+pfHari});
-      setPfNama('');setPfTempat('');setPfTarikh('');setPfHari('1');
-      setPOk('Program berjaya ditambah');setTimeout(()=>setPOk(''),3000);
-      const p=await DB.getProgs();setProgs(p||[]);
-    }catch(e){setPErr('Ralat: '+e.message);}
-  };
-  const delPr=async id=>{
-    try{await DB.delProg(id);setProgs(p=>p.filter(x=>x.id!==id));if(qrSel?.id===id){setQrSel(null);setQrDataUrl('');}}
-    catch(e){alert('Gagal: '+e.message);}
-  };
-  const saveSb=()=>{ls.set(SK.SB_URL,sbUrl.trim());ls.set(SK.SB_KEY,sbKey.trim());setSbOk('Disimpan. Memuat semula...');setSbErr2('');setTimeout(()=>{setSbOk('');loadData();},1500);};
-  const testSb=async()=>{setSbErr2('');setSbOk('');try{await DB.getStaff();setSbOk('Sambungan berjaya!');setTimeout(()=>setSbOk(''),3000);}catch(e){setSbErr2('Gagal: '+e.message);}};
-  const savePin=async()=>{if(nPin.length<4)return setPmErr('Min 4 digit');await setPin(nPin);setNPin('');setPmErr('');setPmOk('PIN dikemas kini');setTimeout(()=>setPmOk(''),3000);};
-
-  const Loader=()=><div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:'48px',gap:10}}>
-    <div style={{width:22,height:22,border:`3px solid ${BGL}`,borderTopColor:BG,borderRadius:'50%',animation:'spin .7s linear infinite'}}/>
-    <span style={{color:'var(--muted)',fontSize:14}}>Memuat data dari Supabase...</span>
-  </div>;
-  const Empty=({icon,msg})=><div style={{textAlign:'center',padding:'48px 24px',color:'var(--dim)'}}>
-    <i className={`ti ti-${icon}`} style={{fontSize:44,display:'block',marginBottom:12,color:'var(--border)'}}/>
-    <div style={{fontSize:14,color:'var(--muted)'}}>{msg}</div>
-  </div>;
-
-  const tabUtama=()=>{
-    if(loading)return <Loader/>;
-    if(dbErr)return <div className="alert alert-err" style={{margin:'0 0 16px'}}><i className="ti ti-alert-circle" style={{fontSize:16,flexShrink:0}}/>
-      <div>Gagal sambung ke Supabase: <strong>{dbErr}</strong><br/><span style={{fontSize:12}}>Pergi ke Tetapan untuk konfigurasi Supabase.</span></div>
-    </div>;
-    const today=new Date().toISOString().slice(0,10);
-    const total=Object.values(attMap).reduce((s,v)=>s+v,0);
-    return <div style={{animation:'fadeUp .25s ease'}}>
-      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,marginBottom:22}}>
-        <StatCard icon="users" label="Kakitangan" value={staff.length} color={BG}/>
-        <StatCard icon="calendar-event" label="Program" value={progs.length} color="#5B1A6B"/>
-        <StatCard icon="clipboard-check" label="Rekod Hadir" value={total} color="#0C5A3D"/>
-        <StatCard icon="calendar-stats" label="Hari Ini" value={progs.filter(p=>p.tarikh===today).length} color="#0C3070"/>
-      </div>
-      {progs.length>0?<>
-        <div className="sec">Program Terkini</div>
-        <div className="card-sh" style={{overflow:'hidden'}}>
-          <table className="tbl"><thead><tr>
-            <th style={{width:'35%'}}>Program</th><th style={{width:'20%'}}>Tempat</th>
-            <th style={{width:'25%'}}>Tarikh</th><th style={{textAlign:'right'}}>Hadir</th>
-          </tr></thead>
-          <tbody>{[...progs].slice(0,8).map(p=>(
-            <tr key={p.id} onClick={()=>{setSelP(p);setSub('rep');setTab('program');}}>
-              <td><div style={{fontWeight:600}}>{p.nama}</div></td>
-              <td style={{color:'var(--muted)'}}>{p.tempat}</td>
-              <td style={{color:'var(--muted)'}}>{HR[p.hari]}, {fds(p.tarikh)}</td>
-              <td style={{textAlign:'right'}}><span style={{background:BGL,color:BGD,padding:'3px 10px',borderRadius:99,fontWeight:700,fontSize:12}}>{attMap[p.id]||0} org</span></td>
-            </tr>
-          ))}</tbody>
-          </table>
-        </div>
-      </>:<Empty icon="calendar-off" msg="Tiada program. Tambah dalam tab Program."/>}
-    </div>;
-  };
-
-  const tabKakitangan=()=>{
-    if(loading)return <Loader/>;
-    return <div style={{animation:'fadeUp .25s ease',display:'grid',gridTemplateColumns:'300px 1fr',gap:20,alignItems:'start'}}>
-      <div className="card" style={{padding:20}}>
-        <div style={{fontSize:14,fontWeight:700,marginBottom:3}}>Tambah Kakitangan</div>
-        <div style={{fontSize:12,color:'var(--muted)',marginBottom:16}}>Kakitangan yang tidak dijumpai semasa daftar hadir boleh ditambah di sini</div>
-        <div style={{display:'flex',flexDirection:'column',gap:12}}>
-          <Field label="Nama Penuh"><input placeholder="Cth: Ahmad Bin Hassan" value={sfNama} onChange={e=>setSfNama(e.target.value)}/></Field>
-          <Field label="No. Kad Pengenalan"><input placeholder="12 digit tanpa sempang" value={sfKP} maxLength={12} onChange={e=>setSfKP(e.target.value.replace(/\D/g,''))}/></Field>
-          <Field label="Bahagian"><select value={sfBah} onChange={e=>setSfBah(e.target.value)}>{BAH.map((b,i)=><option key={i} value={i}>{b}</option>)}</select></Field>
-          {sErr&&<div className="alert alert-err"><i className="ti ti-alert-circle" style={{fontSize:14,flexShrink:0}}/>{sErr}</div>}
-          {sOk&&<div className="alert alert-ok"><i className="ti ti-check" style={{fontSize:14,flexShrink:0}}/>{sOk}</div>}
-          <button className="btn btn-p btn-block" onClick={addSt}><i className="ti ti-user-plus" style={{fontSize:16}}/>Tambah ke Pangkalan Data</button>
-        </div>
-      </div>
-      <div>
-        <div className="sec">{staff.length} kakitangan dalam pangkalan data Supabase</div>
-        {staff.length===0?<div className="card-sh"><Empty icon="users" msg="Belum ada kakitangan dalam pangkalan data."/></div>
-        :<div className="card-sh" style={{overflow:'hidden'}}>
-          <table className="tbl"><thead><tr>
-            <th style={{width:'42%'}}>Nama</th><th style={{width:'28%'}}>No. KP</th><th style={{width:'22%'}}>Bahagian</th><th style={{width:44}}></th>
-          </tr></thead>
-          <tbody>{staff.map((s,i)=>(
-            <tr key={s.id} style={{cursor:'default'}}>
-              <td><div style={{display:'flex',alignItems:'center',gap:9}}>
-                <div style={{width:30,height:30,borderRadius:8,background:BGL,color:BGD,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,flexShrink:0}}>
-                  {s.nama.trim().split(' ').slice(0,2).map(n=>n[0]||'').join('').toUpperCase()||'?'}
-                </div>
-                <span style={{fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.nama}</span>
-              </div></td>
-              <td style={{fontFamily:'monospace',fontSize:12,color:'var(--muted)'}}>{s.no_kp}</td>
-              <td><Bdg l={BAH[s.bahagian]} i={s.bahagian}/></td>
-              <td style={{textAlign:'right'}}><button className="btn-icon" onClick={()=>delSt(s.id)}><i className="ti ti-trash" style={{fontSize:14}}/></button></td>
-            </tr>
-          ))}</tbody>
-          </table>
-        </div>}
-      </div>
-    </div>;
-  };
-
-  const tabProgRep=()=>{
-    const [recs,setRecs]=useState([]);const [rl,setRl]=useState(true);
-    useEffect(()=>{if(selP)DB.getAtt(selP.id).then(r=>{setRecs(r||[]);setRl(false);}).catch(()=>setRl(false));},[]);
-    if(!selP)return null;
-    return <div style={{animation:'fadeUp .2s ease'}}>
-      <button className="btn btn-g btn-sm" onClick={()=>setSub(null)} style={{marginBottom:16}}><i className="ti ti-arrow-left" style={{fontSize:14}}/>Kembali</button>
-      <div style={{display:'grid',gridTemplateColumns:'200px 1fr',gap:16,alignItems:'start'}}>
-        <div>
-          <div style={{fontSize:16,fontWeight:700,marginBottom:3}}>{selP.nama}</div>
-          <div style={{fontSize:12,color:'var(--muted)',marginBottom:14}}>{selP.tempat} · {HR[selP.hari]}, {fd(selP.tarikh)}</div>
-          {[{l:'Jumlah Hadir',v:recs.length,bg:BGL,col:BG,tc:BGD},...BAH.map((b,i)=>({l:b,v:recs.filter(r=>r.bahagian===i||r.bahagian===String(i)).length,bg:'var(--page)',col:'var(--text)',tc:'var(--muted)'}))].map((x,i)=>(
-            <div key={i} className="card" style={{padding:'10px 14px',marginBottom:8,background:x.bg,borderColor:i===0?'rgba(139,26,46,.2)':'var(--border)'}}>
-              <div style={{fontSize:22,fontWeight:700,color:x.col}}>{x.v}</div>
-              <div style={{fontSize:11,color:x.tc,fontWeight:500}}>{x.l}</div>
-            </div>
-          ))}
-          <button className="btn btn-g btn-block btn-sm" onClick={()=>{setQrSel(selP);setQrDataUrl('');goTab('qrkod');}}>
-            <i className="ti ti-qrcode" style={{fontSize:14}}/>Jana Kod QR
-          </button>
-        </div>
-        {rl?<Loader/>:recs.length===0?<div className="card-sh"><Empty icon="users" msg="Tiada rekod kehadiran"/></div>
-        :<div className="card-sh" style={{overflow:'hidden'}}>
-          <table className="tbl"><thead><tr>
-            <th style={{width:32}}>#</th><th>Nama</th><th style={{width:90}}>Bahagian</th><th style={{width:60,textAlign:'right'}}>Masa</th>
-          </tr></thead>
-          <tbody>{recs.map((r,i)=>(
-            <tr key={r.id} style={{cursor:'default'}}>
-              <td style={{color:'var(--dim)',fontSize:11}}>{i+1}</td>
-              <td>
-                <div style={{fontWeight:600}}>{r.nama}</div>
-                <div style={{fontSize:10,color:'var(--dim)',fontFamily:'monospace'}}>{r.no_kp}</div>
-                {!r.verified&&<span style={{fontSize:9,color:'var(--warn)',background:'var(--warn-l)',padding:'1px 5px',borderRadius:99}}>tidak disahkan</span>}
-              </td>
-              <td>{r.bahagian!=null?<Bdg l={BAH[r.bahagian]} i={r.bahagian}/>:<span style={{fontSize:11,color:'var(--dim)'}}>—</span>}</td>
-              <td style={{textAlign:'right',color:'var(--muted)',fontSize:12}}>{ft(r.masa)}</td>
-            </tr>
-          ))}</tbody>
-          </table>
-        </div>}
-      </div>
-    </div>;
-  };
-
-  const tabProgram=()=>{
-    if(sub==='rep'&&selP)return tabProgRep();
-    if(loading)return <Loader/>;
-    const sorted=[...progs];
+  const [gsUrl,setGsUrl]=useState(ls.get('smk_gs_url')||'');
+  const [gsOk,setGsOk]=useState('');const [gsErr,setGsErr]=useState('');
     return <div style={{animation:'fadeUp .25s ease',display:'grid',gridTemplateColumns:'300px 1fr',gap:20,alignItems:'start'}}>
       <div className="card" style={{padding:20}}>
         <div style={{fontSize:14,fontWeight:700,marginBottom:3}}>Tambah Program</div>
@@ -742,7 +555,7 @@ function AdminPanel({pin,setPin,onBack}){
         </div>
       </div>
       <div>
-        <div className="sec">{progs.length} program dalam Supabase</div>
+        <div className="sec">{progs.length} program</div>
         {sorted.length===0?<div className="card-sh"><Empty icon="calendar" msg="Belum ada program."/></div>
         :<div className="card-sh" style={{overflow:'hidden'}}>
           <table className="tbl"><thead><tr>
@@ -917,33 +730,80 @@ ALTER TABLE kakitangan DISABLE ROW LEVEL SECURITY;
 ALTER TABLE program DISABLE ROW LEVEL SECURITY;
 ALTER TABLE kehadiran DISABLE ROW LEVEL SECURITY;`;
 
-  const tabTetapan=()=><div style={{animation:'fadeUp .25s ease',maxWidth:540}}>
+  const tabTetapan=()=><div style={{animation:'fadeUp .25s ease',maxWidth:560}}>
     <div className="card" style={{padding:20,marginBottom:14}}>
-      <div style={{fontSize:15,fontWeight:700,marginBottom:4}}>Konfigurasi Supabase</div>
-      <div style={{fontSize:13,color:'var(--muted)',marginBottom:14}}>Sambungkan apl ke pangkalan data Supabase untuk menyimpan data kakitangan, program, dan rekod kehadiran.</div>
+      <div style={{fontSize:15,fontWeight:700,marginBottom:4}}>Sambungan Google Apps Script</div>
+      <div style={{fontSize:13,color:'var(--muted)',marginBottom:14}}>Masukkan URL Web App Google Apps Script untuk menyambung ke Google Sheets.</div>
       <div style={{display:'flex',flexDirection:'column',gap:12}}>
-        <Field label="Project URL" hint="Dapatkan dari: Supabase → Settings → API → Project URL">
-          <input placeholder="https://xxxx.supabase.co" value={sbUrl} onChange={e=>setSbUrl(e.target.value)}/>
+        <Field label="URL Apps Script" hint="Contoh: https://script.google.com/macros/s/AKfy.../exec">
+          <input placeholder="https://script.google.com/macros/s/.../exec" value={gsUrl} onChange={e=>setGsUrl(e.target.value)}/>
         </Field>
-        <Field label="Anon / Public Key" hint="Dapatkan dari: Supabase → Settings → API → Project API Keys (anon public)">
-          <input type="password" placeholder="eyJhbGciOiJIUzI1NiIs..." value={sbKey} onChange={e=>setSbKey(e.target.value)}/>
-        </Field>
-        {sbErr2&&<div className="alert alert-err"><i className="ti ti-alert-circle" style={{fontSize:14,flexShrink:0}}/>{sbErr2}</div>}
-        {sbOk&&<div className="alert alert-ok"><i className="ti ti-check" style={{fontSize:14,flexShrink:0}}/>{sbOk}</div>}
+        {gsErr&&<div className="alert alert-err"><i className="ti ti-alert-circle" style={{fontSize:14,flexShrink:0}}/>{gsErr}</div>}
+        {gsOk&&<div className="alert alert-ok"><i className="ti ti-check" style={{fontSize:14,flexShrink:0}}/>{gsOk}</div>}
         <div style={{display:'flex',gap:8}}>
-          <button className="btn btn-p" style={{flex:1}} onClick={saveSb}><i className="ti ti-device-floppy" style={{fontSize:15}}/>Simpan Konfigurasi</button>
-          <button className="btn btn-o" onClick={testSb}><i className="ti ti-plug" style={{fontSize:15}}/>Uji Sambungan</button>
+          <button className="btn btn-p" style={{flex:1}} onClick={saveGs}><i className="ti ti-device-floppy" style={{fontSize:15}}/>Simpan URL</button>
+          <button className="btn btn-o" onClick={testGs}><i className="ti ti-plug" style={{fontSize:15}}/>Uji Sambungan</button>
         </div>
       </div>
     </div>
     <div className="card" style={{padding:20,marginBottom:14}}>
-      <div style={{fontSize:15,fontWeight:700,marginBottom:4}}>SQL Schema Supabase</div>
-      <div style={{fontSize:13,color:'var(--muted)',marginBottom:12}}>Jalankan SQL berikut dalam Supabase SQL Editor untuk mencipta jadual yang diperlukan:</div>
-      <pre style={{fontSize:11,background:BARK,color:'#c8e6c9',padding:'12px 14px',borderRadius:8,overflowX:'auto',lineHeight:1.6,whiteSpace:'pre'}}>{SQL_SCHEMA}</pre>
+      <div style={{fontSize:15,fontWeight:700,marginBottom:4}}>Kod Google Apps Script (Code.gs)</div>
+      <div style={{fontSize:13,color:'var(--muted)',marginBottom:4}}>Salin kod ini, tampal dalam Apps Script, kemudian deploy.</div>
+      <pre style={{fontSize:10,background:'#1e1e2e',color:'#cdd6f4',padding:'14px',borderRadius:9,overflowX:'auto',lineHeight:1.6,whiteSpace:'pre-wrap',wordBreak:'break-all'}}>{`function doGet(e){
+  try{
+    const p=e.parameter,a=p.action;
+    let r;
+    if(a==='getKakitangan')    r=sArr('kakitangan');
+    else if(a==='addKakitangan'){aRow('kakitangan',[p.id,p.nama,p.no_kp,+p.bahagian,now()]);r={ok:true};}
+    else if(a==='delKakitangan'){delId('kakitangan',p.id);r={ok:true};}
+    else if(a==='findByKP')    r=sArr('kakitangan').filter(x=>x.no_kp===p.no_kp);
+    else if(a==='getProgram')  r=sArr('program').reverse();
+    else if(a==='addProgram')  {aRow('program',[p.id,p.nama,p.tempat,p.tarikh,+p.hari,now()]);r={ok:true};}
+    else if(a==='delProgram')  {delId('program',p.id);r={ok:true};}
+    else if(a==='getKehadiran') r=sArr('kehadiran').filter(x=>x.program_id===p.program_id);
+    else if(a==='checkDup')    r=sArr('kehadiran').filter(x=>x.program_id===p.program_id&&x.no_kp===p.no_kp);
+    else if(a==='addKehadiran'){
+      aRow('kehadiran',[p.id,p.program_id,p.kakitangan_id||'',p.no_kp,p.nama,
+        p.bahagian!==''?+p.bahagian:'',now(),p.verified==='true']);
+      r={ok:true};
+    }
+    else r={error:'Unknown: '+a};
+    return out(r);
+  }catch(err){return out({error:err.toString()});}
+}
+function out(d){
+  return ContentService.createTextOutput(JSON.stringify(d))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+const SS=SpreadsheetApp.getActiveSpreadsheet();
+const HD={
+  kakitangan:['id','nama','no_kp','bahagian','created_at'],
+  program:['id','nama','tempat','tarikh','hari','created_at'],
+  kehadiran:['id','program_id','kakitangan_id','no_kp','nama','bahagian','masa','verified']
+};
+function gs(n){
+  let s=SS.getSheetByName(n);
+  if(!s){s=SS.insertSheet(n);s.getRange(1,1,1,HD[n].length).setValues([HD[n]]);s.setFrozenRows(1);}
+  return s;
+}
+function sArr(n){
+  const d=gs(n).getDataRange().getValues();
+  if(d.length<2)return[];
+  const h=d[0];
+  return d.slice(1).map(r=>Object.fromEntries(h.map((k,i)=>[k,r[i]])));
+}
+function aRow(n,row){gs(n).appendRow(row);}
+function delId(n,id){
+  const s=gs(n);
+  const ids=s.getRange(1,1,s.getLastRow(),1).getValues().flat();
+  const i=ids.indexOf(id);
+  if(i>0)s.deleteRow(i+1);
+}
+function now(){return new Date().toISOString();}`}</pre>
     </div>
     <div className="card" style={{padding:18,marginBottom:14}}>
       <div style={{fontSize:15,fontWeight:700,marginBottom:4}}>PIN Admin</div>
-      <div style={{fontSize:13,color:'var(--muted)',marginBottom:12}}>PIN lalai: <strong>1234</strong>. Tukar selepas log masuk pertama.</div>
+      <div style={{fontSize:13,color:'var(--muted)',marginBottom:12}}>PIN lalai: <strong>1234</strong></div>
       <div style={{display:'flex',gap:8}}>
         <input type="password" placeholder="PIN baharu (4–8 digit)" value={nPin} maxLength={8} onChange={e=>setNPin(e.target.value.replace(/\D/g,''))} style={{flex:1}}/>
         <button className="btn btn-p" onClick={savePin}><i className="ti ti-lock" style={{fontSize:15}}/>Simpan</button>
@@ -952,7 +812,6 @@ ALTER TABLE kehadiran DISABLE ROW LEVEL SECURITY;`;
       {pmOk&&<div className="alert alert-ok" style={{marginTop:9}}><i className="ti ti-check" style={{fontSize:14,flexShrink:0}}/>{pmOk}</div>}
     </div>
     <div className="card" style={{padding:18}}>
-      <div style={{fontSize:15,fontWeight:700,marginBottom:4}}>Kembali ke Daftar Kehadiran</div>
       <button className="btn btn-g" onClick={onBack}><i className="ti ti-arrow-left" style={{fontSize:15}}/>Keluar dari Panel Admin</button>
     </div>
   </div>;
@@ -1016,7 +875,7 @@ ALTER TABLE kehadiran DISABLE ROW LEVEL SECURITY;`;
       <div style={{padding:'12px 22px',borderBottom:'1px solid var(--border)',background:'#fff',display:'flex',alignItems:'center',justifyContent:'space-between',boxShadow:'var(--sh1)'}}>
         <div style={{fontSize:15,fontWeight:700}}>{hdrTitle}</div>
         <div style={{display:'flex',alignItems:'center',gap:10}}>
-          {dbErr&&<span style={{fontSize:11,color:'var(--err)',background:'var(--err-l)',padding:'3px 9px',borderRadius:99,border:'1px solid #FECACA'}}>⚠ Supabase Error</span>}
+          {dbErr&&<span style={{fontSize:11,color:'var(--err)',background:'var(--err-l)',padding:'3px 9px',borderRadius:99,border:'1px solid #FECACA'}}>⚠ GSheets Error</span>}
           <div style={{fontSize:11,color:'var(--dim)',fontWeight:500}}>{new Date().toLocaleDateString('ms-MY',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div>
         </div>
       </div>
