@@ -89,19 +89,44 @@ const ft=ts=>{try{return new Date(ts).toLocaleTimeString('ms-MY',{hour:'2-digit'
 function parseTime(val){
   if(!val&&val!==0)return '';
   const s=String(val).trim();
-  if(!s)return '';
-  // Already HH:MM
+  if(!s||s==='—')return '';
   if(/^\d{1,2}:\d{2}$/.test(s))return s.length===4?'0'+s:s;
-  // Google Sheets time value (1899-12-30...)
   try{
     const d=new Date(s);
     if(!isNaN(d)&&d.getFullYear()<=1900){
-      const h=String(d.getUTCHours()).padStart(2,'0');
-      const m=String(d.getUTCMinutes()).padStart(2,'0');
-      return h+':'+m;
+      // Google Sheets time serial (epoch 1899) — use UTC to avoid timezone shift
+      return String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0');
     }
   }catch{}
   return s;
+}
+
+/* Extract YYYY-MM-DD from any date format Google Sheets might return */
+function parseDatePart(val){
+  if(!val)return null;
+  const s=String(val).trim();
+  // Plain YYYY-MM-DD
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+  // ISO with time e.g. 2026-06-06T00:00:00.000Z
+  if(/^\d{4}-\d{2}-\d{2}T/.test(s)){
+    // Use local date interpretation to avoid off-by-one from UTC midnight
+    const d=new Date(s);
+    if(!isNaN(d))return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  // Try any parse
+  const d=new Date(s);
+  if(!isNaN(d)&&d.getFullYear()>1900)
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  return null;
+}
+
+/* Build a local datetime from date + time strings */
+function buildDt(tarikh,masa){
+  const dp=parseDatePart(tarikh);
+  const tp=parseTime(masa);
+  if(!dp||!tp)return null;
+  const d=new Date(`${dp}T${tp}:00`);
+  return isNaN(d)?null:d;
 }
 
 /* Calculate bilangan jam from masa_mula & masa_tamat */
@@ -116,42 +141,25 @@ function calcJam(mula,tamat){
   return m>0?`${h} jam ${m} minit`:`${h} jam`;
 }
 
-/* Calculate QR expiry timestamp: tarikh + masa_tamat + 1 hour */
+/* Calculate QR expiry: program tarikh + masa_tamat + 1 hour */
 function calcExpiry(prog){
-  if(!prog.tarikh||!prog.masa_tamat)return '0';
-  try{
-    const s=String(prog.tarikh).trim();
-    const datePart=s.includes('T')?s.split('T')[0]:/^\d{4}-\d{2}-\d{2}$/.test(s)?s:null;
-    if(!datePart)return '0';
-    const mt=parseTime(prog.masa_tamat);
-    if(!mt)return '0';
-    const end=new Date(`${datePart}T${mt}:00`);
-    if(isNaN(end))return '0';
-    end.setHours(end.getHours()+1);
-    return String(end.getTime());
-  }catch{return '0';}
+  const end=buildDt(prog.tarikh,prog.masa_tamat);
+  if(!end)return '0';
+  end.setHours(end.getHours()+1);
+  return String(end.getTime());
 }
 
-/* Check if QR is valid now (after masa_mula, before masa_tamat+1h) */
+/* Check if QR is valid now — based entirely on programme time */
 function checkValidity(prog){
   const now=Date.now();
-  // Check expiry
+  // Check expiry (tarikh + masa_tamat + 1h)
   if(prog.exp&&prog.exp!=='0'&&now>parseInt(prog.exp)){
     return{valid:false,reason:'expired',exp:parseInt(prog.exp)};
   }
-  // Check too early (masa_mula)
-  if(prog.tarikh&&prog.masa_mula){
-    try{
-      const s=String(prog.tarikh).trim();
-      const datePart=s.includes('T')?s.split('T')[0]:/^\d{4}-\d{2}-\d{2}$/.test(s)?s:null;
-      if(datePart){
-        const mm=parseTime(prog.masa_mula);
-        const start=new Date(`${datePart}T${mm}:00`);
-        if(!isNaN(start)&&now<start.getTime()){
-          return{valid:false,reason:'early',start:start.getTime()};
-        }
-      }
-    }catch{}
+  // Check too early (before tarikh + masa_mula)
+  const start=buildDt(prog.tarikh,prog.masa_mula);
+  if(start&&now<start.getTime()){
+    return{valid:false,reason:'early',start:start.getTime()};
   }
   return{valid:true};
 }
@@ -232,7 +240,8 @@ function dlQR(prog,du){
     x.fillText(prog.nama.length>42?prog.nama.slice(0,39)+'...':prog.nama,W/2,iy+6);
     x.fillStyle='#7A4555';x.font='12px Arial';x.fillText(prog.tempat,W/2,iy+24);
     x.fillText(`${HR[prog.hari]}, ${fd(prog.tarikh)}`,W/2,iy+41);
-    if(prog.masa_mula&&prog.masa_tamat)x.fillText(`${prog.masa_mula} — ${prog.masa_tamat}  (${jam||''})`,W/2,iy+58);
+    const pm1=parseTime(prog.masa_mula),pm2=parseTime(prog.masa_tamat);
+    if(pm1&&pm2)x.fillText(`${pm1} — ${pm2}  (${jam||''})`,W/2,iy+58);
     x.strokeStyle='#EDD8DC';x.setLineDash([4,4]);x.lineWidth=1;x.beginPath();x.moveTo(26,iy+74);x.lineTo(W-26,iy+74);x.stroke();x.setLineDash([]);
     x.fillStyle='#B8909A';x.font='10px Arial';x.fillText('Imbas dengan kamera telefon atau mana-mana apl QR scanner',W/2,iy+90);
     x.fillStyle=BG;x.fillRect(0,H-6,W,6);x.strokeStyle='#EDD8DC';x.lineWidth=1;x.strokeRect(.5,.5,W-1,H-1);
@@ -244,7 +253,7 @@ function prQR(prog,du){
   if(!du){alert('QR belum siap.');return;}
   const w=window.open('','_blank','width=540,height=760');if(!w){alert('Sila benarkan pop-up.');return;}
   const jam=calcJam(prog.masa_mula,prog.masa_tamat)||'';
-  w.document.write(`<!DOCTYPE html><html><head><title>QR</title><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet"/><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Outfit',Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#F9F4F5;padding:20px}.card{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 40px rgba(139,26,46,.15);width:360px;text-align:center}.hdr{background:linear-gradient(135deg,#2D0510,#6b1020);padding:16px 20px}.kpm{font-size:8px;color:rgba(255,255,255,.35);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}.sch{font-size:14px;font-weight:800;color:#fff;margin-bottom:2px}.sys{font-size:10px;color:rgba(255,255,255,.4)}.qw{padding:18px;display:flex;justify-content:center;background:#fdf5f6}.qw img{width:210px;height:210px;border-radius:8px}.bar{height:3px;background:#8B1A2E;margin:0 20px}.inf{padding:14px 20px 18px;background:#fdf5f6}.inf h2{font-size:14px;font-weight:700;color:#1A0A0D;margin-bottom:5px}.inf p{font-size:11px;color:#7A4555;margin:2px 0}.nt{font-size:9px;color:#C09AA8;margin-top:10px;padding-top:9px;border-top:1px dashed #EDD8DC;line-height:1.5}.ft{background:#8B1A2E;height:5px}@media print{body{background:#fff;padding:0}}</style></head><body><div class="card"><div class="hdr"><div class="kpm">Kementerian Pendidikan Malaysia</div><div class="sch">SMK Haji Abdul Rahman Limbong</div><div class="sys">Sistem Kehadiran Program</div></div><div class="qw"><img src="${du}"/></div><div class="bar"></div><div class="inf"><h2>${prog.nama}</h2><p>\u{1F4CD} ${prog.tempat}</p><p>\u{1F4C5} ${HR[prog.hari]}, ${fd(prog.tarikh)}</p>${prog.masa_mula&&prog.masa_tamat?`<p>\u{1F552} ${prog.masa_mula} \u2014 ${prog.masa_tamat}${jam?' ('+jam+')':''}</p>`:''}<p class="nt">Imbas kod QR dengan kamera telefon untuk membuka laman pendaftaran kehadiran.</p></div><div class="ft"></div></div><script>setTimeout(()=>window.print(),500)<\/script></body></html>`);
+  w.document.write(`<!DOCTYPE html><html><head><title>QR</title><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet"/><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Outfit',Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#F9F4F5;padding:20px}.card{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 40px rgba(139,26,46,.15);width:360px;text-align:center}.hdr{background:linear-gradient(135deg,#2D0510,#6b1020);padding:16px 20px}.kpm{font-size:8px;color:rgba(255,255,255,.35);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}.sch{font-size:14px;font-weight:800;color:#fff;margin-bottom:2px}.sys{font-size:10px;color:rgba(255,255,255,.4)}.qw{padding:18px;display:flex;justify-content:center;background:#fdf5f6}.qw img{width:210px;height:210px;border-radius:8px}.bar{height:3px;background:#8B1A2E;margin:0 20px}.inf{padding:14px 20px 18px;background:#fdf5f6}.inf h2{font-size:14px;font-weight:700;color:#1A0A0D;margin-bottom:5px}.inf p{font-size:11px;color:#7A4555;margin:2px 0}.nt{font-size:9px;color:#C09AA8;margin-top:10px;padding-top:9px;border-top:1px dashed #EDD8DC;line-height:1.5}.ft{background:#8B1A2E;height:5px}@media print{body{background:#fff;padding:0}}</style></head><body><div class="card"><div class="hdr"><div class="kpm">Kementerian Pendidikan Malaysia</div><div class="sch">SMK Haji Abdul Rahman Limbong</div><div class="sys">Sistem Kehadiran Program</div></div><div class="qw"><img src="${du}"/></div><div class="bar"></div><div class="inf"><h2>${prog.nama}</h2><p>\u{1F4CD} ${prog.tempat}</p><p>\u{1F4C5} ${HR[prog.hari]}, ${fd(prog.tarikh)}</p>${pm1&&pm2?`<p>\\u{1F552} ${pm1} \\u2014 ${pm2}${jam?\' (\'+jam+\')\':\'\'}</p>`:''}<p class="nt">Imbas kod QR dengan kamera telefon untuk membuka laman pendaftaran kehadiran.</p></div><div class="ft"></div></div><script>setTimeout(()=>window.print(),500)<\/script></body></html>`);
   w.document.close();
 }
 
@@ -665,9 +674,14 @@ function Admin({pin,setPin,onBack}){
             {!qDU&&<div style={{fontSize:11,color:'var(--dim)',marginTop:8,display:'flex',alignItems:'center',justifyContent:'center',gap:5}}><span style={{width:12,height:12,border:'2px solid var(--dim)',borderTopColor:'transparent',borderRadius:'50%',animation:'spin .7s linear infinite'}}/>Menjana QR...</div>}
             {qDU&&<div style={{marginTop:10,padding:'8px 10px',background:'var(--page)',borderRadius:7,border:'1px solid var(--border2)',textAlign:'left'}}>
               {jam&&<div style={{display:'flex',alignItems:'center',gap:6,marginBottom:4}}><i className="ti ti-clock" style={{fontSize:12,color:BG}}/><span style={{fontSize:11,fontWeight:600,color:BGD}}>{jam}</span></div>}
-              {exp&&exp!=='0'?<div style={{fontSize:10,color:'var(--warn)',fontWeight:600,display:'flex',alignItems:'center',gap:5}}>
-                <i className="ti ti-clock-off" style={{fontSize:11}}/>QR tamat: {new Date(parseInt(exp)).toLocaleString('ms-MY',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}
-              </div>:<div style={{fontSize:10,color:'var(--ok)',fontWeight:600}}>✓ Tiada had masa</div>}
+              {exp&&exp!=='0'?<div>
+                <div style={{fontSize:10,color:'var(--ok)',fontWeight:600,marginBottom:3,display:'flex',alignItems:'center',gap:5}}>
+                  <i className="ti ti-calendar-check" style={{fontSize:11}}/>Aktif: {parseTime(sel.masa_mula)||'—'} — {parseTime(sel.masa_tamat)||'—'}
+                </div>
+                <div style={{fontSize:10,color:'var(--warn)',fontWeight:600,display:'flex',alignItems:'center',gap:5}}>
+                  <i className="ti ti-clock-off" style={{fontSize:11}}/>Tamat: {new Date(parseInt(exp)).toLocaleString('ms-MY',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}
+                </div>
+              </div>:<div style={{fontSize:10,color:'var(--ok)',fontWeight:600}}>✓ Tiada had masa (masa_tamat tidak ditetapkan)</div>}
             </div>}
           </div>
           <div style={{flex:1,minWidth:0}}>
