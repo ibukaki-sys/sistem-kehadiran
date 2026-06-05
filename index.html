@@ -62,10 +62,79 @@ const HR=['Ahad','Isnin','Selasa','Rabu','Khamis','Jumaat','Sabtu'];
 const BC=[{bg:'#F0E8F6',col:'#5B1A6B',dot:'#8B3DAA'},{bg:'#FDF0F2',col:'#5C001A',dot:'#8B1A2E'},{bg:'#E8EEF8',col:'#0C2F7A',dot:'#2355C4'}];
 const SCHOOL='SMK Haji Abdul Rahman Limbong';
 const gId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6).toUpperCase();
-const fd=d=>new Date(d+'T00:00').toLocaleDateString('ms-MY',{day:'2-digit',month:'long',year:'numeric'});
-const fds=d=>new Date(d+'T00:00').toLocaleDateString('ms-MY',{day:'2-digit',month:'short',year:'numeric'});
-const ft=ts=>new Date(ts).toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit'});
 const ls={get:k=>{try{return localStorage.getItem(k)}catch{return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch{}}};
+
+/* ── Date helpers — handles Google Sheets date formats ── */
+function parseDt(d){
+  if(!d&&d!==0)return null;
+  if(typeof d==='number'){
+    // Excel/Sheets serial date
+    return new Date((d-25569)*86400*1000);
+  }
+  const s=String(d).trim();
+  if(!s||s==='—')return null;
+  // ISO: 2026-06-05
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s))return new Date(s+'T00:00');
+  // ISO with time
+  if(s.includes('T')||s.includes('Z'))return new Date(s);
+  // Try direct parse
+  const dt=new Date(s);
+  return isNaN(dt)?null:dt;
+}
+const fd=d=>{const dt=parseDt(d);return dt&&!isNaN(dt)?dt.toLocaleDateString('ms-MY',{day:'2-digit',month:'long',year:'numeric'}):'—';};
+const fds=d=>{const dt=parseDt(d);return dt&&!isNaN(dt)?dt.toLocaleDateString('ms-MY',{day:'2-digit',month:'short',year:'numeric'}):'—';};
+const ft=ts=>{try{return new Date(ts).toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit'});}catch{return '';}};
+
+/* Calculate bilangan jam from masa_mula & masa_tamat */
+function calcJam(mula,tamat){
+  if(!mula||!tamat)return null;
+  const [mh,mm]=mula.split(':').map(Number);
+  const [th,tm]=tamat.split(':').map(Number);
+  const diff=(th*60+tm)-(mh*60+mm);
+  if(diff<=0)return null;
+  const h=Math.floor(diff/60),m=diff%60;
+  return m>0?`${h} jam ${m} minit`:`${h} jam`;
+}
+
+/* Calculate QR expiry timestamp: tarikh + masa_tamat + 1 hour */
+function calcExpiry(prog){
+  if(!prog.tarikh||!prog.masa_tamat)return '0';
+  try{
+    const s=String(prog.tarikh).trim();
+    // Get date part only
+    const datePart=s.includes('T')?s.split('T')[0]:/^\d{4}-\d{2}-\d{2}$/.test(s)?s:null;
+    if(!datePart)return '0';
+    const end=new Date(`${datePart}T${prog.masa_tamat}:00`);
+    if(isNaN(end))return '0';
+    end.setHours(end.getHours()+1);
+    return String(end.getTime());
+  }catch{return '0';}
+}
+
+/* Check if QR is valid now (after masa_mula, before masa_tamat+1h) */
+function checkValidity(prog){
+  const now=Date.now();
+  // Check expiry
+  if(prog.exp&&prog.exp!=='0'&&now>parseInt(prog.exp)){
+    return{valid:false,reason:'expired',exp:parseInt(prog.exp)};
+  }
+  // Check too early (masa_mula)
+  if(prog.tarikh&&prog.masa_mula){
+    try{
+      const s=String(prog.tarikh).trim();
+      const datePart=s.includes('T')?s.split('T')[0]:/^\d{4}-\d{2}-\d{2}$/.test(s)?s:null;
+      if(datePart){
+        const start=new Date(`${datePart}T${prog.masa_mula}:00`);
+        if(!isNaN(start)&&now<start.getTime()){
+          return{valid:false,reason:'early',start:start.getTime()};
+        }
+      }
+    }catch{}
+  }
+  return{valid:true};
+}
+
+/* ── Google Sheets API ── */
 const GS_URL='https://script.google.com/macros/s/AKfycbwEQh-QK0-DhhM0vywbqxysB4-lgtCdABM2XgIrNYA2hljOi8KZV8B56XBzBy6BtsU/exec';
 async function gsReq(params){
   const full=GS_URL+'?'+new URLSearchParams(params).toString();
@@ -81,7 +150,7 @@ const DB={
   delStaff:id=>gsReq({action:'delKakitangan',id}),
   findByKP:kp=>gsReq({action:'findByKP',no_kp:kp}),
   getProgs:()=>gsReq({action:'getProgram'}),
-  addProg:d=>gsReq({action:'addProgram',id:d.id,nama:d.nama,tempat:d.tempat,tarikh:d.tarikh,hari:d.hari}),
+  addProg:d=>gsReq({action:'addProgram',id:d.id,nama:d.nama,tempat:d.tempat,tarikh:d.tarikh,hari:d.hari,masa_mula:d.masa_mula||'',masa_tamat:d.masa_tamat||''}),
   delProg:id=>gsReq({action:'delProgram',id}),
   getAtt:pid=>gsReq({action:'getKehadiran',program_id:pid}),
   checkDup:(pid,kp)=>gsReq({action:'checkDup',program_id:pid,no_kp:kp}),
@@ -90,21 +159,26 @@ const DB={
 function getProg(){
   const p=new URLSearchParams(window.location.search);
   if(!p.get('p'))return null;
-  return{id:p.get('p'),nama:decodeURIComponent(p.get('nm')||''),tempat:decodeURIComponent(p.get('tp')||''),tarikh:p.get('dt')||'',hari:parseInt(p.get('hr')||'0'),exp:p.get('exp')||'0'};
+  return{id:p.get('p'),nama:decodeURIComponent(p.get('nm')||''),tempat:decodeURIComponent(p.get('tp')||''),tarikh:p.get('dt')||'',hari:parseInt(p.get('hr')||'0'),masa_mula:p.get('mm')||'',masa_tamat:p.get('mt')||'',exp:p.get('exp')||'0'};
 }
 function getBase(){return window.location.origin+window.location.pathname;}
-/* UI */
+
+/* ── UI helpers ── */
 function Bdg({l,i}){const c=BC[i%3];return<span className="badge" style={{background:c.bg,color:c.col}}><span style={{width:5,height:5,borderRadius:'50%',background:c.dot,display:'inline-block',marginRight:5}}/>{l}</span>;}
 function Fld({label,children,hint}){return<div className="fld">{label&&<label className="lbl">{label}</label>}{children}{hint&&<div style={{fontSize:11,color:'var(--dim)'}}>{hint}</div>}</div>;}
 function SC({icon,label,value,color}){return<div style={{background:'#fff',border:'1px solid var(--border)',borderRadius:'var(--r)',padding:'14px 16px',display:'flex',alignItems:'center',gap:12,boxShadow:'var(--sh1)'}}><div style={{width:40,height:40,borderRadius:10,background:color+'15',color,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,flexShrink:0}}><i className={`ti ti-${icon}`}/></div><div><div style={{fontSize:24,fontWeight:700,lineHeight:1,color:'var(--text)',marginBottom:3}}>{value}</div><div style={{fontSize:11,color:'var(--muted)',fontWeight:500,textTransform:'uppercase',letterSpacing:'.04em'}}>{label}</div></div></div>;}
 function Ldr(){return<div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:'48px',gap:10}}><div style={{width:22,height:22,border:`3px solid ${BGL}`,borderTopColor:BG,borderRadius:'50%',animation:'spin .7s linear infinite'}}/><span style={{color:'var(--muted)',fontSize:14}}>Memuat data...</span></div>;}
-function Mty({icon,msg}){return<div style={{textAlign:'center',padding:'48px 24px',color:'var(--dim)'}}><i className={`ti ti-${icon}`} style={{fontSize:44,display:'block',marginBottom:12,color:'var(--border)'}}/><div style={{fontSize:14,color:'var(--muted)'}}>{msg}</div></div>;}
+function Mty({icon,msg}){return<div style={{textAlign:'center',padding:'48px 24px'}}><i className={`ti ti-${icon}`} style={{fontSize:44,display:'block',marginBottom:12,color:'var(--border)'}}/><div style={{fontSize:14,color:'var(--muted)'}}>{msg}</div></div>;}
 function Banner({right}){return<div className="sch-banner" style={{padding:'18px 20px'}}><div style={{display:'flex',alignItems:'center',gap:14,position:'relative',zIndex:1}}><div style={{width:56,height:56,borderRadius:14,background:'rgba(255,255,255,.12)',border:'1.5px solid rgba(255,255,255,.2)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><i className="ti ti-school" style={{fontSize:28,color:'rgba(255,255,255,.9)'}}/></div><div style={{flex:1,minWidth:0}}><div style={{fontSize:9,color:'rgba(255,255,255,.4)',letterSpacing:'.09em',textTransform:'uppercase',marginBottom:2}}>Kementerian Pendidikan Malaysia</div><div style={{fontSize:19,fontWeight:800,color:'#fff',letterSpacing:'.01em',lineHeight:1.15,marginBottom:2}}>{SCHOOL}</div><div style={{fontSize:11,color:'rgba(255,255,255,.5)'}}>Sistem Kehadiran Program</div></div>{right&&<div style={{flexShrink:0}}>{right}</div>}</div></div>;}
-/* QRGen */
+
+/* ── QRGen — stable, no blinking ── */
 function QRGen({data,size=200,onDU}){
   const ref=useRef();
+  // Only regenerate when data actually changes
+  const prevData=useRef('');
   useEffect(()=>{
-    if(!data||!ref.current)return;
+    if(!data||!ref.current||data===prevData.current)return;
+    prevData.current=data;
     ref.current.innerHTML='';
     const tmp=document.createElement('div');
     try{new window.QRCode(tmp,{text:data,width:size,height:size,colorDark:BARK,colorLight:'#ffffff',correctLevel:(window.QRCode&&window.QRCode.CorrectLevel)?window.QRCode.CorrectLevel.M:0});}
@@ -115,36 +189,44 @@ function QRGen({data,size=200,onDU}){
   },[data,size]);
   return<div ref={ref} style={{lineHeight:0,display:'flex',alignItems:'center',justifyContent:'center'}}/>;
 }
+
 function dlQR(prog,du){
   if(!du){alert('QR belum siap.');return;}
   const img=new Image();
   img.onload=()=>{
-    const W=480,H=610,c=document.createElement('canvas');c.width=W;c.height=H;
+    const W=480,H=640,c=document.createElement('canvas');c.width=W;c.height=H;
     const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,H);
-    const g=x.createLinearGradient(0,0,W,86);g.addColorStop(0,BARK);g.addColorStop(1,'#6b1020');
-    x.fillStyle=g;x.fillRect(0,0,W,86);
-    x.fillStyle='rgba(255,255,255,.35)';x.font='9px Arial';x.textAlign='center';x.fillText('KEMENTERIAN PENDIDIKAN MALAYSIA',W/2,16);
-    x.fillStyle='#fff';x.font='bold 16px Arial';x.fillText('SMK HAJI ABDUL RAHMAN LIMBONG',W/2,38);
-    x.fillStyle='rgba(255,255,255,.4)';x.font='10px Arial';x.fillText('SISTEM KEHADIRAN PROGRAM',W/2,56);
-    const qs=270,qx=(W-qs)/2,qy=100;
+    const g=x.createLinearGradient(0,0,W,90);g.addColorStop(0,BARK);g.addColorStop(1,'#6b1020');
+    x.fillStyle=g;x.fillRect(0,0,W,90);
+    x.fillStyle='rgba(255,255,255,.35)';x.font='9px Arial';x.textAlign='center';x.fillText('KEMENTERIAN PENDIDIKAN MALAYSIA',W/2,18);
+    x.fillStyle='#fff';x.font='bold 16px Arial';x.fillText('SMK HAJI ABDUL RAHMAN LIMBONG',W/2,40);
+    x.fillStyle='rgba(255,255,255,.4)';x.font='10px Arial';x.fillText('SISTEM KEHADIRAN PROGRAM',W/2,60);
+    const jam=calcJam(prog.masa_mula,prog.masa_tamat);
+    if(jam){x.fillStyle='rgba(255,255,255,.3)';x.font='9px Arial';x.fillText(`Tempoh: ${jam}`,W/2,76);}
+    const qs=260,qx=(W-qs)/2,qy=106;
     x.fillStyle='#f9f3f4';x.beginPath();x.roundRect(qx-12,qy-12,qs+24,qs+24,10);x.fill();
     x.drawImage(img,qx,qy,qs,qs);x.fillStyle=BG;x.fillRect(qx,qy+qs+8,qs,3);
-    const iy=qy+qs+26;x.fillStyle='#1A0A0D';x.font='bold 16px Arial';x.textAlign='center';
+    const iy=qy+qs+26;x.fillStyle='#1A0A0D';x.font='bold 15px Arial';x.textAlign='center';
     x.fillText(prog.nama.length>42?prog.nama.slice(0,39)+'...':prog.nama,W/2,iy+6);
-    x.fillStyle='#7A4555';x.font='12px Arial';x.fillText(prog.tempat,W/2,iy+26);x.fillText(`${HR[prog.hari]}, ${fd(prog.tarikh)}`,W/2,iy+44);
-    x.strokeStyle='#EDD8DC';x.setLineDash([4,4]);x.lineWidth=1;x.beginPath();x.moveTo(26,iy+60);x.lineTo(W-26,iy+60);x.stroke();x.setLineDash([]);
-    x.fillStyle='#B8909A';x.font='10px Arial';x.fillText('Imbas dengan kamera telefon atau mana-mana apl QR scanner',W/2,iy+78);
+    x.fillStyle='#7A4555';x.font='12px Arial';x.fillText(prog.tempat,W/2,iy+24);
+    x.fillText(`${HR[prog.hari]}, ${fd(prog.tarikh)}`,W/2,iy+41);
+    if(prog.masa_mula&&prog.masa_tamat)x.fillText(`${prog.masa_mula} — ${prog.masa_tamat}  (${jam||''})`,W/2,iy+58);
+    x.strokeStyle='#EDD8DC';x.setLineDash([4,4]);x.lineWidth=1;x.beginPath();x.moveTo(26,iy+74);x.lineTo(W-26,iy+74);x.stroke();x.setLineDash([]);
+    x.fillStyle='#B8909A';x.font='10px Arial';x.fillText('Imbas dengan kamera telefon atau mana-mana apl QR scanner',W/2,iy+90);
     x.fillStyle=BG;x.fillRect(0,H-6,W,6);x.strokeStyle='#EDD8DC';x.lineWidth=1;x.strokeRect(.5,.5,W-1,H-1);
     const a=document.createElement('a');a.download=`QR-${prog.nama.replace(/\s+/g,'-')}.png`;a.href=c.toDataURL('image/png');a.click();
   };img.src=du;
 }
+
 function prQR(prog,du){
   if(!du){alert('QR belum siap.');return;}
   const w=window.open('','_blank','width=540,height=760');if(!w){alert('Sila benarkan pop-up.');return;}
-  w.document.write(`<!DOCTYPE html><html><head><title>QR</title><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet"/><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Outfit',Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#F9F4F5;padding:20px}.card{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 40px rgba(139,26,46,.15);width:360px;text-align:center}.hdr{background:linear-gradient(135deg,#2D0510,#6b1020);padding:16px 20px}.kpm{font-size:8px;color:rgba(255,255,255,.35);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}.sch{font-size:14px;font-weight:800;color:#fff;margin-bottom:2px}.sys{font-size:10px;color:rgba(255,255,255,.4)}.qw{padding:18px;display:flex;justify-content:center;background:#fdf5f6}.qw img{width:210px;height:210px;border-radius:8px}.bar{height:3px;background:#8B1A2E;margin:0 20px}.inf{padding:14px 20px 18px;background:#fdf5f6}.inf h2{font-size:14px;font-weight:700;color:#1A0A0D;margin-bottom:5px}.inf p{font-size:11px;color:#7A4555;margin:2px 0}.nt{font-size:9px;color:#C09AA8;margin-top:10px;padding-top:9px;border-top:1px dashed #EDD8DC;line-height:1.5}.ft{background:#8B1A2E;height:5px}@media print{body{background:#fff;padding:0}}</style></head><body><div class="card"><div class="hdr"><div class="kpm">Kementerian Pendidikan Malaysia</div><div class="sch">SMK Haji Abdul Rahman Limbong</div><div class="sys">Sistem Kehadiran Program</div></div><div class="qw"><img src="${du}"/></div><div class="bar"></div><div class="inf"><h2>${prog.nama}</h2><p>\u{1F4CD} ${prog.tempat}</p><p>\u{1F4C5} ${HR[prog.hari]}, ${fd(prog.tarikh)}</p><p class="nt">Imbas kod QR dengan kamera telefon untuk membuka laman pendaftaran kehadiran.</p></div><div class="ft"></div></div><script>setTimeout(()=>window.print(),500)<\/script></body></html>`);
+  const jam=calcJam(prog.masa_mula,prog.masa_tamat)||'';
+  w.document.write(`<!DOCTYPE html><html><head><title>QR</title><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet"/><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Outfit',Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#F9F4F5;padding:20px}.card{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 40px rgba(139,26,46,.15);width:360px;text-align:center}.hdr{background:linear-gradient(135deg,#2D0510,#6b1020);padding:16px 20px}.kpm{font-size:8px;color:rgba(255,255,255,.35);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}.sch{font-size:14px;font-weight:800;color:#fff;margin-bottom:2px}.sys{font-size:10px;color:rgba(255,255,255,.4)}.qw{padding:18px;display:flex;justify-content:center;background:#fdf5f6}.qw img{width:210px;height:210px;border-radius:8px}.bar{height:3px;background:#8B1A2E;margin:0 20px}.inf{padding:14px 20px 18px;background:#fdf5f6}.inf h2{font-size:14px;font-weight:700;color:#1A0A0D;margin-bottom:5px}.inf p{font-size:11px;color:#7A4555;margin:2px 0}.nt{font-size:9px;color:#C09AA8;margin-top:10px;padding-top:9px;border-top:1px dashed #EDD8DC;line-height:1.5}.ft{background:#8B1A2E;height:5px}@media print{body{background:#fff;padding:0}}</style></head><body><div class="card"><div class="hdr"><div class="kpm">Kementerian Pendidikan Malaysia</div><div class="sch">SMK Haji Abdul Rahman Limbong</div><div class="sys">Sistem Kehadiran Program</div></div><div class="qw"><img src="${du}"/></div><div class="bar"></div><div class="inf"><h2>${prog.nama}</h2><p>\u{1F4CD} ${prog.tempat}</p><p>\u{1F4C5} ${HR[prog.hari]}, ${fd(prog.tarikh)}</p>${prog.masa_mula&&prog.masa_tamat?`<p>\u{1F552} ${prog.masa_mula} \u2014 ${prog.masa_tamat}${jam?' ('+jam+')':''}</p>`:''}<p class="nt">Imbas kod QR dengan kamera telefon untuk membuka laman pendaftaran kehadiran.</p></div><div class="ft"></div></div><script>setTimeout(()=>window.print(),500)<\/script></body></html>`);
   w.document.close();
 }
-/* QR Scanner */
+
+/* ── QR Scanner ── */
 function QRScan({onScan,onCancel}){
   const vR=useRef(),cR=useRef(),rafR=useRef(),stR=useRef();
   const [st,setSt]=useState('init');
@@ -164,7 +246,8 @@ function QRScan({onScan,onCancel}){
       </div></>}
   </div><button className="btn btn-g btn-block" style={{marginTop:12}} onClick={onCancel}>Batal</button></div>;
 }
-/* Attendance Form */
+
+/* ── Attendance Form ── */
 function AttForm({prog,onBack,onNext}){
   const [ic,setIc]=useState('');
   const [err,setErr]=useState('');
@@ -173,8 +256,9 @@ function AttForm({prog,onBack,onNext}){
   const [done,setDone]=useState(null);
   const [load,setLoad]=useState(false);
   const [cnt,setCnt]=useState(0);
-  const expired=prog.exp&&prog.exp!=='0'&&Date.now()>parseInt(prog.exp);
   useEffect(()=>{DB.getAtt(prog.id).then(r=>setCnt((r||[]).length)).catch(()=>{});},[prog.id]);
+  const validity=checkValidity(prog);
+  const jam=calcJam(prog.masa_mula,prog.masa_tamat);
   const submit=async()=>{
     if(ic.length<12)return setErr('No KP mestilah 12 digit');
     setLoad(true);setErr('');
@@ -188,32 +272,45 @@ function AttForm({prog,onBack,onNext}){
     }catch(e){setErr('Ralat: '+e.message);}
     setLoad(false);
   };
-  if(expired)return<div style={{padding:'50px 24px',textAlign:'center',animation:'fadeUp .25s ease'}}>
+
+  // Validity screens
+  if(!validity.valid&&validity.reason==='expired')return<div style={{padding:'50px 24px',textAlign:'center',animation:'fadeUp .25s ease'}}>
     <div style={{width:80,height:80,borderRadius:'50%',background:'#FEF2F2',color:'#B91C1C',display:'flex',alignItems:'center',justifyContent:'center',fontSize:40,margin:'0 auto 16px'}}><i className="ti ti-clock-off"/></div>
     <div style={{fontSize:20,fontWeight:700,marginBottom:8}}>Kod QR Telah Tamat Tempoh</div>
-    <div style={{fontSize:14,color:'var(--muted)',marginBottom:8,lineHeight:1.6}}>QR ini sudah tidak sah. Sila minta pentadbir jana kod QR baharu.</div>
-    <div style={{fontSize:12,color:'var(--dim)',marginBottom:24}}>Tamat: {new Date(parseInt(prog.exp)).toLocaleString('ms-MY',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+    <div style={{fontSize:14,color:'var(--muted)',marginBottom:8,lineHeight:1.6}}>QR ini sudah tidak sah. Masa pendaftaran telah tamat.</div>
+    <div style={{fontSize:12,color:'var(--dim)',marginBottom:24}}>Tamat: {new Date(validity.exp).toLocaleString('ms-MY',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
     {onBack&&<button className="btn btn-p" onClick={onBack}>Kembali</button>}
   </div>;
+
+  if(!validity.valid&&validity.reason==='early')return<div style={{padding:'50px 24px',textAlign:'center',animation:'fadeUp .25s ease'}}>
+    <div style={{width:80,height:80,borderRadius:'50%',background:'var(--warn-l)',color:'var(--warn)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:40,margin:'0 auto 16px'}}><i className="ti ti-clock"/></div>
+    <div style={{fontSize:20,fontWeight:700,marginBottom:8}}>Program Belum Bermula</div>
+    <div style={{fontSize:14,color:'var(--muted)',marginBottom:8,lineHeight:1.6}}>Pendaftaran kehadiran akan dibuka pada waktu program bermula.</div>
+    <div style={{fontSize:12,color:'var(--dim)',marginBottom:24}}>Mula: {new Date(validity.start).toLocaleString('ms-MY',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+    {onBack&&<button className="btn btn-g" onClick={onBack}>Kembali</button>}
+  </div>;
+
   if(done)return<div style={{padding:'40px 24px 32px',textAlign:'center',animation:'popIn .4s cubic-bezier(.175,.885,.32,1.275)'}}>
     <div style={{width:88,height:88,borderRadius:'50%',background:BGL,color:BG,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px',fontSize:44,boxShadow:'0 0 0 8px rgba(139,26,46,.07),0 0 0 16px rgba(139,26,46,.03)'}}><i className="ti ti-check"/></div>
     <div style={{fontSize:12,color:'var(--muted)',fontWeight:600,textTransform:'uppercase',letterSpacing:'.06em',marginBottom:4}}>Kehadiran Direkod</div>
     <div style={{fontSize:26,fontWeight:700,color:'var(--text)',marginBottom:6}}>{done.nama}</div>
     {done.bah!=null&&<div style={{marginBottom:4}}><Bdg l={BAH[done.bah]} i={done.bah}/></div>}
     {!done.ver&&<div style={{fontSize:12,color:'var(--warn)',marginTop:6,background:'var(--warn-l)',padding:'4px 12px',borderRadius:99,display:'inline-block',border:'1px solid #FDE68A'}}>Tidak dalam pangkalan data</div>}
-    <div style={{fontSize:14,color:'var(--muted)',marginTop:10,marginBottom:4}}>{prog.nama}</div>
+    <div style={{fontSize:14,color:'var(--muted)',marginTop:10,marginBottom:2}}>{prog.nama}</div>
     <div style={{fontSize:12,color:'var(--dim)',marginBottom:28}}>{cnt} kakitangan hadir</div>
     {onNext&&<button className="btn btn-p btn-block" onClick={()=>{setDone(null);setIc('');setErr('');setWalk(false);setWNama('');}}><i className="ti ti-user-plus" style={{fontSize:16}}/>Kakitangan Seterusnya</button>}
     {onBack&&<button onClick={onBack} style={{marginTop:10,background:'none',border:'none',cursor:'pointer',color:'var(--muted)',fontSize:13,width:'100%',padding:'6px'}}>Kembali</button>}
   </div>;
+
   return<div style={{padding:'24px 20px 28px',animation:'fadeUp .25s ease'}}>
     <div style={{background:`linear-gradient(135deg,${BARK} 0%,#6b1020 100%)`,borderRadius:14,padding:'16px 20px',marginBottom:24,position:'relative',overflow:'hidden'}}>
       <div style={{position:'absolute',top:-20,right:-20,width:100,height:100,borderRadius:'50%',background:'rgba(255,255,255,.04)'}}/>
       <div style={{fontSize:9,color:'rgba(255,255,255,.35)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:6}}>SMK Haji Abdul Rahman Limbong</div>
       <div style={{fontSize:17,fontWeight:700,color:'#fff',marginBottom:8,position:'relative'}}>{prog.nama}</div>
-      <div style={{display:'flex',flexWrap:'wrap',gap:12,fontSize:12,color:'rgba(255,255,255,.6)',position:'relative'}}>
+      <div style={{display:'flex',flexWrap:'wrap',gap:10,fontSize:12,color:'rgba(255,255,255,.65)',position:'relative'}}>
         <span><i className="ti ti-map-pin" style={{fontSize:12,marginRight:4}}/>{prog.tempat}</span>
         <span><i className="ti ti-calendar" style={{fontSize:12,marginRight:4}}/>{HR[prog.hari]}, {fds(prog.tarikh)}</span>
+        {prog.masa_mula&&prog.masa_tamat&&<span><i className="ti ti-clock" style={{fontSize:12,marginRight:4}}/>{prog.masa_mula} — {prog.masa_tamat}{jam&&` (${jam})`}</span>}
         <span style={{background:'rgba(255,255,255,.1)',borderRadius:99,padding:'2px 8px'}}><i className="ti ti-users" style={{fontSize:11,marginRight:4}}/>{cnt} hadir</span>
       </div>
     </div>
@@ -248,12 +345,13 @@ function AttForm({prog,onBack,onNext}){
     {onBack&&<button onClick={onBack} style={{marginTop:10,width:'100%',background:'none',border:'none',cursor:'pointer',color:'var(--muted)',fontSize:13,padding:'6px'}}>Kembali</button>}
   </div>;
 }
-/* Kakitangan View */
+
+/* ══ KAKITANGAN VIEW ══ */
 function KView({onAdmin}){
   const [sc,setSc]=useState('home');
   const [prog,setProg]=useState(null);
   const scan=data=>{
-    try{const u=new URL(data);const p=u.searchParams;if(p.get('p')){setProg({id:p.get('p'),nama:decodeURIComponent(p.get('nm')||''),tempat:decodeURIComponent(p.get('tp')||''),tarikh:p.get('dt')||'',hari:parseInt(p.get('hr')||'0'),exp:p.get('exp')||'0'});setSc('attend');return;}}catch{}
+    try{const u=new URL(data);const p=u.searchParams;if(p.get('p')){setProg({id:p.get('p'),nama:decodeURIComponent(p.get('nm')||''),tempat:decodeURIComponent(p.get('tp')||''),tarikh:p.get('dt')||'',hari:parseInt(p.get('hr')||'0'),masa_mula:p.get('mm')||'',masa_tamat:p.get('mt')||'',exp:p.get('exp')||'0'});setSc('attend');return;}}catch{}
     setSc('invalid');
   };
   return<div style={{minHeight:'100vh',background:'#fff',display:'flex',flexDirection:'column'}}>
@@ -291,7 +389,8 @@ function KView({onAdmin}){
     </div>
   </div>;
 }
-/* Admin Panel */
+
+/* ══ ADMIN PANEL ══ */
 function Admin({pin,setPin,onBack}){
   const [tab,setTab]=useState('utama');
   const [sub,setSub]=useState(null);
@@ -299,22 +398,29 @@ function Admin({pin,setPin,onBack}){
   const [staff,setStaff]=useState([]);
   const [progs,setProgs]=useState([]);
   const [aMap,setAMap]=useState({});
-  const [load,setLoad]=useState(true);
+  const [loading,setLoading]=useState(true);
   const [dbErr,setDbErr]=useState('');
+  // QR tab state
   const [qSel,setQSel]=useState(null);
   const [qDU,setQDU]=useState('');
-  const [qDur,setQDur]=useState('28800000');
+  const [qUrl,setQUrl]=useState(''); // stable URL, only changes when program changes
+  // Kakitangan form
   const [sfN,setSfN]=useState('');const [sfK,setSfK]=useState('');const [sfB,setSfB]=useState('0');
   const [sErr,setSErr]=useState('');const [sOk,setSOk]=useState('');
-  const [pfN,setPfN]=useState('');const [pfT,setPfT]=useState('');const [pfD,setPfD]=useState('');const [pfH,setPfH]=useState('1');
+  // Program form
+  const [pfN,setPfN]=useState('');const [pfT,setPfT]=useState('');const [pfD,setPfD]=useState('');
+  const [pfH,setPfH]=useState('1');const [pfMM,setPfMM]=useState('08:00');const [pfMT,setPfMT]=useState('17:00');
   const [pErr,setPErr]=useState('');const [pOk,setPOk]=useState('');
+  // Laporan
   const [rP,setRP]=useState('');const [rData,setRData]=useState([]);const [rLoad,setRLoad]=useState(false);
+  // Program report
   const [prData,setPrData]=useState([]);const [prLoad,setPrLoad]=useState(false);
+  // Settings
   const [nPin,setNPin]=useState('');const [pmErr,setPmErr]=useState('');const [pmOk,setPmOk]=useState('');
   const [gsOk,setGsOk]=useState('');const [gsErr,setGsErr]=useState('');
 
   const loadAll=useCallback(async()=>{
-    setLoad(true);setDbErr('');
+    setLoading(true);setDbErr('');
     try{
       const [s,p]=await Promise.all([DB.getStaff(),DB.getProgs()]);
       setStaff(s||[]);setProgs(p||[]);
@@ -322,24 +428,45 @@ function Admin({pin,setPin,onBack}){
       await Promise.all((p||[]).map(async pg=>{try{const a=await DB.getAtt(pg.id);m[pg.id]=(a||[]).length;}catch{m[pg.id]=0;}}));
       setAMap(m);
     }catch(e){setDbErr(e.message);}
-    setLoad(false);
+    setLoading(false);
   },[]);
 
   useEffect(()=>{loadAll();},[]);
+
+  // Load program report data when selP+sub changes
   useEffect(()=>{
     if(selP&&sub==='rep'){setPrLoad(true);DB.getAtt(selP.id).then(r=>{setPrData(r||[]);setPrLoad(false);}).catch(()=>setPrLoad(false));}
   },[selP,sub]);
 
-  const goTab=t=>{setTab(t);setSub(null);setSelP(null);setSErr('');setPErr('');setSOk('');setPOk('');if(t==='qrkod'&&progs.length>0&&!qSel){setQSel(progs[0]);setQDU('');}};
+  // Update stable QR URL when selected program changes (no blinking)
+  useEffect(()=>{
+    if(qSel){
+      const exp=calcExpiry(qSel);
+      const url=`${getBase()}?p=${qSel.id}&nm=${encodeURIComponent(qSel.nama)}&tp=${encodeURIComponent(qSel.tempat)}&dt=${qSel.tarikh}&hr=${qSel.hari}&mm=${encodeURIComponent(qSel.masa_mula||'')}&mt=${encodeURIComponent(qSel.masa_tamat||'')}&exp=${exp}`;
+      setQUrl(url);
+      setQDU('');
+    }
+  },[qSel]);
+
+  const goTab=t=>{setTab(t);setSub(null);setSelP(null);setSErr('');setPErr('');setSOk('');setPOk('');if(t==='qrkod'&&progs.length>0&&!qSel){setQSel(progs[0]);}};
   const addSt=async()=>{if(!sfN.trim()||!sfK.trim())return setSErr('Sila isi semua ruangan');if(sfK.length!==12)return setSErr('No KP mestilah 12 digit');setSErr('');try{await DB.addStaff({nama:sfN.trim(),no_kp:sfK,bahagian:+sfB});setSfN('');setSfK('');setSfB('0');setSOk('Berjaya ditambah');setTimeout(()=>setSOk(''),3000);const s=await DB.getStaff();setStaff(s||[]);}catch(e){setSErr('Ralat: '+e.message);}};
   const delSt=async id=>{try{await DB.delStaff(id);setStaff(s=>s.filter(x=>x.id!==id));}catch(e){alert('Gagal: '+e.message);}};
-  const addPr=async()=>{if(!pfN.trim()||!pfT.trim()||!pfD)return setPErr('Sila lengkapkan semua ruangan');setPErr('');try{await DB.addProg({id:gId(),nama:pfN.trim(),tempat:pfT.trim(),tarikh:pfD,hari:+pfH});setPfN('');setPfT('');setPfD('');setPfH('1');setPOk('Program berjaya ditambah');setTimeout(()=>setPOk(''),3000);const p=await DB.getProgs();setProgs(p||[]);}catch(e){setPErr('Ralat: '+e.message);}};
-  const delPr=async id=>{try{await DB.delProg(id);setProgs(p=>p.filter(x=>x.id!==id));if(qSel?.id===id){setQSel(null);setQDU('');}}catch(e){alert('Gagal: '+e.message);}};
+  const addPr=async()=>{
+    if(!pfN.trim()||!pfT.trim()||!pfD)return setPErr('Sila lengkapkan Nama, Tempat, dan Tarikh');
+    setPErr('');
+    try{
+      await DB.addProg({id:gId(),nama:pfN.trim(),tempat:pfT.trim(),tarikh:pfD,hari:+pfH,masa_mula:pfMM,masa_tamat:pfMT});
+      setPfN('');setPfT('');setPfD('');setPfH('1');setPfMM('08:00');setPfMT('17:00');
+      setPOk('Program berjaya ditambah');setTimeout(()=>setPOk(''),3000);
+      const p=await DB.getProgs();setProgs(p||[]);
+    }catch(e){setPErr('Ralat: '+e.message);}
+  };
+  const delPr=async id=>{try{await DB.delProg(id);setProgs(p=>p.filter(x=>x.id!==id));if(qSel?.id===id){setQSel(null);setQUrl('');setQDU('');}}catch(e){alert('Gagal: '+e.message);}};
   const testGs=async()=>{setGsErr('');setGsOk('');try{await DB.getStaff();setGsOk('Sambungan berjaya!');setTimeout(()=>setGsOk(''),4000);}catch(e){setGsErr('Gagal: '+e.message);}};
   const savePin=async()=>{if(nPin.length<4)return setPmErr('Min 4 digit');await setPin(nPin);setNPin('');setPmErr('');setPmOk('PIN dikemas kini');setTimeout(()=>setPmOk(''),3000);};
 
   const tUtama=()=>{
-    if(load)return<Ldr/>;
+    if(loading)return<Ldr/>;
     if(dbErr)return<div className="alert alert-err" style={{margin:'0 0 16px'}}><i className="ti ti-alert-circle" style={{fontSize:16,flexShrink:0}}/><div>Gagal memuat data: <strong>{dbErr}</strong><br/><span style={{fontSize:12}}>Semak sambungan Apps Script dalam Tetapan.</span></div></div>;
     const today=new Date().toISOString().slice(0,10);
     const total=Object.values(aMap).reduce((s,v)=>s+v,0);
@@ -352,20 +479,23 @@ function Admin({pin,setPin,onBack}){
       </div>
       {progs.length>0?<><div className="sec">Program Terkini</div>
         <div className="card-sh" style={{overflow:'hidden'}}><table className="tbl"><thead><tr>
-          <th style={{width:'35%'}}>Program</th><th style={{width:'20%'}}>Tempat</th><th style={{width:'25%'}}>Tarikh</th><th style={{textAlign:'right'}}>Hadir</th>
-        </tr></thead><tbody>{progs.slice(0,8).map(p=>(
+          <th style={{width:'30%'}}>Program</th><th style={{width:'18%'}}>Tempat</th><th style={{width:'18%'}}>Tarikh</th><th style={{width:'18%'}}>Masa</th><th style={{textAlign:'right'}}>Hadir</th>
+        </tr></thead><tbody>{progs.slice(0,8).map(p=>{const jam=calcJam(p.masa_mula,p.masa_tamat);return(
           <tr key={p.id} onClick={()=>{setSelP(p);setSub('rep');setTab('program');}}>
-            <td><div style={{fontWeight:600}}>{p.nama}</div></td><td style={{color:'var(--muted)'}}>{p.tempat}</td>
-            <td style={{color:'var(--muted)'}}>{HR[p.hari]}, {fds(p.tarikh)}</td>
+            <td><div style={{fontWeight:600}}>{p.nama}</div></td>
+            <td style={{color:'var(--muted)',fontSize:12}}>{p.tempat}</td>
+            <td style={{color:'var(--muted)',fontSize:12}}>{HR[p.hari]}, {fds(p.tarikh)}</td>
+            <td style={{color:'var(--muted)',fontSize:12}}>{p.masa_mula&&p.masa_tamat?`${p.masa_mula}–${p.masa_tamat}`:'-'}</td>
             <td style={{textAlign:'right'}}><span style={{background:BGL,color:BGD,padding:'3px 10px',borderRadius:99,fontWeight:700,fontSize:12}}>{aMap[p.id]||0} org</span></td>
           </tr>
-        ))}</tbody></table></div>
+        );})}
+        </tbody></table></div>
       </>:<Mty icon="calendar-off" msg="Tiada program. Tambah dalam tab Program."/>}
     </div>;
   };
 
   const tKakitangan=()=>{
-    if(load)return<Ldr/>;
+    if(loading)return<Ldr/>;
     return<div style={{animation:'fadeUp .25s ease',display:'grid',gridTemplateColumns:'300px 1fr',gap:20,alignItems:'start'}}>
       <div className="card" style={{padding:20}}>
         <div style={{fontSize:14,fontWeight:700,marginBottom:3}}>Tambah Kakitangan</div>
@@ -398,16 +528,20 @@ function Admin({pin,setPin,onBack}){
 
   const tProgRep=()=>{
     if(!selP)return null;
+    const jam=calcJam(selP.masa_mula,selP.masa_tamat);
     return<div style={{animation:'fadeUp .2s ease'}}>
       <button className="btn btn-g btn-sm" onClick={()=>setSub(null)} style={{marginBottom:16}}><i className="ti ti-arrow-left" style={{fontSize:14}}/>Kembali</button>
       <div style={{display:'grid',gridTemplateColumns:'200px 1fr',gap:16,alignItems:'start'}}>
         <div>
           <div style={{fontSize:16,fontWeight:700,marginBottom:3}}>{selP.nama}</div>
-          <div style={{fontSize:12,color:'var(--muted)',marginBottom:14}}>{selP.tempat} · {HR[selP.hari]}, {fd(selP.tarikh)}</div>
+          <div style={{fontSize:12,color:'var(--muted)',marginBottom:3}}>{selP.tempat}</div>
+          <div style={{fontSize:12,color:'var(--muted)',marginBottom:3}}>{HR[selP.hari]}, {fd(selP.tarikh)}</div>
+          {selP.masa_mula&&selP.masa_tamat&&<div style={{fontSize:12,color:'var(--muted)',marginBottom:jam?3:14}}>{selP.masa_mula} — {selP.masa_tamat}</div>}
+          {jam&&<div style={{fontSize:12,fontWeight:600,color:BG,marginBottom:14}}>{jam}</div>}
           {[{l:'Jumlah Hadir',v:prData.length,bg:BGL,col:BG,tc:BGD},...BAH.map((b,i)=>({l:b,v:prData.filter(r=>r.bahagian===i||r.bahagian===String(i)).length,bg:'var(--page)',col:'var(--text)',tc:'var(--muted)'}))].map((x,i)=>(
             <div key={i} className="card" style={{padding:'10px 14px',marginBottom:8,background:x.bg,borderColor:i===0?'rgba(139,26,46,.2)':'var(--border)'}}><div style={{fontSize:22,fontWeight:700,color:x.col}}>{x.v}</div><div style={{fontSize:11,color:x.tc,fontWeight:500}}>{x.l}</div></div>
           ))}
-          <button className="btn btn-g btn-block btn-sm" style={{marginTop:4}} onClick={()=>{setQSel(selP);setQDU('');goTab('qrkod');}}><i className="ti ti-qrcode" style={{fontSize:14}}/>Jana Kod QR</button>
+          <button className="btn btn-g btn-block btn-sm" style={{marginTop:4}} onClick={()=>{setQSel(selP);goTab('qrkod');}}><i className="ti ti-qrcode" style={{fontSize:14}}/>Jana Kod QR</button>
         </div>
         {prLoad?<Ldr/>:prData.length===0?<div className="card-sh"><Mty icon="users" msg="Tiada rekod kehadiran"/></div>
         :<div className="card-sh" style={{overflow:'hidden'}}><table className="tbl"><thead><tr>
@@ -427,16 +561,25 @@ function Admin({pin,setPin,onBack}){
 
   const tProgram=()=>{
     if(sub==='rep'&&selP)return tProgRep();
-    if(load)return<Ldr/>;
-    return<div style={{animation:'fadeUp .25s ease',display:'grid',gridTemplateColumns:'300px 1fr',gap:20,alignItems:'start'}}>
+    if(loading)return<Ldr/>;
+    return<div style={{animation:'fadeUp .25s ease',display:'grid',gridTemplateColumns:'320px 1fr',gap:20,alignItems:'start'}}>
       <div className="card" style={{padding:20}}>
         <div style={{fontSize:14,fontWeight:700,marginBottom:3}}>Tambah Program</div>
-        <div style={{fontSize:12,color:'var(--muted)',marginBottom:16}}>Cipta program baharu untuk rekod kehadiran</div>
+        <div style={{fontSize:12,color:'var(--muted)',marginBottom:16}}>Cipta program baharu</div>
         <div style={{display:'flex',flexDirection:'column',gap:12}}>
           <Fld label="Nama Program"><input placeholder="Cth: Kursus Pemantapan PdP" value={pfN} onChange={e=>setPfN(e.target.value)}/></Fld>
           <Fld label="Tempat"><input placeholder="Cth: Dewan Sekolah" value={pfT} onChange={e=>setPfT(e.target.value)}/></Fld>
           <Fld label="Tarikh"><input type="date" value={pfD} onChange={e=>{const d=e.target.value;setPfD(d);if(d)setPfH(String(new Date(d+'T00:00').getDay()));}}/></Fld>
           <Fld label="Hari"><select value={pfH} onChange={e=>setPfH(e.target.value)}>{HR.map((h,i)=><option key={i} value={i}>{h}</option>)}</select></Fld>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+            <Fld label="Masa Mula"><input type="time" value={pfMM} onChange={e=>setPfMM(e.target.value)}/></Fld>
+            <Fld label="Masa Tamat"><input type="time" value={pfMT} onChange={e=>setPfMT(e.target.value)}/></Fld>
+          </div>
+          {pfMM&&pfMT&&calcJam(pfMM,pfMT)&&<div className="alert alert-info" style={{padding:'8px 12px'}}>
+            <i className="ti ti-clock" style={{fontSize:14,flexShrink:0}}/>
+            <span style={{fontWeight:600}}>{calcJam(pfMM,pfMT)}</span>
+            <span style={{color:'var(--muted)',fontSize:12,marginLeft:4}}>— QR tamat 1 jam selepas program</span>
+          </div>}
           {pErr&&<div className="alert alert-err"><i className="ti ti-alert-circle" style={{fontSize:14,flexShrink:0}}/>{pErr}</div>}
           {pOk&&<div className="alert alert-ok"><i className="ti ti-check" style={{fontSize:14,flexShrink:0}}/>{pOk}</div>}
           <button className="btn btn-p btn-block" onClick={addPr}><i className="ti ti-plus" style={{fontSize:16}}/>Tambah Program</button>
@@ -446,20 +589,24 @@ function Admin({pin,setPin,onBack}){
         <div className="sec">{progs.length} program</div>
         {progs.length===0?<div className="card-sh"><Mty icon="calendar" msg="Belum ada program."/></div>
         :<div className="card-sh" style={{overflow:'hidden'}}><table className="tbl"><thead><tr>
-          <th style={{width:'28%'}}>Program</th><th style={{width:'20%'}}>Tempat</th><th style={{width:'22%'}}>Tarikh</th><th style={{width:70,textAlign:'center'}}>Hadir</th><th style={{width:100}}></th>
-        </tr></thead><tbody>{progs.map(p=>(
+          <th style={{width:'26%'}}>Program</th><th style={{width:'16%'}}>Tempat</th><th style={{width:'18%'}}>Tarikh</th><th style={{width:'20%'}}>Masa</th><th style={{width:60,textAlign:'center'}}>Hadir</th><th style={{width:90}}></th>
+        </tr></thead><tbody>{progs.map(p=>{const jam=calcJam(p.masa_mula,p.masa_tamat);return(
           <tr key={p.id}>
-            <td><div style={{fontWeight:600}}>{p.nama}</div></td>
-            <td style={{color:'var(--muted)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.tempat}</td>
+            <td><div style={{fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.nama}</div></td>
+            <td style={{color:'var(--muted)',fontSize:12,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.tempat}</td>
             <td style={{color:'var(--muted)',fontSize:12}}>{HR[p.hari]}, {fds(p.tarikh)}</td>
+            <td style={{fontSize:11}}>
+              {p.masa_mula&&p.masa_tamat?<><div style={{color:'var(--text)',fontWeight:500}}>{p.masa_mula} — {p.masa_tamat}</div><div style={{color:BG,fontWeight:600}}>{jam||''}</div></>:<span style={{color:'var(--dim)'}}>—</span>}
+            </td>
             <td style={{textAlign:'center'}}><span style={{background:BGL,color:BGD,padding:'3px 9px',borderRadius:99,fontWeight:700,fontSize:12}}>{aMap[p.id]||0}</span></td>
             <td><div style={{display:'flex',gap:4,justifyContent:'flex-end'}}>
-              <button className="btn btn-g btn-sm" onClick={()=>{setQSel(p);setQDU('');goTab('qrkod');}}><i className="ti ti-qrcode" style={{fontSize:13}}/>QR</button>
+              <button className="btn btn-g btn-sm" onClick={()=>{setQSel(p);goTab('qrkod');}}><i className="ti ti-qrcode" style={{fontSize:13}}/>QR</button>
               <button className="btn-icon" onClick={()=>{setSelP(p);setSub('rep');}}><i className="ti ti-list" style={{fontSize:15}}/></button>
               <button className="btn-icon" onClick={()=>delPr(p.id)}><i className="ti ti-trash" style={{fontSize:15}}/></button>
             </div></td>
           </tr>
-        ))}</tbody></table></div>}
+        );})}
+        </tbody></table></div>}
       </div>
     </div>;
   };
@@ -467,15 +614,16 @@ function Admin({pin,setPin,onBack}){
   const tQRKod=()=>{
     const sel=qSel||progs[0]||null;
     if(progs.length===0)return<div className="card-sh"><Mty icon="qrcode-off" msg="Tambah program dahulu."/></div>;
-    const expTs=qDur==='0'?'0':String(Date.now()+parseInt(qDur));
-    const qUrl=sel?`${getBase()}?p=${sel.id}&nm=${encodeURIComponent(sel.nama)}&tp=${encodeURIComponent(sel.tempat)}&dt=${sel.tarikh}&hr=${sel.hari}&exp=${expTs}`:'';
+    const jam=sel?calcJam(sel.masa_mula,sel.masa_tamat):null;
+    const exp=sel?calcExpiry(sel):null;
     return<div style={{animation:'fadeUp .25s ease',display:'grid',gridTemplateColumns:'215px 1fr',gap:0,minHeight:480}}>
       <div style={{borderRight:'1px solid var(--border)',overflowY:'auto'}}>
         <div style={{padding:'10px 14px 8px',borderBottom:'1px solid var(--border2)'}}><div className="sec">Pilih Program</div></div>
-        {progs.map(p=>{const isSel=sel?.id===p.id;return<div key={p.id} className={`pi${isSel?' on':''}`} onClick={()=>{setQSel(p);setQDU('');}}>
+        {progs.map(p=>{const isSel=sel?.id===p.id;return<div key={p.id} className={`pi${isSel?' on':''}`} onClick={()=>setQSel(p)}>
           <div style={{fontWeight:isSel?600:500,fontSize:13,color:isSel?BGD:'var(--text)',marginBottom:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.nama}</div>
           <div style={{fontSize:11,color:isSel?BGD:'var(--muted)'}}>{HR[p.hari]}, {fds(p.tarikh)}</div>
-          <div style={{fontSize:11,color:isSel?BG:'var(--dim)',marginTop:3,fontWeight:isSel?600:400}}>{aMap[p.id]||0} hadir</div>
+          {p.masa_mula&&p.masa_tamat&&<div style={{fontSize:11,color:isSel?BG:'var(--dim)',marginTop:2}}>{p.masa_mula}–{p.masa_tamat}</div>}
+          <div style={{fontSize:11,color:isSel?BG:'var(--dim)',marginTop:2,fontWeight:isSel?600:400}}>{aMap[p.id]||0} hadir</div>
         </div>;})}
       </div>
       {sel&&<div style={{padding:'0 0 28px 22px',display:'flex',flexDirection:'column',gap:14}}>
@@ -483,34 +631,28 @@ function Admin({pin,setPin,onBack}){
           <div style={{position:'absolute',right:-20,top:-20,width:100,height:100,borderRadius:'50%',background:'rgba(255,255,255,.04)'}}/>
           <div style={{fontSize:9,color:'rgba(255,255,255,.35)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:5}}>{SCHOOL}</div>
           <div style={{fontSize:15,fontWeight:700,marginBottom:5,position:'relative'}}>{sel.nama}</div>
-          <div style={{display:'flex',flexWrap:'wrap',gap:12,fontSize:12,color:'rgba(255,255,255,.65)',position:'relative'}}>
+          <div style={{display:'flex',flexWrap:'wrap',gap:10,fontSize:12,color:'rgba(255,255,255,.65)',position:'relative'}}>
             <span>📍 {sel.tempat}</span><span>📅 {HR[sel.hari]}, {fds(sel.tarikh)}</span>
+            {sel.masa_mula&&sel.masa_tamat&&<span>🕐 {sel.masa_mula} — {sel.masa_tamat}{jam?` (${jam})`:''}</span>}
             <span style={{background:'rgba(255,255,255,.12)',borderRadius:99,padding:'2px 8px'}}>👥 {aMap[sel.id]||0} hadir</span>
           </div>
         </div>
         <div style={{display:'flex',gap:18,alignItems:'flex-start'}}>
           <div className="card-sh" style={{padding:16,textAlign:'center',flexShrink:0}}>
-            <QRGen key={qUrl} data={qUrl} size={200} onDU={du=>setQDU(du)}/>
+            <QRGen data={qUrl} size={200} onDU={du=>setQDU(du)}/>
             {!qDU&&<div style={{fontSize:11,color:'var(--dim)',marginTop:8,display:'flex',alignItems:'center',justifyContent:'center',gap:5}}><span style={{width:12,height:12,border:'2px solid var(--dim)',borderTopColor:'transparent',borderRadius:'50%',animation:'spin .7s linear infinite'}}/>Menjana QR...</div>}
-            {qDU&&<div style={{marginTop:10,padding:'7px 10px',background:'var(--page)',borderRadius:7,border:'1px solid var(--border2)'}}>
-              <code style={{fontSize:10,color:'var(--muted)',fontFamily:'monospace',display:'block',marginBottom:4}}>{sel.id}</code>
-              {qDur!=='0'?<div style={{fontSize:10,color:'var(--warn)',fontWeight:600}}>⏱ Tamat: {new Date(Date.now()+parseInt(qDur)).toLocaleString('ms-MY',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
-              :<div style={{fontSize:10,color:'var(--ok)',fontWeight:600}}>✓ Tanpa had masa</div>}
+            {qDU&&<div style={{marginTop:10,padding:'8px 10px',background:'var(--page)',borderRadius:7,border:'1px solid var(--border2)',textAlign:'left'}}>
+              {jam&&<div style={{display:'flex',alignItems:'center',gap:6,marginBottom:4}}><i className="ti ti-clock" style={{fontSize:12,color:BG}}/><span style={{fontSize:11,fontWeight:600,color:BGD}}>{jam}</span></div>}
+              {exp&&exp!=='0'?<div style={{fontSize:10,color:'var(--warn)',fontWeight:600,display:'flex',alignItems:'center',gap:5}}>
+                <i className="ti ti-clock-off" style={{fontSize:11}}/>QR tamat: {new Date(parseInt(exp)).toLocaleString('ms-MY',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}
+              </div>:<div style={{fontSize:10,color:'var(--ok)',fontWeight:600}}>✓ Tiada had masa</div>}
             </div>}
           </div>
           <div style={{flex:1,minWidth:0}}>
-            <div className="card" style={{padding:'12px 14px',marginBottom:12}}>
-              <div className="sec">Tempoh Sah QR</div>
-              <select value={qDur} onChange={e=>{setQDur(e.target.value);setQDU('');}}>
-                <option value="1800000">30 minit</option>
-                <option value="3600000">1 jam</option>
-                <option value="7200000">2 jam</option>
-                <option value="14400000">4 jam</option>
-                <option value="28800000">8 jam</option>
-                <option value="86400000">1 hari</option>
-                <option value="0">Tanpa had</option>
-              </select>
-            </div>
+            {!sel.masa_mula&&<div className="alert alert-warn" style={{marginBottom:12,flexDirection:'column',gap:4}}>
+              <div style={{fontWeight:600,display:'flex',alignItems:'center',gap:6}}><i className="ti ti-alert-triangle" style={{fontSize:14}}/>Tiada Masa Program</div>
+              <div style={{fontSize:12}}>Program ini tiada masa mula/tamat. QR tidak akan tamat tempoh.</div>
+            </div>}
             <div className="alert alert-info" style={{marginBottom:12,flexDirection:'column',gap:5}}>
               <div style={{fontWeight:600,display:'flex',alignItems:'center',gap:6}}><i className="ti ti-world" style={{fontSize:14}}/>Imbas dengan Mana-mana Apl</div>
               <div style={{fontSize:12,lineHeight:1.6}}>QR ini mengandungi URL yang boleh diimbas oleh kamera telefon, WhatsApp, atau sebarang apl QR scanner.</div>
@@ -544,7 +686,13 @@ function Admin({pin,setPin,onBack}){
       </div>
       {cur&&<div style={{display:'grid',gridTemplateColumns:'200px 1fr',gap:14,alignItems:'start'}}>
         <div>
-          <div className="card" style={{padding:13,marginBottom:10}}><div style={{fontWeight:700,fontSize:14,marginBottom:3}}>{cur.nama}</div><div style={{fontSize:12,color:'var(--muted)',marginBottom:1}}>📍 {cur.tempat}</div><div style={{fontSize:12,color:'var(--muted)'}}>📅 {HR[cur.hari]}, {fd(cur.tarikh)}</div></div>
+          <div className="card" style={{padding:13,marginBottom:10}}>
+            <div style={{fontWeight:700,fontSize:14,marginBottom:3}}>{cur.nama}</div>
+            <div style={{fontSize:12,color:'var(--muted)',marginBottom:1}}>📍 {cur.tempat}</div>
+            <div style={{fontSize:12,color:'var(--muted)',marginBottom:1}}>📅 {HR[cur.hari]}, {fd(cur.tarikh)}</div>
+            {cur.masa_mula&&cur.masa_tamat&&<div style={{fontSize:12,color:'var(--muted)',marginBottom:1}}>🕐 {cur.masa_mula} — {cur.masa_tamat}</div>}
+            {calcJam(cur.masa_mula,cur.masa_tamat)&&<div style={{fontSize:12,fontWeight:600,color:BG}}>{calcJam(cur.masa_mula,cur.masa_tamat)}</div>}
+          </div>
           {[{l:'Jumlah',v:rData.length,bg:BGL,col:BG,tc:BGD},...BAH.map((b,i)=>({l:b,v:rData.filter(r=>r.bahagian===i||r.bahagian===String(i)).length,bg:'var(--page)',col:'var(--text)',tc:'var(--muted)'}))].map((x,i)=>(
             <div key={i} className="card" style={{padding:'9px 12px',marginBottom:7,background:x.bg,borderColor:i===0?'rgba(139,26,46,.2)':'var(--border)'}}><div style={{fontSize:21,fontWeight:700,color:x.col}}>{x.v}</div><div style={{fontSize:11,color:x.tc,fontWeight:500}}>{x.l}</div></div>
           ))}
@@ -573,18 +721,29 @@ function Admin({pin,setPin,onBack}){
     else if(a==='delKakitangan'){delId('kakitangan',p.id);r={ok:true};}
     else if(a==='findByKP')    r=sArr('kakitangan').filter(x=>x.no_kp===p.no_kp);
     else if(a==='getProgram')  r=sArr('program').reverse();
-    else if(a==='addProgram')  {aRow('program',[p.id,p.nama,p.tempat,p.tarikh,+p.hari,now()]);r={ok:true};}
+    else if(a==='addProgram'){
+      aRow('program',[p.id,p.nama,p.tempat,p.tarikh,+p.hari,p.masa_mula||'',p.masa_tamat||'',now()]);
+      r={ok:true};
+    }
     else if(a==='delProgram')  {delId('program',p.id);r={ok:true};}
     else if(a==='getKehadiran') r=sArr('kehadiran').filter(x=>x.program_id===p.program_id);
     else if(a==='checkDup')    r=sArr('kehadiran').filter(x=>x.program_id===p.program_id&&x.no_kp===p.no_kp);
-    else if(a==='addKehadiran'){aRow('kehadiran',[p.id,p.program_id,p.kakitangan_id||'',p.no_kp,p.nama,p.bahagian!==''?+p.bahagian:'',now(),p.verified==='true']);r={ok:true};}
+    else if(a==='addKehadiran'){
+      aRow('kehadiran',[p.id,p.program_id,p.kakitangan_id||'',p.no_kp,p.nama,
+        p.bahagian!==''?+p.bahagian:'',now(),p.verified==='true']);
+      r={ok:true};
+    }
     else r={error:'Unknown: '+a};
     return out(r);
   }catch(err){return out({error:err.toString()});}
 }
 function out(d){return ContentService.createTextOutput(JSON.stringify(d)).setMimeType(ContentService.MimeType.JSON);}
 const SS=SpreadsheetApp.getActiveSpreadsheet();
-const HD={kakitangan:['id','nama','no_kp','bahagian','created_at'],program:['id','nama','tempat','tarikh','hari','created_at'],kehadiran:['id','program_id','kakitangan_id','no_kp','nama','bahagian','masa','verified']};
+const HD={
+  kakitangan:['id','nama','no_kp','bahagian','created_at'],
+  program:['id','nama','tempat','tarikh','hari','masa_mula','masa_tamat','created_at'],
+  kehadiran:['id','program_id','kakitangan_id','no_kp','nama','bahagian','masa','verified']
+};
 function gs(n){let s=SS.getSheetByName(n);if(!s){s=SS.insertSheet(n);s.getRange(1,1,1,HD[n].length).setValues([HD[n]]);s.setFrozenRows(1);}return s;}
 function sArr(n){const d=gs(n).getDataRange().getValues();if(d.length<2)return[];const h=d[0];return d.slice(1).map(r=>Object.fromEntries(h.map((k,i)=>[k,r[i]])));}
 function aRow(n,row){gs(n).appendRow(row);}
@@ -650,7 +809,8 @@ function now(){return new Date().toISOString();}`;
     </div>
   </div>;
 }
-/* Root */
+
+/* ══ ROOT ══ */
 function App(){
   const [mode,setMode]=useState(null);
   const [pin,setPin]=useState('1234');
