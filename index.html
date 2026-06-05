@@ -85,11 +85,31 @@ const fd=d=>{const dt=parseDt(d);return dt&&!isNaN(dt)?dt.toLocaleDateString('ms
 const fds=d=>{const dt=parseDt(d);return dt&&!isNaN(dt)?dt.toLocaleDateString('ms-MY',{day:'2-digit',month:'short',year:'numeric'}):'—';};
 const ft=ts=>{try{return new Date(ts).toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit'});}catch{return '';}};
 
+/* Parse time — handles HH:MM string or Google Sheets 1899 Date format */
+function parseTime(val){
+  if(!val&&val!==0)return '';
+  const s=String(val).trim();
+  if(!s)return '';
+  // Already HH:MM
+  if(/^\d{1,2}:\d{2}$/.test(s))return s.length===4?'0'+s:s;
+  // Google Sheets time value (1899-12-30...)
+  try{
+    const d=new Date(s);
+    if(!isNaN(d)&&d.getFullYear()<=1900){
+      const h=String(d.getUTCHours()).padStart(2,'0');
+      const m=String(d.getUTCMinutes()).padStart(2,'0');
+      return h+':'+m;
+    }
+  }catch{}
+  return s;
+}
+
 /* Calculate bilangan jam from masa_mula & masa_tamat */
 function calcJam(mula,tamat){
-  if(!mula||!tamat)return null;
-  const [mh,mm]=mula.split(':').map(Number);
-  const [th,tm]=tamat.split(':').map(Number);
+  const m1=parseTime(mula),m2=parseTime(tamat);
+  if(!m1||!m2)return null;
+  const [mh,mm]=m1.split(':').map(Number);
+  const [th,tm]=m2.split(':').map(Number);
   const diff=(th*60+tm)-(mh*60+mm);
   if(diff<=0)return null;
   const h=Math.floor(diff/60),m=diff%60;
@@ -101,10 +121,11 @@ function calcExpiry(prog){
   if(!prog.tarikh||!prog.masa_tamat)return '0';
   try{
     const s=String(prog.tarikh).trim();
-    // Get date part only
     const datePart=s.includes('T')?s.split('T')[0]:/^\d{4}-\d{2}-\d{2}$/.test(s)?s:null;
     if(!datePart)return '0';
-    const end=new Date(`${datePart}T${prog.masa_tamat}:00`);
+    const mt=parseTime(prog.masa_tamat);
+    if(!mt)return '0';
+    const end=new Date(`${datePart}T${mt}:00`);
     if(isNaN(end))return '0';
     end.setHours(end.getHours()+1);
     return String(end.getTime());
@@ -124,7 +145,8 @@ function checkValidity(prog){
       const s=String(prog.tarikh).trim();
       const datePart=s.includes('T')?s.split('T')[0]:/^\d{4}-\d{2}-\d{2}$/.test(s)?s:null;
       if(datePart){
-        const start=new Date(`${datePart}T${prog.masa_mula}:00`);
+        const mm=parseTime(prog.masa_mula);
+        const start=new Date(`${datePart}T${mm}:00`);
         if(!isNaN(start)&&now<start.getTime()){
           return{valid:false,reason:'early',start:start.getTime()};
         }
@@ -310,7 +332,7 @@ function AttForm({prog,onBack,onNext}){
       <div style={{display:'flex',flexWrap:'wrap',gap:10,fontSize:12,color:'rgba(255,255,255,.65)',position:'relative'}}>
         <span><i className="ti ti-map-pin" style={{fontSize:12,marginRight:4}}/>{prog.tempat}</span>
         <span><i className="ti ti-calendar" style={{fontSize:12,marginRight:4}}/>{HR[prog.hari]}, {fds(prog.tarikh)}</span>
-        {prog.masa_mula&&prog.masa_tamat&&<span><i className="ti ti-clock" style={{fontSize:12,marginRight:4}}/>{prog.masa_mula} — {prog.masa_tamat}{jam&&` (${jam})`}</span>}
+        {prog.masa_mula&&prog.masa_tamat&&<span><i className="ti ti-clock" style={{fontSize:12,marginRight:4}}/>{parseTime(prog.masa_mula)} — {parseTime(prog.masa_tamat)}{jam&&` (${jam})`}</span>}
         <span style={{background:'rgba(255,255,255,.1)',borderRadius:99,padding:'2px 8px'}}><i className="ti ti-users" style={{fontSize:11,marginRight:4}}/>{cnt} hadir</span>
       </div>
     </div>
@@ -442,7 +464,7 @@ function Admin({pin,setPin,onBack}){
   useEffect(()=>{
     if(qSel){
       const exp=calcExpiry(qSel);
-      const url=`${getBase()}?p=${qSel.id}&nm=${encodeURIComponent(qSel.nama)}&tp=${encodeURIComponent(qSel.tempat)}&dt=${qSel.tarikh}&hr=${qSel.hari}&mm=${encodeURIComponent(qSel.masa_mula||'')}&mt=${encodeURIComponent(qSel.masa_tamat||'')}&exp=${exp}`;
+      const url=`${getBase()}?p=${qSel.id}&nm=${encodeURIComponent(qSel.nama)}&tp=${encodeURIComponent(qSel.tempat)}&dt=${qSel.tarikh}&hr=${qSel.hari}&mm=${encodeURIComponent(parseTime(qSel.masa_mula)||'')}&mt=${encodeURIComponent(parseTime(qSel.masa_tamat)||'')}&exp=${exp}`;
       setQUrl(url);
       setQDU('');
     }
@@ -485,7 +507,7 @@ function Admin({pin,setPin,onBack}){
             <td><div style={{fontWeight:600}}>{p.nama}</div></td>
             <td style={{color:'var(--muted)',fontSize:12}}>{p.tempat}</td>
             <td style={{color:'var(--muted)',fontSize:12}}>{HR[p.hari]}, {fds(p.tarikh)}</td>
-            <td style={{color:'var(--muted)',fontSize:12}}>{p.masa_mula&&p.masa_tamat?`${p.masa_mula}–${p.masa_tamat}`:'-'}</td>
+            <td style={{color:'var(--muted)',fontSize:12}}>{p.masa_mula&&p.masa_tamat?`${parseTime(p.masa_mula)}–${parseTime(p.masa_tamat)}`:'-'}</td>
             <td style={{textAlign:'right'}}><span style={{background:BGL,color:BGD,padding:'3px 10px',borderRadius:99,fontWeight:700,fontSize:12}}>{aMap[p.id]||0} org</span></td>
           </tr>
         );})}
@@ -596,7 +618,7 @@ function Admin({pin,setPin,onBack}){
             <td style={{color:'var(--muted)',fontSize:12,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.tempat}</td>
             <td style={{color:'var(--muted)',fontSize:12}}>{HR[p.hari]}, {fds(p.tarikh)}</td>
             <td style={{fontSize:11}}>
-              {p.masa_mula&&p.masa_tamat?<><div style={{color:'var(--text)',fontWeight:500}}>{p.masa_mula} — {p.masa_tamat}</div><div style={{color:BG,fontWeight:600}}>{jam||''}</div></>:<span style={{color:'var(--dim)'}}>—</span>}
+              {p.masa_mula&&p.masa_tamat?<><div style={{color:'var(--text)',fontWeight:500}}>{parseTime(p.masa_mula)} — {parseTime(p.masa_tamat)}</div><div style={{color:BG,fontWeight:600}}>{jam||''}</div></>:<span style={{color:'var(--dim)'}}>—</span>}
             </td>
             <td style={{textAlign:'center'}}><span style={{background:BGL,color:BGD,padding:'3px 9px',borderRadius:99,fontWeight:700,fontSize:12}}>{aMap[p.id]||0}</span></td>
             <td><div style={{display:'flex',gap:4,justifyContent:'flex-end'}}>
@@ -622,7 +644,7 @@ function Admin({pin,setPin,onBack}){
         {progs.map(p=>{const isSel=sel?.id===p.id;return<div key={p.id} className={`pi${isSel?' on':''}`} onClick={()=>setQSel(p)}>
           <div style={{fontWeight:isSel?600:500,fontSize:13,color:isSel?BGD:'var(--text)',marginBottom:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.nama}</div>
           <div style={{fontSize:11,color:isSel?BGD:'var(--muted)'}}>{HR[p.hari]}, {fds(p.tarikh)}</div>
-          {p.masa_mula&&p.masa_tamat&&<div style={{fontSize:11,color:isSel?BG:'var(--dim)',marginTop:2}}>{p.masa_mula}–{p.masa_tamat}</div>}
+          {p.masa_mula&&p.masa_tamat&&<div style={{fontSize:11,color:isSel?BG:'var(--dim)',marginTop:2}}>{parseTime(p.masa_mula)}–{parseTime(p.masa_tamat)}</div>}
           <div style={{fontSize:11,color:isSel?BG:'var(--dim)',marginTop:2,fontWeight:isSel?600:400}}>{aMap[p.id]||0} hadir</div>
         </div>;})}
       </div>
@@ -633,7 +655,7 @@ function Admin({pin,setPin,onBack}){
           <div style={{fontSize:15,fontWeight:700,marginBottom:5,position:'relative'}}>{sel.nama}</div>
           <div style={{display:'flex',flexWrap:'wrap',gap:10,fontSize:12,color:'rgba(255,255,255,.65)',position:'relative'}}>
             <span>📍 {sel.tempat}</span><span>📅 {HR[sel.hari]}, {fds(sel.tarikh)}</span>
-            {sel.masa_mula&&sel.masa_tamat&&<span>🕐 {sel.masa_mula} — {sel.masa_tamat}{jam?` (${jam})`:''}</span>}
+            {sel.masa_mula&&sel.masa_tamat&&<span>🕐 {parseTime(sel.masa_mula)} — {parseTime(sel.masa_tamat)}{jam?` (${jam})`:''}</span>}
             <span style={{background:'rgba(255,255,255,.12)',borderRadius:99,padding:'2px 8px'}}>👥 {aMap[sel.id]||0} hadir</span>
           </div>
         </div>
@@ -690,7 +712,7 @@ function Admin({pin,setPin,onBack}){
             <div style={{fontWeight:700,fontSize:14,marginBottom:3}}>{cur.nama}</div>
             <div style={{fontSize:12,color:'var(--muted)',marginBottom:1}}>📍 {cur.tempat}</div>
             <div style={{fontSize:12,color:'var(--muted)',marginBottom:1}}>📅 {HR[cur.hari]}, {fd(cur.tarikh)}</div>
-            {cur.masa_mula&&cur.masa_tamat&&<div style={{fontSize:12,color:'var(--muted)',marginBottom:1}}>🕐 {cur.masa_mula} — {cur.masa_tamat}</div>}
+            {cur.masa_mula&&cur.masa_tamat&&<div style={{fontSize:12,color:'var(--muted)',marginBottom:1}}>🕐 {parseTime(cur.masa_mula)} — {parseTime(cur.masa_tamat)}</div>}
             {calcJam(cur.masa_mula,cur.masa_tamat)&&<div style={{fontSize:12,fontWeight:600,color:BG}}>{calcJam(cur.masa_mula,cur.masa_tamat)}</div>}
           </div>
           {[{l:'Jumlah',v:rData.length,bg:BGL,col:BG,tc:BGD},...BAH.map((b,i)=>({l:b,v:rData.filter(r=>r.bahagian===i||r.bahagian===String(i)).length,bg:'var(--page)',col:'var(--text)',tc:'var(--muted)'}))].map((x,i)=>(
