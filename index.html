@@ -66,7 +66,7 @@ const gId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6).toUp
 const ls={get:k=>{try{return localStorage.getItem(k)}catch{return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch{}}};
 
 /* ── Google Sheets API ── */
-const GS_URL='https://script.google.com/macros/s/AKfycbzfd1TaKlUhle9ZtzUYxgehMTc3IxsLzxsgr6oe9JkhJdj1gtuZajBNLzN2RZz5z2M/exec';
+const GS_URL='https://script.google.com/macros/s/AKfycbyjz9yA9OX_aatPCZOYcb2Imj6GrvoQzRN2MTO27dVJ84kJI0nCoDuQo-QkezLmFDk/exec';
 
 async function gsReq(params){
   const full=GS_URL+'?'+new URLSearchParams(params).toString();
@@ -493,7 +493,7 @@ function Admin({pin,setPin,onBack}){
   },[qSel]);
 
   const goTab=t=>{setTab(t);setSub(null);setSelP(null);setSErr('');setPErr('');setSOk('');setPOk('');if(t==='qrkod'&&progs.length>0&&!qSel){setQSel(progs[0]);}};
-  const addSt=async()=>{if(!sfN.trim()||!sfK.trim())return setSErr('Sila isi semua ruangan');if(sfK.length!==12)return setSErr('No KP mestilah 12 digit');setSErr('');try{await DB.addStaff({nama:sfN.trim(),no_kp:sfK,bahagian:+sfB});setSfN('');setSfK('');setSfB('0');setSOk('Berjaya ditambah');setTimeout(()=>setSOk(''),3000);const s=await DB.getStaff();setStaff(s||[]);}catch(e){setSErr('Ralat: '+e.message);}};
+  const addSt=async()=>{if(!sfN.trim()||!sfK.trim())return setSErr('Sila isi semua ruangan');if(sfK.length!==12)return setSErr('No KP mestilah 12 digit');setSErr('');try{await DB.addStaff({id:gId(),nama:sfN.trim(),no_kp:sfK,bahagian:+sfB});setSfN('');setSfK('');setSfB('0');setSOk('Berjaya ditambah');setTimeout(()=>setSOk(''),3000);const s=await DB.getStaff();setStaff(s||[]);}catch(e){setSErr('Ralat: '+e.message);}};
   const parseBulk=txt=>{
     const lines=txt.trim().split('\n').filter(l=>l.trim());
     const rows=[],errs=[];
@@ -510,7 +510,7 @@ function Admin({pin,setPin,onBack}){
       else if(/^\d+$/.test(bRaw))bah=Math.min(2,+bRaw);
       if(!nama){errs.push('Baris '+(i+1)+': nama kosong');return;}
       if(noKP.length!==12){errs.push('Baris '+(i+1)+': No KP tidak sah ('+noKP+')');return;}
-      rows.push({nama,no_kp:noKP,bahagian:bah});
+      rows.push({id:gId(),nama,no_kp:noKP,bahagian:bah});
     });
     setBulkRows(rows);setBulkErrs(errs);
   };
