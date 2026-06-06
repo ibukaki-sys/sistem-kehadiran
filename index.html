@@ -66,7 +66,7 @@ const gId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6).toUp
 const ls={get:k=>{try{return localStorage.getItem(k)}catch{return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch{}}};
 
 /* ── Google Sheets API ── */
-const GS_URL='https://script.google.com/macros/s/AKfycbydALULXe87-2bV27gg6ldHV_nluUX4Ppg6S0-8qMdWMdFLqMmiqNPl34azmEp522g/exec';
+const GS_URL='https://script.google.com/macros/s/AKfycbzfd1TaKlUhle9ZtzUYxgehMTc3IxsLzxsgr6oe9JkhJdj1gtuZajBNLzN2RZz5z2M/exec';
 
 async function gsReq(params){
   const full=GS_URL+'?'+new URLSearchParams(params).toString();
@@ -96,17 +96,28 @@ function getProg(){
 function getBase(){return window.location.origin+window.location.pathname;}
 
 /* ── Date/Time helpers ── */
-// Parse time value — handles HH:MM string or Google Sheets 1899-epoch Date
+// Parse time — handles HH:MM string or any date-wrapped time value
 function parseTime(val){
   if(!val&&val!==0)return '';
   const s=String(val).trim();
   if(!s||s==='—')return '';
+  // Already HH:MM or H:MM
   if(/^\d{1,2}:\d{2}$/.test(s))return s.length===4?'0'+s:s;
+  // HH:MM:SS — strip seconds
+  if(/^\d{1,2}:\d{2}:\d{2}/.test(s))return s.slice(0,5).padStart(5,'0');
+  // Display value like "2:30 AM" / "14:30"
+  const ampm=s.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))? ?(AM|PM)?$/i);
+  if(ampm){
+    let h=+ampm[1],m=+ampm[2];
+    if(ampm[4]){if(/PM/i.test(ampm[4])&&h<12)h+=12;if(/AM/i.test(ampm[4])&&h===12)h=0;}
+    return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+  }
   try{
     const d=new Date(s);
-    // Google Sheets stores time as Date anchored to 1899-12-30
-    if(!isNaN(d)&&d.getFullYear()<=1900)
-      return String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0');
+    if(!isNaN(d)&&d.getFullYear()<=1900){
+      // Use LOCAL hours — browser is in Malaysia timezone, matches sheet
+      return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+    }
   }catch{}
   return s;
 }
