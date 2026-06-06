@@ -885,7 +885,7 @@ function now(){return new Date().toISOString();}`;
     </div>
     <div className="card" style={{padding:18,marginBottom:14}}>
       <div style={{fontSize:15,fontWeight:700,marginBottom:4}}>PIN Admin</div>
-      <div style={{fontSize:13,color:'var(--muted)',marginBottom:12}}>PIN lalai: <strong>1234</strong></div>
+      <div style={{fontSize:13,color:'var(--muted)',marginBottom:12}}>PIN lalai: <strong>1941</strong></div>
       <div style={{display:'flex',gap:8}}>
         <input type="password" placeholder="PIN baharu (4-8 digit)" value={nPin} maxLength={8} onChange={e=>setNPin(e.target.value.replace(/\D/g,''))} style={{flex:1}}/>
         <button className="btn btn-p" onClick={savePin}><i className="ti ti-lock" style={{fontSize:15}}/>Simpan</button>
@@ -959,7 +959,7 @@ function App(){
       {pErr&&<div className="alert alert-err" style={{marginTop:9}}><i className="ti ti-alert-circle" style={{fontSize:14,flexShrink:0}}/>{pErr}</div>}
       <button className="btn btn-p btn-block" style={{marginTop:14,padding:'13px',fontSize:15}} onClick={tryAdmin}><i className="ti ti-login" style={{fontSize:18}}/>Log Masuk</button>
       <button onClick={()=>{setMode('kakitangan');setPIn('');setPErr('');}} style={{marginTop:10,width:'100%',background:'none',border:'none',cursor:'pointer',color:'var(--muted)',fontSize:13,padding:'6px'}}>\u2190 Kembali ke Daftar Kehadiran</button>
-      <div style={{textAlign:'center',marginTop:8,fontSize:11,color:'var(--dim)'}}>PIN lalai: <strong style={{color:'var(--muted)'}}>1234</strong></div>
+      <div style={{textAlign:'center',marginTop:8,fontSize:11,color:'var(--dim)'}}>PIN lalai: <strong style={{color:'var(--muted)'}}>1941</strong></div>
     </div>
   </div>;
   if(mode==='admin')return<Admin pin={pin} setPin={updPin} onBack={()=>setMode('kakitangan')}/>;
