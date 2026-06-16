@@ -959,7 +959,7 @@ function App(){
       {pErr&&<div className="alert alert-err" style={{marginTop:9}}><i className="ti ti-alert-circle" style={{fontSize:14,flexShrink:0}}/>{pErr}</div>}
       <button className="btn btn-p btn-block" style={{marginTop:14,padding:'13px',fontSize:15}} onClick={tryAdmin}><i className="ti ti-login" style={{fontSize:18}}/>Log Masuk</button>
       <button onClick={()=>{setMode('kakitangan');setPIn('');setPErr('');}} style={{marginTop:10,width:'100%',background:'none',border:'none',cursor:'pointer',color:'var(--muted)',fontSize:13,padding:'6px'}}>\u2190 Kembali ke Daftar Kehadiran</button>
-      <div style={{textAlign:'center',marginTop:8,fontSize:11,color:'var(--dim)'}}>PIN lalai: <strong style={{color:'var(--muted)'}}>1941</strong></div>
+      <div style={{textAlign:'center',marginTop:8,fontSize:11,color:'var(--dim)'}}>PIN lalai: <strong style={{color:'var(--muted)'}}>1234</strong></div>
     </div>
   </div>;
   if(mode==='admin')return<Admin pin={pin} setPin={updPin} onBack={()=>setMode('kakitangan')}/>;
