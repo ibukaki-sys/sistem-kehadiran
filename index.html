@@ -66,7 +66,7 @@ const gId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6).toUp
 const ls={get:k=>{try{return localStorage.getItem(k)}catch{return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch{}}};
 
 /* ── Google Sheets API ── */
-const GS_URL='https://script.google.com/macros/s/AKfycbyjz9yA9OX_aatPCZOYcb2Imj6GrvoQzRN2MTO27dVJ84kJI0nCoDuQo-QkezLmFDk/exec';
+const GS_URL='https://script.google.com/macros/s/AKfycbzfd1TaKlUhle9ZtzUYxgehMTc3IxsLzxsgr6oe9JkhJdj1gtuZajBNLzN2RZz5z2M/exec';
 
 async function gsReq(params){
   const full=GS_URL+'?'+new URLSearchParams(params).toString();
@@ -441,7 +441,7 @@ function KView({onAdmin}){
 }
 
 /* ══ ADMIN PANEL ══ */
-function Admin({pin,setPin,onBack}){
+function Admin({pin,setPin,tPin,setTPin,role,onBack}){
   const [tab,setTab]=useState('utama');
   const [sub,setSub]=useState(null);
   const [selP,setSelP]=useState(null);
@@ -468,6 +468,7 @@ function Admin({pin,setPin,onBack}){
   const [rP,setRP]=useState('');const [rData,setRData]=useState([]);const [rLoad,setRLoad]=useState(false);
   const [prData,setPrData]=useState([]);const [prLoad,setPrLoad]=useState(false);
   const [nPin,setNPin]=useState('');const [pmErr,setPmErr]=useState('');const [pmOk,setPmOk]=useState('');
+  const [nTPin,setNTPin]=useState('');const [ptErr,setPtErr]=useState('');const [ptOk,setPtOk]=useState('');
   const [gsOk,setGsOk]=useState('');const [gsErr,setGsErr]=useState('');
 
   const loadAll=useCallback(async()=>{
@@ -493,7 +494,7 @@ function Admin({pin,setPin,onBack}){
   },[qSel]);
 
   const goTab=t=>{setTab(t);setSub(null);setSelP(null);setSErr('');setPErr('');setSOk('');setPOk('');if(t==='qrkod'&&progs.length>0&&!qSel){setQSel(progs[0]);}};
-  const addSt=async()=>{if(!sfN.trim()||!sfK.trim())return setSErr('Sila isi semua ruangan');if(sfK.length!==12)return setSErr('No KP mestilah 12 digit');setSErr('');try{await DB.addStaff({id:gId(),nama:sfN.trim(),no_kp:sfK,bahagian:+sfB});setSfN('');setSfK('');setSfB('0');setSOk('Berjaya ditambah');setTimeout(()=>setSOk(''),3000);const s=await DB.getStaff();setStaff(s||[]);}catch(e){setSErr('Ralat: '+e.message);}};
+  const addSt=async()=>{if(!sfN.trim()||!sfK.trim())return setSErr('Sila isi semua ruangan');if(sfK.length!==12)return setSErr('No KP mestilah 12 digit');setSErr('');try{await DB.addStaff({nama:sfN.trim(),no_kp:sfK,bahagian:+sfB});setSfN('');setSfK('');setSfB('0');setSOk('Berjaya ditambah');setTimeout(()=>setSOk(''),3000);const s=await DB.getStaff();setStaff(s||[]);}catch(e){setSErr('Ralat: '+e.message);}};
   const parseBulk=txt=>{
     const lines=txt.trim().split('\n').filter(l=>l.trim());
     const rows=[],errs=[];
@@ -510,7 +511,7 @@ function Admin({pin,setPin,onBack}){
       else if(/^\d+$/.test(bRaw))bah=Math.min(2,+bRaw);
       if(!nama){errs.push('Baris '+(i+1)+': nama kosong');return;}
       if(noKP.length!==12){errs.push('Baris '+(i+1)+': No KP tidak sah ('+noKP+')');return;}
-      rows.push({id:gId(),nama,no_kp:noKP,bahagian:bah});
+      rows.push({nama,no_kp:noKP,bahagian:bah});
     });
     setBulkRows(rows);setBulkErrs(errs);
   };
@@ -529,6 +530,7 @@ function Admin({pin,setPin,onBack}){
   const delPr=async id=>{try{await DB.delProg(id);setProgs(p=>p.filter(x=>x.id!==id));if(qSel&&qSel.id===id){setQSel(null);setQUrl('');setQDU('');}}catch(e){alert('Gagal: '+e.message);}};
   const testGs=async()=>{setGsErr('');setGsOk('');try{await DB.getStaff();setGsOk('Sambungan berjaya!');setTimeout(()=>setGsOk(''),4000);}catch(e){setGsErr('Gagal: '+e.message);}};
   const savePin=async()=>{if(nPin.length<4)return setPmErr('Min 4 digit');await setPin(nPin);setNPin('');setPmErr('');setPmOk('PIN dikemas kini');setTimeout(()=>setPmOk(''),3000);};
+  const saveTPin=async()=>{if(nTPin.length<4)return setPtErr('Min 4 digit');await setTPin(nTPin);setNTPin('');setPtErr('');setPtOk('PIN Guru dikemas kini');setTimeout(()=>setPtOk(''),3000);};
 
   const tUtama=()=>{
     if(loading)return<Ldr/>;
@@ -893,13 +895,24 @@ function now(){return new Date().toISOString();}`;
       {pmErr&&<div className="alert alert-err" style={{marginTop:9}}><i className="ti ti-alert-circle" style={{fontSize:14,flexShrink:0}}/>{pmErr}</div>}
       {pmOk&&<div className="alert alert-ok" style={{marginTop:9}}><i className="ti ti-check" style={{fontSize:14,flexShrink:0}}/>{pmOk}</div>}
     </div>
+    <div className="card" style={{padding:18,marginBottom:14}}>
+      <div style={{fontSize:15,fontWeight:700,marginBottom:4}}>PIN Admin Guru</div>
+      <div style={{fontSize:13,color:'var(--muted)',marginBottom:12}}>PIN untuk akses terhad (Program, QR, Laporan sahaja). PIN lalai: <strong>2024</strong></div>
+      <div style={{display:'flex',gap:8}}>
+        <input type="password" placeholder="PIN baharu (4-8 digit)" value={nTPin||''} maxLength={8} onChange={e=>setNTPin(e.target.value.replace(/\D/g,''))} style={{flex:1}}/>
+        <button className="btn btn-p" onClick={saveTPin}><i className="ti ti-lock" style={{fontSize:15}}/>Simpan</button>
+      </div>
+      {ptErr&&<div className="alert alert-err" style={{marginTop:9}}><i className="ti ti-alert-circle" style={{fontSize:14,flexShrink:0}}/>{ptErr}</div>}
+      {ptOk&&<div className="alert alert-ok" style={{marginTop:9}}><i className="ti ti-check" style={{fontSize:14,flexShrink:0}}/>{ptOk}</div>}
+    </div>
     <div className="card" style={{padding:18}}>
       <button className="btn btn-g" onClick={onBack}><i className="ti ti-arrow-left" style={{fontSize:15}}/>Keluar dari Panel Admin</button>
     </div>
   </div>;
 
-  const rTab=()=>{switch(tab){case 'utama':return tUtama();case 'kakitangan':return tKakitangan();case 'program':return tProgram();case 'qrkod':return tQRKod();case 'laporan':return tLaporan();case 'tetapan':return tTetapan();default:return tUtama();}};
-  const NAVS=[{id:'utama',ic:'layout-dashboard',l:'Papan Pemuka'},{id:'kakitangan',ic:'users',l:'Kakitangan'},{id:'program',ic:'calendar',l:'Program'},{id:'qrkod',ic:'qrcode',l:'Jana Kod QR'},{id:'laporan',ic:'chart-bar',l:'Laporan'},{id:'tetapan',ic:'settings',l:'Tetapan'}];
+  const rTab=()=>{if(role==='teacher'&&(tab==='kakitangan'||tab==='tetapan'))return tUtama();switch(tab){case 'utama':return tUtama();case 'kakitangan':return tKakitangan();case 'program':return tProgram();case 'qrkod':return tQRKod();case 'laporan':return tLaporan();case 'tetapan':return tTetapan();default:return tUtama();}};
+  const allNavs=[{id:'utama',ic:'layout-dashboard',l:'Papan Pemuka',roles:['admin','teacher']},{id:'kakitangan',ic:'users',l:'Kakitangan',roles:['admin']},{id:'program',ic:'calendar',l:'Program',roles:['admin','teacher']},{id:'qrkod',ic:'qrcode',l:'Jana Kod QR',roles:['admin','teacher']},{id:'laporan',ic:'chart-bar',l:'Laporan',roles:['admin','teacher']},{id:'tetapan',ic:'settings',l:'Tetapan',roles:['admin']}];
+  const NAVS=allNavs.filter(n=>n.roles.includes(role));
   const hdr=sub==='rep'&&selP?'Kehadiran \u2014 '+selP.nama:{utama:'Papan Pemuka',kakitangan:'Kakitangan',program:'Program',qrkod:'Jana Kod QR',laporan:'Laporan',tetapan:'Tetapan'}[tab];
 
   return<div style={{display:'flex',minHeight:'100vh'}}>
@@ -910,7 +923,7 @@ function now(){return new Date().toISOString();}`;
           <div style={{fontSize:9,color:'rgba(255,255,255,.3)',letterSpacing:'.06em',textTransform:'uppercase',lineHeight:1.4}}>SMK Haji Abdul<br/>Rahman Limbong</div>
         </div>
         <div style={{fontSize:10,fontWeight:600,color:'rgba(255,255,255,.7)',lineHeight:1.3,marginBottom:8}}>Sistem Kehadiran Program</div>
-        <div style={{display:'inline-flex',alignItems:'center',gap:4,background:'rgba(255,255,255,.08)',borderRadius:5,padding:'3px 8px',border:'1px solid rgba(255,255,255,.08)'}}><i className="ti ti-shield-check" style={{fontSize:10,color:BGL}}/><span style={{fontSize:10,color:BGL,fontWeight:600}}>ADMIN</span></div>
+        <div style={{display:'inline-flex',alignItems:'center',gap:4,background:'rgba(255,255,255,.08)',borderRadius:5,padding:'3px 8px',border:'1px solid rgba(255,255,255,.08)'}}><i className={role==='admin'?'ti ti-shield-check':'ti ti-user-check'} style={{fontSize:10,color:BGL}}/><span style={{fontSize:10,color:BGL,fontWeight:600}}>{role==='admin'?'ADMIN PENUH':'ADMIN GURU'}</span></div>
       </div>
       <div style={{padding:'9px 8px',flex:1}}>
         {NAVS.map(n=><button key={n.id} className={'nav'+(tab===n.id?' on':'')+(n.id==='qrkod'?' qr':'')} onClick={()=>goTab(n.id)}>
@@ -934,12 +947,15 @@ function now(){return new Date().toISOString();}`;
 function App(){
   const [mode,setMode]=useState(null);
   const [pin,setPin]=useState('1941');
+  const [tPin,setTPin]=useState('2024');
   const [pIn,setPIn]=useState('');
   const [pErr,setPErr]=useState('');
+  const [role,setRole]=useState('admin');
   const [dProg,setDProg]=useState(null);
-  useEffect(()=>{const p=ls.get('smk_pin5');if(p)setPin(p);const dp=getProg();if(dp&&dp.id){setDProg(dp);setMode('direct');}else setMode('kakitangan');},[]);
+  useEffect(()=>{const p=ls.get('smk_pin5');if(p)setPin(p);const tp=ls.get('smk_tpin');if(tp)setTPin(tp);const dp=getProg();if(dp&&dp.id){setDProg(dp);setMode('direct');}else setMode('kakitangan');},[]);
   const updPin=p=>{setPin(p);ls.set('smk_pin5',p);};
-  const tryAdmin=()=>{if(pIn===pin){setMode('admin');setPIn('');setPErr('');}else{setPErr('PIN tidak sah.');setPIn('');}};
+  const updTPin=p=>{setTPin(p);ls.set('smk_tpin',p);};
+  const tryAdmin=()=>{if(pIn===pin){setRole('admin');setMode('admin');setPIn('');setPErr('');}else if(pIn===tPin){setRole('teacher');setMode('admin');setPIn('');setPErr('');}else{setPErr('PIN tidak sah.');setPIn('');}};
   if(!mode)return<div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',minHeight:'100vh',gap:14,background:'#fff'}}><div style={{width:36,height:36,border:'3px solid '+BGL,borderTopColor:BG,borderRadius:'50%',animation:'spin .7s linear infinite'}}/><div style={{fontSize:14,color:'var(--muted)',fontWeight:500}}>Memuatkan sistem...</div></div>;
   if(mode==='direct'&&dProg)return<div style={{minHeight:'100vh',background:'#fff',maxWidth:480,margin:'0 auto',boxShadow:'0 0 40px rgba(0,0,0,.08)'}}><Banner/><AttForm prog={dProg} onBack={()=>{window.history.replaceState({},'',window.location.pathname);setMode('kakitangan');}} onNext={true}/></div>;
   if(mode==='pin')return<div style={{minHeight:'100vh',background:'var(--page)',display:'flex',alignItems:'center',justifyContent:'center',padding:20}}>
@@ -959,10 +975,10 @@ function App(){
       {pErr&&<div className="alert alert-err" style={{marginTop:9}}><i className="ti ti-alert-circle" style={{fontSize:14,flexShrink:0}}/>{pErr}</div>}
       <button className="btn btn-p btn-block" style={{marginTop:14,padding:'13px',fontSize:15}} onClick={tryAdmin}><i className="ti ti-login" style={{fontSize:18}}/>Log Masuk</button>
       <button onClick={()=>{setMode('kakitangan');setPIn('');setPErr('');}} style={{marginTop:10,width:'100%',background:'none',border:'none',cursor:'pointer',color:'var(--muted)',fontSize:13,padding:'6px'}}>\u2190 Kembali ke Daftar Kehadiran</button>
-      <div style={{textAlign:'center',marginTop:8,fontSize:11,color:'var(--dim)'}}>PIN lalai: <strong style={{color:'var(--muted)'}}>1234</strong></div>
+
     </div>
   </div>;
-  if(mode==='admin')return<Admin pin={pin} setPin={updPin} onBack={()=>setMode('kakitangan')}/>;
+  if(mode==='admin')return<Admin pin={pin} setPin={updPin} tPin={tPin} setTPin={updTPin} role={role} onBack={()=>setMode('kakitangan')}/>;
   return<KView onAdmin={()=>{setPIn('');setPErr('');setMode('pin');}}/>;
 }
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
