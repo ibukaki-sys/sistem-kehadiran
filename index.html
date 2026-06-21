@@ -66,7 +66,7 @@ const gId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6).toUp
 const ls={get:k=>{try{return localStorage.getItem(k)}catch{return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch{}}};
 
 /* ── Google Sheets API ── */
-const GS_URL='https://script.google.com/macros/s/AKfycbzfd1TaKlUhle9ZtzUYxgehMTc3IxsLzxsgr6oe9JkhJdj1gtuZajBNLzN2RZz5z2M/exec';
+const GS_URL='https://script.google.com/macros/s/AKfycbwf5gRmFH3XX5aiaN0aD9flsMUT8l-Z3knvhz16lXPefXuxcAMLouyyQCgO-G0Zlq0/exec';
 
 async function gsReq(params){
   const full=GS_URL+'?'+new URLSearchParams(params).toString();
@@ -82,7 +82,8 @@ const DB={
   delStaff:id=>gsReq({action:'delKakitangan',id}),
   findByKP:kp=>gsReq({action:'findByKP',no_kp:kp}),
   getProgs:()=>gsReq({action:'getProgram'}),
-  addProg:d=>gsReq({action:'addProgram',id:d.id,nama:d.nama,tempat:d.tempat,tarikh:d.tarikh,hari:d.hari,masa_mula:d.masa_mula||'',masa_tamat:d.masa_tamat||''}),
+  addProg:d=>gsReq({action:'addProgram',id:d.id,nama:d.nama,tempat:d.tempat,tarikh:d.tarikh,hari:d.hari,masa_mula:d.masa_mula||'',masa_tamat:d.masa_tamat||'',created_by:d.created_by||'',created_by_nama:d.created_by_nama||''}),
+  editProg:d=>gsReq({action:'editProgram',id:d.id,nama:d.nama,tempat:d.tempat,tarikh:d.tarikh,hari:d.hari,masa_mula:d.masa_mula||'',masa_tamat:d.masa_tamat||''}),
   delProg:id=>gsReq({action:'delProgram',id}),
   getAtt:pid=>gsReq({action:'getKehadiran',program_id:pid}),
   checkDup:(pid,kp)=>gsReq({action:'checkDup',program_id:pid,no_kp:kp}),
@@ -441,7 +442,7 @@ function KView({onAdmin}){
 }
 
 /* ══ ADMIN PANEL ══ */
-function Admin({pin,setPin,tPin,setTPin,role,onBack}){
+function Admin({pin,setPin,role,teacherInfo,onBack}){
   const [tab,setTab]=useState('utama');
   const [sub,setSub]=useState(null);
   const [selP,setSelP]=useState(null);
@@ -465,10 +466,10 @@ function Admin({pin,setPin,tPin,setTPin,role,onBack}){
   const [pfN,setPfN]=useState('');const [pfTp,setPfTp]=useState('');const [pfD,setPfD]=useState('');
   const [pfH,setPfH]=useState('1');const [pfMM,setPfMM]=useState('08:00');const [pfMT,setPfMT]=useState('17:00');
   const [pErr,setPErr]=useState('');const [pOk,setPOk]=useState('');
+  const [editId,setEditId]=useState(null);
   const [rP,setRP]=useState('');const [rData,setRData]=useState([]);const [rLoad,setRLoad]=useState(false);
   const [prData,setPrData]=useState([]);const [prLoad,setPrLoad]=useState(false);
   const [nPin,setNPin]=useState('');const [pmErr,setPmErr]=useState('');const [pmOk,setPmOk]=useState('');
-  const [nTPin,setNTPin]=useState('');const [ptErr,setPtErr]=useState('');const [ptOk,setPtOk]=useState('');
   const [gsOk,setGsOk]=useState('');const [gsErr,setGsErr]=useState('');
 
   const loadAll=useCallback(async()=>{
@@ -493,7 +494,9 @@ function Admin({pin,setPin,tPin,setTPin,role,onBack}){
     }
   },[qSel]);
 
-  const goTab=t=>{setTab(t);setSub(null);setSelP(null);setSErr('');setPErr('');setSOk('');setPOk('');if(t==='qrkod'&&progs.length>0&&!qSel){setQSel(progs[0]);}};
+  const visibleProgs=(role==='teacher'&&teacherInfo)?progs.filter(p=>String(p.created_by||'')===String(teacherInfo.id)):progs;
+  const canEdit=p=>role==='admin'||(role==='teacher'&&teacherInfo&&String(p.created_by||'')===String(teacherInfo.id));
+  const goTab=t=>{setTab(t);setSub(null);setSelP(null);setSErr('');setPErr('');setSOk('');setPOk('');setEditId(null);setPfN('');setPfTp('');setPfD('');setPfH('1');setPfMM('08:00');setPfMT('17:00');if(t==='qrkod'&&visibleProgs.length>0&&!qSel){setQSel(visibleProgs[0]);}};
   const addSt=async()=>{if(!sfN.trim()||!sfK.trim())return setSErr('Sila isi semua ruangan');if(sfK.length!==12)return setSErr('No KP mestilah 12 digit');setSErr('');try{await DB.addStaff({nama:sfN.trim(),no_kp:sfK,bahagian:+sfB});setSfN('');setSfK('');setSfB('0');setSOk('Berjaya ditambah');setTimeout(()=>setSOk(''),3000);const s=await DB.getStaff();setStaff(s||[]);}catch(e){setSErr('Ralat: '+e.message);}};
   const parseBulk=txt=>{
     const lines=txt.trim().split('\n').filter(l=>l.trim());
@@ -526,28 +529,55 @@ function Admin({pin,setPin,tPin,setTPin,role,onBack}){
     setBulkDone({ok,fail});setBulkLoad(false);
   };
   const delSt=async id=>{try{await DB.delStaff(id);setStaff(s=>s.filter(x=>x.id!==id));}catch(e){alert('Gagal: '+e.message);}};
-  const addPr=async()=>{if(!pfN.trim()||!pfTp.trim()||!pfD)return setPErr('Sila lengkapkan Nama, Tempat, dan Tarikh');setPErr('');try{await DB.addProg({id:gId(),nama:pfN.trim(),tempat:pfTp.trim(),tarikh:pfD,hari:+pfH,masa_mula:pfMM,masa_tamat:pfMT});setPfN('');setPfTp('');setPfD('');setPfH('1');setPfMM('08:00');setPfMT('17:00');setPOk('Program berjaya ditambah');setTimeout(()=>setPOk(''),3000);const p=await DB.getProgs();setProgs(p||[]);}catch(e){setPErr('Ralat: '+e.message);}};
-  const delPr=async id=>{try{await DB.delProg(id);setProgs(p=>p.filter(x=>x.id!==id));if(qSel&&qSel.id===id){setQSel(null);setQUrl('');setQDU('');}}catch(e){alert('Gagal: '+e.message);}};
+  const addPr=async()=>{
+    if(!pfN.trim()||!pfTp.trim()||!pfD)return setPErr('Sila lengkapkan Nama, Tempat, dan Tarikh');
+    setPErr('');
+    try{
+      if(editId){
+        await DB.editProg({id:editId,nama:pfN.trim(),tempat:pfTp.trim(),tarikh:pfD,hari:+pfH,masa_mula:pfMM,masa_tamat:pfMT});
+        setPOk('Program berjaya dikemaskini');
+      }else{
+        await DB.addProg({id:gId(),nama:pfN.trim(),tempat:pfTp.trim(),tarikh:pfD,hari:+pfH,masa_mula:pfMM,masa_tamat:pfMT,
+          created_by:role==='teacher'&&teacherInfo?teacherInfo.id:'',
+          created_by_nama:role==='teacher'&&teacherInfo?teacherInfo.nama:''});
+        setPOk('Program berjaya ditambah');
+      }
+      setPfN('');setPfTp('');setPfD('');setPfH('1');setPfMM('08:00');setPfMT('17:00');setEditId(null);
+      setTimeout(()=>setPOk(''),3000);
+      const p=await DB.getProgs();setProgs(p||[]);
+    }catch(e){setPErr('Ralat: '+e.message);}
+  };
+  const startEdit=p=>{
+    setEditId(p.id);setPfN(p.nama);setPfTp(p.tempat);
+    setPfD(parseDateStr(p.tarikh)||'');setPfH(String(p.hari));
+    setPfMM(parseTime(p.masa_mula)||'08:00');setPfMT(parseTime(p.masa_tamat)||'17:00');
+    setPErr('');setPOk('');
+  };
+  const cancelEdit=()=>{setEditId(null);setPfN('');setPfTp('');setPfD('');setPfH('1');setPfMM('08:00');setPfMT('17:00');setPErr('');};
+  const delPr=async id=>{try{await DB.delProg(id);setProgs(p=>p.filter(x=>x.id!==id));if(qSel&&qSel.id===id){setQSel(null);setQUrl('');setQDU('');}if(editId===id)cancelEdit();}catch(e){alert('Gagal: '+e.message);}};
   const testGs=async()=>{setGsErr('');setGsOk('');try{await DB.getStaff();setGsOk('Sambungan berjaya!');setTimeout(()=>setGsOk(''),4000);}catch(e){setGsErr('Gagal: '+e.message);}};
   const savePin=async()=>{if(nPin.length<4)return setPmErr('Min 4 digit');await setPin(nPin);setNPin('');setPmErr('');setPmOk('PIN dikemas kini');setTimeout(()=>setPmOk(''),3000);};
-  const saveTPin=async()=>{if(nTPin.length<4)return setPtErr('Min 4 digit');await setTPin(nTPin);setNTPin('');setPtErr('');setPtOk('PIN Guru dikemas kini');setTimeout(()=>setPtOk(''),3000);};
 
   const tUtama=()=>{
     if(loading)return<Ldr/>;
     if(dbErr)return<div className="alert alert-err" style={{margin:'0 0 16px'}}><i className="ti ti-alert-circle" style={{fontSize:16,flexShrink:0}}/><div>Gagal memuat data: <strong>{dbErr}</strong><br/><span style={{fontSize:12}}>Semak sambungan Apps Script dalam Tetapan.</span></div></div>;
     const today=new Date().toISOString().slice(0,10);
-    const total=Object.values(aMap).reduce((s,v)=>s+v,0);
+    const myTotal=visibleProgs.reduce((s,p)=>s+(aMap[p.id]||0),0);
     return<div style={{animation:'fadeUp .25s ease'}}>
-      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,marginBottom:22}}>
-        <SC icon="users" label="Kakitangan" value={staff.length} color={BG}/>
-        <SC icon="calendar-event" label="Program" value={progs.length} color="#5B1A6B"/>
-        <SC icon="clipboard-check" label="Rekod Hadir" value={total} color="#0C5A3D"/>
-        <SC icon="calendar-stats" label="Hari Ini" value={progs.filter(p=>parseDateStr(p.tarikh)===today).length} color="#0C3070"/>
+      {role==='teacher'&&teacherInfo&&<div className="alert alert-info" style={{marginBottom:18}}>
+        <i className="ti ti-user-check" style={{fontSize:16,flexShrink:0}}/>
+        <div>Log masuk sebagai <strong>{teacherInfo.nama}</strong> — anda hanya boleh urus program yang anda cipta sendiri.</div>
+      </div>}
+      <div style={{display:'grid',gridTemplateColumns:role==='admin'?'repeat(4,1fr)':'repeat(3,1fr)',gap:10,marginBottom:22}}>
+        {role==='admin'&&<SC icon="users" label="Kakitangan" value={staff.length} color={BG}/>}
+        <SC icon="calendar-event" label={role==='admin'?'Program':'Program Saya'} value={visibleProgs.length} color="#5B1A6B"/>
+        <SC icon="clipboard-check" label="Rekod Hadir" value={myTotal} color="#0C5A3D"/>
+        <SC icon="calendar-stats" label="Hari Ini" value={visibleProgs.filter(p=>parseDateStr(p.tarikh)===today).length} color="#0C3070"/>
       </div>
-      {progs.length>0?<><div className="sec">Program Terkini</div>
+      {visibleProgs.length>0?<><div className="sec">Program Terkini</div>
         <div className="card-sh" style={{overflow:'hidden'}}><table className="tbl"><thead><tr>
           <th style={{width:'28%'}}>Program</th><th style={{width:'18%'}}>Tempat</th><th style={{width:'18%'}}>Tarikh</th><th style={{width:'18%'}}>Masa</th><th style={{textAlign:'right'}}>Hadir</th>
-        </tr></thead><tbody>{progs.slice(0,8).map(p=>{const pm1=parseTime(p.masa_mula),pm2=parseTime(p.masa_tamat),jam=calcJam(pm1,pm2);return<tr key={p.id} onClick={()=>{setSelP(p);setSub('rep');setTab('program');}}>
+        </tr></thead><tbody>{visibleProgs.slice(0,8).map(p=>{const pm1=parseTime(p.masa_mula),pm2=parseTime(p.masa_tamat),jam=calcJam(pm1,pm2);return<tr key={p.id} onClick={()=>{setSelP(p);setSub('rep');setTab('program');}}>
           <td><div style={{fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.nama}</div></td>
           <td style={{color:'var(--muted)',fontSize:12,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.tempat}</td>
           <td style={{color:'var(--muted)',fontSize:12}}>{HR[p.hari]}, {fds(p.tarikh)}</td>
@@ -688,8 +718,8 @@ function Admin({pin,setPin,tPin,setTPin,role,onBack}){
     if(loading)return<Ldr/>;
     return<div style={{animation:'fadeUp .25s ease',display:'grid',gridTemplateColumns:'320px 1fr',gap:20,alignItems:'start'}}>
       <div className="card" style={{padding:20}}>
-        <div style={{fontSize:14,fontWeight:700,marginBottom:3}}>Tambah Program</div>
-        <div style={{fontSize:12,color:'var(--muted)',marginBottom:16}}>Cipta program baharu untuk rekod kehadiran</div>
+        <div style={{fontSize:14,fontWeight:700,marginBottom:3}}>{editId?'Kemaskini Program':'Tambah Program'}</div>
+        <div style={{fontSize:12,color:'var(--muted)',marginBottom:16}}>{editId?'Ubah butiran program sedia ada':'Cipta program baharu untuk rekod kehadiran'}</div>
         <div style={{display:'flex',flexDirection:'column',gap:12}}>
           <Fld label="Nama Program"><input placeholder="Cth: Kursus Pemantapan PdP" value={pfN} onChange={e=>setPfN(e.target.value)}/></Fld>
           <Fld label="Tempat"><input placeholder="Cth: Dewan Sekolah" value={pfTp} onChange={e=>setPfTp(e.target.value)}/></Fld>
@@ -706,40 +736,48 @@ function Admin({pin,setPin,tPin,setTPin,role,onBack}){
           </div>}
           {pErr&&<div className="alert alert-err"><i className="ti ti-alert-circle" style={{fontSize:14,flexShrink:0}}/>{pErr}</div>}
           {pOk&&<div className="alert alert-ok"><i className="ti ti-check" style={{fontSize:14,flexShrink:0}}/>{pOk}</div>}
-          <button className="btn btn-p btn-block" onClick={addPr}><i className="ti ti-plus" style={{fontSize:16}}/>Tambah Program</button>
+          <div style={{display:'flex',gap:8}}>
+            {editId&&<button className="btn btn-g" style={{flex:'0 0 auto'}} onClick={cancelEdit}><i className="ti ti-x" style={{fontSize:15}}/></button>}
+            <button className="btn btn-p btn-block" onClick={addPr}>
+              <i className={editId?'ti ti-check':'ti ti-plus'} style={{fontSize:16}}/>{editId?'Simpan Perubahan':'Tambah Program'}
+            </button>
+          </div>
         </div>
       </div>
       <div>
-        <div className="sec">{progs.length} program</div>
-        {progs.length===0?<div className="card-sh"><Mty icon="calendar" msg="Belum ada program."/></div>
+        <div className="sec">{visibleProgs.length} program{role==='teacher'?' anda':''}</div>
+        {visibleProgs.length===0?<div className="card-sh"><Mty icon="calendar" msg="Belum ada program."/></div>
         :<div className="card-sh" style={{overflow:'hidden'}}><table className="tbl"><thead><tr>
-          <th style={{width:'26%'}}>Program</th><th style={{width:'16%'}}>Tempat</th><th style={{width:'18%'}}>Tarikh</th><th style={{width:'20%'}}>Masa</th><th style={{width:60,textAlign:'center'}}>Hadir</th><th style={{width:90}}></th>
-        </tr></thead><tbody>{progs.map(p=>{const pm1=parseTime(p.masa_mula),pm2=parseTime(p.masa_tamat),jam=calcJam(pm1,pm2);return<tr key={p.id}>
+          <th style={{width:role==='admin'?'22%':'26%'}}>Program</th><th style={{width:'14%'}}>Tempat</th><th style={{width:'16%'}}>Tarikh</th><th style={{width:'18%'}}>Masa</th>
+          {role==='admin'&&<th style={{width:'14%'}}>Dicipta Oleh</th>}
+          <th style={{width:55,textAlign:'center'}}>Hadir</th><th style={{width:120}}></th>
+        </tr></thead><tbody>{visibleProgs.map(p=>{const pm1=parseTime(p.masa_mula),pm2=parseTime(p.masa_tamat),jam=calcJam(pm1,pm2);return<tr key={p.id}>
           <td><div style={{fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.nama}</div></td>
           <td style={{color:'var(--muted)',fontSize:12,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.tempat}</td>
           <td style={{color:'var(--muted)',fontSize:12}}>{HR[p.hari]}, {fds(p.tarikh)}</td>
           <td style={{fontSize:11}}>{pm1&&pm2?<div><div style={{color:'var(--text)',fontWeight:500}}>{pm1} — {pm2}</div><div style={{color:BG,fontWeight:600}}>{jam||''}</div></div>:<span style={{color:'var(--dim)'}}>—</span>}</td>
+          {role==='admin'&&<td style={{fontSize:11,color:'var(--muted)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.created_by_nama||'—'}</td>}
           <td style={{textAlign:'center'}}><span style={{background:BGL,color:BGD,padding:'3px 9px',borderRadius:99,fontWeight:700,fontSize:12}}>{aMap[p.id]||0}</span></td>
           <td><div style={{display:'flex',gap:4,justifyContent:'flex-end'}}>
-            <button className="btn btn-g btn-sm" onClick={()=>{setQSel(p);goTab('qrkod');}}><i className="ti ti-qrcode" style={{fontSize:13}}/>QR</button>
+            <button className="btn btn-g btn-sm" onClick={()=>{setQSel(p);goTab('qrkod');}}><i className="ti ti-qrcode" style={{fontSize:13}}/></button>
             <button className="btn-icon" onClick={()=>{setSelP(p);setSub('rep');}}><i className="ti ti-list" style={{fontSize:15}}/></button>
-            <button className="btn-icon" onClick={()=>delPr(p.id)}><i className="ti ti-trash" style={{fontSize:15}}/></button>
+            {canEdit(p)&&<button className="btn-icon" onClick={()=>startEdit(p)}><i className="ti ti-edit" style={{fontSize:15}}/></button>}
+            {canEdit(p)&&<button className="btn-icon" onClick={()=>delPr(p.id)}><i className="ti ti-trash" style={{fontSize:15}}/></button>}
           </div></td>
         </tr>;})}
         </tbody></table></div>}
       </div>
     </div>;
   };
-
   const tQRKod=()=>{
-    const sel=qSel||progs[0]||null;
-    if(progs.length===0)return<div className="card-sh"><Mty icon="qrcode-off" msg="Tambah program dahulu."/></div>;
+    const sel=qSel||visibleProgs[0]||null;
+    if(visibleProgs.length===0)return<div className="card-sh"><Mty icon="qrcode-off" msg="Tambah program dahulu."/></div>;
     const pm1=sel?parseTime(sel.masa_mula):'',pm2=sel?parseTime(sel.masa_tamat):'',jam=calcJam(pm1,pm2);
     const exp=sel?calcExpiry(sel):null;
     return<div style={{animation:'fadeUp .25s ease',display:'grid',gridTemplateColumns:'215px 1fr',gap:0,minHeight:480}}>
       <div style={{borderRight:'1px solid var(--border)',overflowY:'auto'}}>
         <div style={{padding:'10px 14px 8px',borderBottom:'1px solid var(--border2)'}}><div className="sec">Pilih Program</div></div>
-        {progs.map(p=>{const isSel=sel&&sel.id===p.id;const p1=parseTime(p.masa_mula),p2=parseTime(p.masa_tamat);return<div key={p.id} className={'pi'+(isSel?' on':'')} onClick={()=>setQSel(p)}>
+        {visibleProgs.map(p=>{const isSel=sel&&sel.id===p.id;const p1=parseTime(p.masa_mula),p2=parseTime(p.masa_tamat);return<div key={p.id} className={'pi'+(isSel?' on':'')} onClick={()=>setQSel(p)}>
           <div style={{fontWeight:isSel?600:500,fontSize:13,color:isSel?BGD:'var(--text)',marginBottom:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.nama}</div>
           <div style={{fontSize:11,color:isSel?BGD:'var(--muted)'}}>{HR[p.hari]}, {fds(p.tarikh)}</div>
           {p1&&p2&&<div style={{fontSize:11,color:isSel?BG:'var(--dim)',marginTop:2}}>{p1}–{p2}</div>}
@@ -797,13 +835,13 @@ function Admin({pin,setPin,tPin,setTPin,role,onBack}){
   };
 
   const tLaporan=()=>{
-    const cur=rP?progs.find(p=>p.id===rP):null;
+    const cur=rP?visibleProgs.find(p=>p.id===rP):null;
     const loadR=async pid=>{setRLoad(true);try{const r=await DB.getAtt(pid);setRData(r||[]);}catch{setRData([]);}setRLoad(false);};
     return<div style={{animation:'fadeUp .25s ease'}}>
       <div style={{marginBottom:14}}><label className="lbl" style={{marginBottom:6}}>Pilih Program</label>
         <select value={rP} onChange={e=>{setRP(e.target.value);if(e.target.value)loadR(e.target.value);}} style={{maxWidth:360}}>
           <option value="">— Pilih program —</option>
-          {progs.map(p=><option key={p.id} value={p.id}>{p.nama} · {fds(p.tarikh)}</option>)}
+          {visibleProgs.map(p=><option key={p.id} value={p.id}>{p.nama} · {fds(p.tarikh)}</option>)}
         </select>
       </div>
       {cur&&<div style={{display:'grid',gridTemplateColumns:'200px 1fr',gap:14,alignItems:'start'}}>
@@ -842,16 +880,22 @@ function Admin({pin,setPin,tPin,setTPin,role,onBack}){
     if(a==='getKakitangan')    r=sArr('kakitangan');
     else if(a==='addKakitangan'){addByH('kakitangan',{id:p.id,nama:p.nama,no_kp:p.no_kp,bahagian:+p.bahagian,created_at:now()});r={ok:true};}
     else if(a==='delKakitangan'){delId('kakitangan',p.id);r={ok:true};}
-    else if(a==='findByKP')    r=sArr('kakitangan').filter(x=>x.no_kp===p.no_kp);
+    else if(a==='findByKP')    r=sArr('kakitangan').filter(x=>String(x.no_kp)===String(p.no_kp));
     else if(a==='getProgram')  r=sArr('program').reverse();
     else if(a==='addProgram'){
       addByH('program',{id:p.id,nama:p.nama,tempat:p.tempat,tarikh:p.tarikh,
-        hari:+p.hari,masa_mula:p.masa_mula||'',masa_tamat:p.masa_tamat||'',created_at:now()});
+        hari:+p.hari,masa_mula:p.masa_mula||'',masa_tamat:p.masa_tamat||'',
+        created_by:p.created_by||'',created_by_nama:p.created_by_nama||'',created_at:now()});
+      r={ok:true};
+    }
+    else if(a==='editProgram'){
+      updateRow('program',p.id,{nama:p.nama,tempat:p.tempat,tarikh:p.tarikh,hari:+p.hari,
+        masa_mula:p.masa_mula||'',masa_tamat:p.masa_tamat||''});
       r={ok:true};
     }
     else if(a==='delProgram')  {delId('program',p.id);r={ok:true};}
     else if(a==='getKehadiran') r=sArr('kehadiran').filter(x=>x.program_id===p.program_id);
-    else if(a==='checkDup')    r=sArr('kehadiran').filter(x=>x.program_id===p.program_id&&x.no_kp===p.no_kp);
+    else if(a==='checkDup')    r=sArr('kehadiran').filter(x=>x.program_id===p.program_id&&String(x.no_kp)===String(p.no_kp));
     else if(a==='addKehadiran'){
       addByH('kehadiran',{id:p.id,program_id:p.program_id,kakitangan_id:p.kakitangan_id||'',
         no_kp:p.no_kp,nama:p.nama,bahagian:p.bahagian!==''?+p.bahagian:'',
@@ -864,13 +908,40 @@ function Admin({pin,setPin,tPin,setTPin,role,onBack}){
 }
 function out(d){return ContentService.createTextOutput(JSON.stringify(d)).setMimeType(ContentService.MimeType.JSON);}
 const SS=SpreadsheetApp.getActiveSpreadsheet();
-const HD={kakitangan:['id','nama','no_kp','bahagian','created_at'],program:['id','nama','tempat','tarikh','hari','masa_mula','masa_tamat','created_at'],kehadiran:['id','program_id','kakitangan_id','no_kp','nama','bahagian','masa','verified']};
+const HD={kakitangan:['id','nama','no_kp','bahagian','created_at'],program:['id','nama','tempat','tarikh','hari','masa_mula','masa_tamat','created_by','created_by_nama','created_at'],kehadiran:['id','program_id','kakitangan_id','no_kp','nama','bahagian','masa','verified']};
 function gs(n){let s=SS.getSheetByName(n);if(!s){s=SS.insertSheet(n);s.getRange(1,1,1,HD[n].length).setValues([HD[n]]);s.setFrozenRows(1);}return s;}
-function fmtVal(v){if(v instanceof Date){const y=v.getFullYear();if(y<=1900)return Utilities.formatDate(v,Session.getScriptTimeZone(),'HH:mm');return Utilities.formatDate(v,Session.getScriptTimeZone(),'yyyy-MM-dd');}return v;}
-function addByH(n,obj){const s=gs(n);const h=s.getRange(1,1,1,s.getLastColumn()).getValues()[0];s.appendRow(h.map(k=>obj[k]!==undefined?obj[k]:''));}
-function sArr(n){const d=gs(n).getDataRange().getValues();if(d.length<2)return[];const h=d[0];return d.slice(1).map(r=>Object.fromEntries(h.map((k,i)=>[k,fmtVal(r[i])])));}
+function fmtVal(v,display){if(v instanceof Date)return display||'';return v;}
+function addByH(n,obj){
+  const s=gs(n);const h=s.getRange(1,1,1,s.getLastColumn()).getValues()[0];
+  s.appendRow(h.map(k=>obj[k]!==undefined?obj[k]:''));
+  const lastRow=s.getLastRow();
+  const textCols={kakitangan:['id','no_kp'],program:['id','masa_mula','masa_tamat','created_by'],kehadiran:['id','program_id','kakitangan_id','no_kp']};
+  (textCols[n]||[]).forEach(col=>{const ci=h.indexOf(col);if(ci>=0){s.getRange(lastRow,ci+1).setNumberFormat('@');s.getRange(lastRow,ci+1).setValue(obj[col]||'');}});
+}
+function updateRow(n,id,obj){
+  const s=gs(n);const data=s.getDataRange().getValues();const h=data[0];const idIdx=h.indexOf('id');
+  for(let r=1;r<data.length;r++){
+    if(String(data[r][idIdx])===String(id)){
+      h.forEach((k,ci)=>{if(obj[k]!==undefined){s.getRange(r+1,ci+1).setValue(obj[k]);if(k==='masa_mula'||k==='masa_tamat')s.getRange(r+1,ci+1).setNumberFormat('@');}});
+      return true;
+    }
+  }
+  return false;
+}
+function sArr(n){
+  const s=gs(n);const data=s.getDataRange().getValues();const disp=s.getDataRange().getDisplayValues();
+  if(data.length<2)return[];const h=data[0];
+  return data.slice(1).map((r,ri)=>Object.fromEntries(h.map((k,i)=>[k,fmtVal(r[i],disp[ri+1][i])])));
+}
 function delId(n,id){const s=gs(n);const ids=s.getRange(1,1,s.getLastRow(),1).getValues().flat();const i=ids.indexOf(id);if(i>0)s.deleteRow(i+1);}
-function now(){return new Date().toISOString();}`;
+function now(){return new Date().toISOString();}
+function addProgramOwnerCols(){
+  const s=gs('program');const h=s.getRange(1,1,1,s.getLastColumn()).getValues()[0];
+  if(h.indexOf('created_by')!==-1){Logger.log('Sudah ada');return;}
+  const lc=s.getLastColumn();s.insertColumnsAfter(lc,2);
+  s.getRange(1,lc+1).setValue('created_by');s.getRange(1,lc+2).setValue('created_by_nama');
+  Logger.log('Kolum created_by & created_by_nama ditambah.');
+}`;
 
   const tTetapan=()=><div style={{animation:'fadeUp .25s ease',maxWidth:560}}>
     <div className="card" style={{padding:20,marginBottom:14}}>
@@ -895,16 +966,6 @@ function now(){return new Date().toISOString();}`;
       {pmErr&&<div className="alert alert-err" style={{marginTop:9}}><i className="ti ti-alert-circle" style={{fontSize:14,flexShrink:0}}/>{pmErr}</div>}
       {pmOk&&<div className="alert alert-ok" style={{marginTop:9}}><i className="ti ti-check" style={{fontSize:14,flexShrink:0}}/>{pmOk}</div>}
     </div>
-    <div className="card" style={{padding:18,marginBottom:14}}>
-      <div style={{fontSize:15,fontWeight:700,marginBottom:4}}>PIN Admin Guru</div>
-      <div style={{fontSize:13,color:'var(--muted)',marginBottom:12}}>PIN untuk akses terhad (Program, QR, Laporan sahaja). PIN lalai: <strong>2024</strong></div>
-      <div style={{display:'flex',gap:8}}>
-        <input type="password" placeholder="PIN baharu (4-8 digit)" value={nTPin||''} maxLength={8} onChange={e=>setNTPin(e.target.value.replace(/\D/g,''))} style={{flex:1}}/>
-        <button className="btn btn-p" onClick={saveTPin}><i className="ti ti-lock" style={{fontSize:15}}/>Simpan</button>
-      </div>
-      {ptErr&&<div className="alert alert-err" style={{marginTop:9}}><i className="ti ti-alert-circle" style={{fontSize:14,flexShrink:0}}/>{ptErr}</div>}
-      {ptOk&&<div className="alert alert-ok" style={{marginTop:9}}><i className="ti ti-check" style={{fontSize:14,flexShrink:0}}/>{ptOk}</div>}
-    </div>
     <div className="card" style={{padding:18}}>
       <button className="btn btn-g" onClick={onBack}><i className="ti ti-arrow-left" style={{fontSize:15}}/>Keluar dari Panel Admin</button>
     </div>
@@ -923,7 +984,7 @@ function now(){return new Date().toISOString();}`;
           <div style={{fontSize:9,color:'rgba(255,255,255,.3)',letterSpacing:'.06em',textTransform:'uppercase',lineHeight:1.4}}>SMK Haji Abdul<br/>Rahman Limbong</div>
         </div>
         <div style={{fontSize:10,fontWeight:600,color:'rgba(255,255,255,.7)',lineHeight:1.3,marginBottom:8}}>Sistem Kehadiran Program</div>
-        <div style={{display:'inline-flex',alignItems:'center',gap:4,background:'rgba(255,255,255,.08)',borderRadius:5,padding:'3px 8px',border:'1px solid rgba(255,255,255,.08)'}}><i className={role==='admin'?'ti ti-shield-check':'ti ti-user-check'} style={{fontSize:10,color:BGL}}/><span style={{fontSize:10,color:BGL,fontWeight:600}}>{role==='admin'?'ADMIN PENUH':'ADMIN GURU'}</span></div>
+        <div style={{display:'inline-flex',alignItems:'center',gap:4,background:'rgba(255,255,255,.08)',borderRadius:5,padding:'3px 8px',border:'1px solid rgba(255,255,255,.08)'}}><i className={role==='admin'?'ti ti-shield-check':'ti ti-user-check'} style={{fontSize:10,color:BGL}}/><span style={{fontSize:10,color:BGL,fontWeight:600}}>{role==='admin'?'ADMIN PENUH':'GURU'}</span></div>
       </div>
       <div style={{padding:'9px 8px',flex:1}}>
         {NAVS.map(n=><button key={n.id} className={'nav'+(tab===n.id?' on':'')+(n.id==='qrkod'?' qr':'')} onClick={()=>goTab(n.id)}>
@@ -936,7 +997,7 @@ function now(){return new Date().toISOString();}`;
     <div style={{flex:1,minWidth:0,display:'flex',flexDirection:'column',background:'var(--page)'}}>
       <div style={{padding:'12px 22px',borderBottom:'1px solid var(--border)',background:'#fff',display:'flex',alignItems:'center',justifyContent:'space-between',boxShadow:'var(--sh1)'}}>
         <div style={{fontSize:15,fontWeight:700}}>{hdr}</div>
-        <div style={{fontSize:11,color:'var(--dim)',fontWeight:500}}>{new Date().toLocaleDateString('ms-MY',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div>
+        <div style={{fontSize:11,color:'var(--dim)',fontWeight:500}}>{role==='teacher'&&teacherInfo?teacherInfo.nama+' • ':''}{new Date().toLocaleDateString('ms-MY',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div>
       </div>
       <div style={{padding:'20px 22px 36px',flex:1,overflowY:'auto'}}>{rTab()}</div>
     </div>
@@ -946,40 +1007,78 @@ function now(){return new Date().toISOString();}`;
 /* ══ ROOT ══ */
 function App(){
   const [mode,setMode]=useState(null);
+  const [loginTab,setLoginTab]=useState('admin');
   const [pin,setPin]=useState('1941');
-  const [tPin,setTPin]=useState('2024');
   const [pIn,setPIn]=useState('');
   const [pErr,setPErr]=useState('');
   const [role,setRole]=useState('admin');
+  const [teacherInfo,setTeacherInfo]=useState(null);
+  const [gKP,setGKP]=useState('');
+  const [gErr,setGErr]=useState('');
+  const [gLoad,setGLoad]=useState(false);
   const [dProg,setDProg]=useState(null);
-  useEffect(()=>{const p=ls.get('smk_pin5');if(p)setPin(p);const tp=ls.get('smk_tpin');if(tp)setTPin(tp);const dp=getProg();if(dp&&dp.id){setDProg(dp);setMode('direct');}else setMode('kakitangan');},[]);
+  useEffect(()=>{const p=ls.get('smk_pin5');if(p)setPin(p);const dp=getProg();if(dp&&dp.id){setDProg(dp);setMode('direct');}else setMode('kakitangan');},[]);
   const updPin=p=>{setPin(p);ls.set('smk_pin5',p);};
-  const updTPin=p=>{setTPin(p);ls.set('smk_tpin',p);};
-  const tryAdmin=()=>{if(pIn===pin){setRole('admin');setMode('admin');setPIn('');setPErr('');}else if(pIn===tPin){setRole('teacher');setMode('admin');setPIn('');setPErr('');}else{setPErr('PIN tidak sah.');setPIn('');}};
+  const tryAdmin=()=>{if(pIn===pin){setRole('admin');setTeacherInfo(null);setMode('admin');setPIn('');setPErr('');}else{setPErr('PIN tidak sah.');setPIn('');}};
+  const tryGuru=async()=>{
+    if(gKP.length!==12)return setGErr('No KP mestilah 12 digit');
+    setGLoad(true);setGErr('');
+    try{
+      const r=await DB.findByKP(gKP.trim());
+      const s=r&&r[0];
+      if(!s){setGErr('No KP tidak dijumpai dalam pangkalan data kakitangan. Sila hubungi pentadbir.');setGLoad(false);return;}
+      setTeacherInfo({id:s.id,nama:s.nama,no_kp:s.no_kp});
+      setRole('teacher');setMode('admin');setGKP('');setGErr('');
+    }catch(e){setGErr('Ralat sambungan: '+e.message);}
+    setGLoad(false);
+  };
   if(!mode)return<div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',minHeight:'100vh',gap:14,background:'#fff'}}><div style={{width:36,height:36,border:'3px solid '+BGL,borderTopColor:BG,borderRadius:'50%',animation:'spin .7s linear infinite'}}/><div style={{fontSize:14,color:'var(--muted)',fontWeight:500}}>Memuatkan sistem...</div></div>;
   if(mode==='direct'&&dProg)return<div style={{minHeight:'100vh',background:'#fff',maxWidth:480,margin:'0 auto',boxShadow:'0 0 40px rgba(0,0,0,.08)'}}><Banner/><AttForm prog={dProg} onBack={()=>{window.history.replaceState({},'',window.location.pathname);setMode('kakitangan');}} onNext={true}/></div>;
   if(mode==='pin')return<div style={{minHeight:'100vh',background:'var(--page)',display:'flex',alignItems:'center',justifyContent:'center',padding:20}}>
     <div style={{background:'#fff',borderRadius:20,padding:'32px 28px',maxWidth:380,width:'100%',boxShadow:'var(--sh3)',border:'1px solid var(--border)',animation:'fadeUp .25s ease'}}>
-      <div style={{textAlign:'center',marginBottom:26}}>
+      <div style={{textAlign:'center',marginBottom:22}}>
         <div style={{width:68,height:68,borderRadius:18,background:'linear-gradient(135deg,'+BARK+' 0%,#6b1020 100%)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:34,margin:'0 auto 14px',color:'#fff',boxShadow:'0 4px 20px rgba(45,5,16,.3)'}}><i className="ti ti-school"/></div>
         <div style={{fontSize:10,color:'var(--dim)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:5}}>Kementerian Pendidikan Malaysia</div>
         <div style={{fontSize:16,fontWeight:800,color:BGD,lineHeight:1.3,marginBottom:5}}>{SCHOOL}</div>
-        <div style={{fontSize:12,color:'var(--muted)',fontWeight:500}}>Log Masuk Panel Admin</div>
+        <div style={{fontSize:12,color:'var(--muted)',fontWeight:500}}>Log Masuk Panel Pengurusan</div>
       </div>
-      <div className="fld"><label className="lbl">PIN Admin</label>
-        <input type="password" inputMode="numeric" placeholder="&#9679; &#9679; &#9679; &#9679;" value={pIn} maxLength={8}
-          onChange={e=>{setPIn(e.target.value.replace(/\D/g,''));setPErr('');}}
-          onKeyDown={e=>e.key==='Enter'&&tryAdmin()}
-          style={{fontSize:28,padding:'14px 18px',textAlign:'center',letterSpacing:8,borderColor:pErr?'var(--err)':'var(--border)'}}/>
+      <div style={{display:'flex',gap:6,marginBottom:20,background:'var(--wine-l)',borderRadius:'var(--r-s)',padding:4}}>
+        {[['admin','Admin Penuh'],['guru','Guru']].map(([id,label])=>(
+          <button key={id} onClick={()=>{setLoginTab(id);setPErr('');setGErr('');}}
+            style={{flex:1,padding:'8px',border:'none',borderRadius:6,cursor:'pointer',fontWeight:600,fontSize:13,fontFamily:'Outfit,sans-serif',
+              background:loginTab===id?BG:'transparent',color:loginTab===id?'#fff':BGD,transition:'all .15s'}}>
+            {label}
+          </button>
+        ))}
       </div>
-      {pErr&&<div className="alert alert-err" style={{marginTop:9}}><i className="ti ti-alert-circle" style={{fontSize:14,flexShrink:0}}/>{pErr}</div>}
-      <button className="btn btn-p btn-block" style={{marginTop:14,padding:'13px',fontSize:15}} onClick={tryAdmin}><i className="ti ti-login" style={{fontSize:18}}/>Log Masuk</button>
-      <button onClick={()=>{setMode('kakitangan');setPIn('');setPErr('');}} style={{marginTop:10,width:'100%',background:'none',border:'none',cursor:'pointer',color:'var(--muted)',fontSize:13,padding:'6px'}}>\u2190 Kembali ke Daftar Kehadiran</button>
-
+      {loginTab==='admin'?<>
+        <div className="fld"><label className="lbl">PIN Admin</label>
+          <input type="password" inputMode="numeric" placeholder="&#9679; &#9679; &#9679; &#9679;" value={pIn} maxLength={8}
+            onChange={e=>{setPIn(e.target.value.replace(/\D/g,''));setPErr('');}}
+            onKeyDown={e=>e.key==='Enter'&&tryAdmin()}
+            style={{fontSize:28,padding:'14px 18px',textAlign:'center',letterSpacing:8,borderColor:pErr?'var(--err)':'var(--border)'}}/>
+        </div>
+        {pErr&&<div className="alert alert-err" style={{marginTop:9}}><i className="ti ti-alert-circle" style={{fontSize:14,flexShrink:0}}/>{pErr}</div>}
+        <button className="btn btn-p btn-block" style={{marginTop:14,padding:'13px',fontSize:15}} onClick={tryAdmin}><i className="ti ti-login" style={{fontSize:18}}/>Log Masuk</button>
+      </>:<>
+        <div className="fld"><label className="lbl">No. Kad Pengenalan</label>
+          <input inputMode="numeric" placeholder="901231125432" value={gKP} maxLength={12}
+            onChange={e=>{setGKP(e.target.value.replace(/\D/g,''));setGErr('');}}
+            onKeyDown={e=>e.key==='Enter'&&tryGuru()}
+            style={{fontSize:20,padding:'14px 18px',textAlign:'center',letterSpacing:3,borderColor:gErr?'var(--err)':'var(--border)'}}/>
+          <div style={{fontSize:11,color:'var(--dim)',textAlign:'center',marginTop:4}}>Guru mesti berdaftar dalam pangkalan data kakitangan</div>
+        </div>
+        {gErr&&<div className="alert alert-err" style={{marginTop:9}}><i className="ti ti-alert-circle" style={{fontSize:14,flexShrink:0}}/>{gErr}</div>}
+        <button className="btn btn-p btn-block" style={{marginTop:14,padding:'13px',fontSize:15}} onClick={tryGuru} disabled={gLoad}>
+          {gLoad?<span style={{width:18,height:18,border:'2px solid rgba(255,255,255,.4)',borderTopColor:'#fff',borderRadius:'50%',animation:'spin .7s linear infinite'}}/>:<i className="ti ti-login" style={{fontSize:18}}/>}
+          {gLoad?'Menyemak...':'Log Masuk'}
+        </button>
+      </>}
+      <button onClick={()=>{setMode('kakitangan');setPIn('');setPErr('');setGKP('');setGErr('');}} style={{marginTop:10,width:'100%',background:'none',border:'none',cursor:'pointer',color:'var(--muted)',fontSize:13,padding:'6px'}}>\u2190 Kembali ke Daftar Kehadiran</button>
     </div>
   </div>;
-  if(mode==='admin')return<Admin pin={pin} setPin={updPin} tPin={tPin} setTPin={updTPin} role={role} onBack={()=>setMode('kakitangan')}/>;
-  return<KView onAdmin={()=>{setPIn('');setPErr('');setMode('pin');}}/>;
+  if(mode==='admin')return<Admin pin={pin} setPin={updPin} role={role} teacherInfo={teacherInfo} onBack={()=>{setMode('kakitangan');setTeacherInfo(null);}}/>;
+  return<KView onAdmin={()=>{setPIn('');setPErr('');setGKP('');setGErr('');setLoginTab('admin');setMode('pin');}}/>;
 }
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 
