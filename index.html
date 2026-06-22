@@ -579,8 +579,8 @@ function Admin({pin,setPin,role,teacherInfo,onBack}){
         <SC icon="calendar-stats" label="Hari Ini" value={visibleProgs.filter(p=>parseDateStr(p.tarikh)===today).length} color="#0C3070"/>
       </div>
       {visibleProgs.length>0?<><div className="sec">Program Terkini</div>
-        <div className="card-sh" style={{overflow:'hidden'}}><table className="tbl"><thead><tr>
-          <th style={{width:'28%'}}>Program</th><th style={{width:'18%'}}>Tempat</th><th style={{width:'18%'}}>Tarikh</th><th style={{width:'18%'}}>Masa</th><th style={{textAlign:'right'}}>Hadir</th>
+        <div className="card-sh" style={{overflowX:'auto'}}><table className="tbl" style={{minWidth:640}}><thead><tr>
+          <th style={{width:'30%'}}>Program</th><th style={{width:'18%'}}>Tempat</th><th style={{width:'17%'}}>Tarikh</th><th style={{width:'17%'}}>Masa</th><th style={{width:'14%',textAlign:'right',whiteSpace:'nowrap'}}>Hadir</th>
         </tr></thead><tbody>{visibleProgs.slice(0,8).map(p=>{const pm1=parseTime(p.masa_mula),pm2=parseTime(p.masa_tamat),jam=calcJam(pm1,pm2);return<tr key={p.id} onClick={()=>{setSelP(p);setSub('rep');setTab('program');}}>
           <td><div style={{fontWeight:600,whiteSpace:'normal',wordBreak:'break-word'}}>{p.nama}</div></td>
           <td style={{color:'var(--muted)',fontSize:12,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.tempat}</td>
@@ -783,10 +783,10 @@ function Admin({pin,setPin,role,teacherInfo,onBack}){
         </button>
       </div>
       {visibleProgs.length===0?<div className="card-sh"><Mty icon="calendar" msg="Belum ada program."/></div>
-      :<div className="card-sh" style={{overflow:'hidden'}}><table className="tbl"><thead><tr>
-        <th style={{width:role==='admin'?'24%':'30%'}}>Program</th><th style={{width:'16%'}}>Tempat</th><th style={{width:'16%'}}>Tarikh</th><th style={{width:'18%'}}>Masa</th>
+      :<div className="card-sh" style={{overflowX:'auto'}}><table className="tbl" style={{minWidth:role==='admin'?920:780}}><thead><tr>
+        <th style={{width:role==='admin'?'24%':'34%'}}>Program</th><th style={{width:'15%'}}>Tempat</th><th style={{width:'15%'}}>Tarikh</th><th style={{width:'17%'}}>Masa</th>
         {role==='admin'&&<th style={{width:'14%'}}>Dicipta Oleh</th>}
-        <th style={{width:55,textAlign:'center'}}>Hadir</th><th style={{width:120}}></th>
+        <th style={{width:64,textAlign:'center',whiteSpace:'nowrap'}}>Hadir</th><th style={{width:155,whiteSpace:'nowrap'}}></th>
       </tr></thead><tbody>{visibleProgs.map(p=>{const pm1=parseTime(p.masa_mula),pm2=parseTime(p.masa_tamat),jam=calcJam(pm1,pm2);return<tr key={p.id}>
         <td><div style={{fontWeight:600,whiteSpace:'normal',wordBreak:'break-word'}}>{p.nama}</div></td>
         <td style={{color:'var(--muted)',fontSize:12,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.tempat}</td>
