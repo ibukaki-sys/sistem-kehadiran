@@ -1109,7 +1109,7 @@ function App(){
           {gLoad?'Menyemak...':'Log Masuk'}
         </button>
       </>}
-      <button onClick={()=>{setMode('kakitangan');setPIn('');setPErr('');setGKP('');setGErr('');}} style={{marginTop:10,width:'100%',background:'none',border:'none',cursor:'pointer',color:'var(--muted)',fontSize:13,padding:'6px'}}>\u2190 Kembali ke Daftar Kehadiran</button>
+      <button onClick={()=>{setMode('kakitangan');setPIn('');setPErr('');setGKP('');setGErr('');}} style={{marginTop:10,width:'100%',background:'none',border:'none',cursor:'pointer',color:'var(--muted)',fontSize:13,padding:'6px'}}>Kembali ke Daftar Kehadiran</button>
     </div>
   </div>;
   if(mode==='admin')return<Admin pin={pin} setPin={updPin} role={role} teacherInfo={teacherInfo} onBack={()=>{setMode('kakitangan');setTeacherInfo(null);}}/>;
