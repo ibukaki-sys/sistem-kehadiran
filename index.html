@@ -66,7 +66,7 @@ const gId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6).toUp
 const ls={get:k=>{try{return localStorage.getItem(k)}catch{return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch{}}};
 
 /* ── Google Sheets API ── */
-const GS_URL='https://script.google.com/macros/s/AKfycbw11d935HMV_FYRpWVQEPU0h1K35XyLY6UOx7kuBDuUlahrs3HRrE-jyg2MySmLcMQ/exec';
+const GS_URL='https://script.google.com/macros/s/AKfycbwVA_UefOOr23EKizHiWR70A-8BOtsPECuQ1Davp_aT6pxhpSUcKLJZzxWmqLp5V1Y/exec';
 
 async function gsReq(params){
   const full=GS_URL+'?'+new URLSearchParams(params).toString();
