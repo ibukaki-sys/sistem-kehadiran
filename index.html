@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Sistem Kehadiran — SMK Haji Abdul Rahman Limbong</title>
+<title>Sistem Kehadiran Mesyuarat/Kursus/Bengkel — SMK Haji Abdul Rahman Limbong</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.33.0/dist/tabler-icons.min.css"/>
@@ -66,7 +66,7 @@ const gId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6).toUp
 const ls={get:k=>{try{return localStorage.getItem(k)}catch{return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch{}}};
 
 /* ── Google Sheets API ── */
-const GS_URL='https://script.google.com/macros/s/AKfycbwf5gRmFH3XX5aiaN0aD9flsMUT8l-Z3knvhz16lXPefXuxcAMLouyyQCgO-G0Zlq0/exec';
+const GS_URL='https://script.google.com/macros/s/AKfycbw11d935HMV_FYRpWVQEPU0h1K35XyLY6UOx7kuBDuUlahrs3HRrE-jyg2MySmLcMQ/exec';
 
 async function gsReq(params){
   const full=GS_URL+'?'+new URLSearchParams(params).toString();
@@ -171,7 +171,7 @@ function Fld({label,children,hint}){return<div className="fld">{label&&<label cl
 function SC({icon,label,value,color}){return<div style={{background:'#fff',border:'1px solid var(--border)',borderRadius:'var(--r)',padding:'14px 16px',display:'flex',alignItems:'center',gap:12,boxShadow:'var(--sh1)'}}><div style={{width:40,height:40,borderRadius:10,background:color+'15',color,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,flexShrink:0}}><i className={'ti ti-'+icon}/></div><div><div style={{fontSize:24,fontWeight:700,lineHeight:1,color:'var(--text)',marginBottom:3}}>{value}</div><div style={{fontSize:11,color:'var(--muted)',fontWeight:500,textTransform:'uppercase',letterSpacing:'.04em'}}>{label}</div></div></div>;}
 function Ldr(){return<div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:'48px',gap:10}}><div style={{width:22,height:22,border:'3px solid '+BGL,borderTopColor:BG,borderRadius:'50%',animation:'spin .7s linear infinite'}}/><span style={{color:'var(--muted)',fontSize:14}}>Memuat data...</span></div>;}
 function Mty({icon,msg}){return<div style={{textAlign:'center',padding:'48px 24px'}}><i className={'ti ti-'+icon} style={{fontSize:44,display:'block',marginBottom:12,color:'var(--border)'}}/><div style={{fontSize:14,color:'var(--muted)'}}>{msg}</div></div>;}
-function Banner({right}){return<div className="sch-banner" style={{padding:'18px 20px'}}><div style={{display:'flex',alignItems:'center',gap:14,position:'relative',zIndex:1}}><div style={{width:56,height:56,borderRadius:14,background:'rgba(255,255,255,.12)',border:'1.5px solid rgba(255,255,255,.2)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><i className="ti ti-school" style={{fontSize:28,color:'rgba(255,255,255,.9)'}}/></div><div style={{flex:1,minWidth:0}}><div style={{fontSize:9,color:'rgba(255,255,255,.4)',letterSpacing:'.09em',textTransform:'uppercase',marginBottom:2}}>Kementerian Pendidikan Malaysia</div><div style={{fontSize:19,fontWeight:800,color:'#fff',letterSpacing:'.01em',lineHeight:1.15,marginBottom:2}}>{SCHOOL}</div><div style={{fontSize:11,color:'rgba(255,255,255,.5)'}}>Sistem Kehadiran Program</div></div>{right&&<div style={{flexShrink:0}}>{right}</div>}</div></div>;}
+function Banner({right}){return<div className="sch-banner" style={{padding:'18px 20px'}}><div style={{display:'flex',alignItems:'center',gap:14,position:'relative',zIndex:1}}><div style={{width:56,height:56,borderRadius:14,background:'rgba(255,255,255,.12)',border:'1.5px solid rgba(255,255,255,.2)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><i className="ti ti-school" style={{fontSize:28,color:'rgba(255,255,255,.9)'}}/></div><div style={{flex:1,minWidth:0}}><div style={{fontSize:9,color:'rgba(255,255,255,.4)',letterSpacing:'.09em',textTransform:'uppercase',marginBottom:2}}>Kementerian Pendidikan Malaysia</div><div style={{fontSize:19,fontWeight:800,color:'#fff',letterSpacing:'.01em',lineHeight:1.15,marginBottom:2}}>{SCHOOL}</div><div style={{fontSize:11,color:'rgba(255,255,255,.5)'}}>Sistem Kehadiran Mesyuarat/Kursus/Bengkel</div></div>{right&&<div style={{flexShrink:0}}>{right}</div>}</div></div>;}
 
 /* ── QRGen — stable, no blinking ── */
 function QRGen({data,size,onDU}){
@@ -258,7 +258,7 @@ function dlQR(prog,du){
     x.textAlign='center';
     x.fillStyle='rgba(255,255,255,.35)';x.font='9px Arial';x.fillText('KEMENTERIAN PENDIDIKAN MALAYSIA',W/2,16);
     x.fillStyle='#fff';x.font='bold 15px Arial';x.fillText('SMK HAJI ABDUL RAHMAN LIMBONG',W/2,38);
-    x.fillStyle='rgba(255,255,255,.4)';x.font='10px Arial';x.fillText('SISTEM KEHADIRAN MESYUARAT/KURSUS/BENGKEL',W/2,58);
+    x.fillStyle='rgba(255,255,255,.4)';x.font='10px Arial';x.fillText('SISTEM KEHADIRAN PROGRAM',W/2,58);
     if(jam){x.fillStyle='rgba(255,255,255,.25)';x.font='9px Arial';x.fillText('Tempoh: '+jam,W/2,74);}
     const qs=260,qx=(W-qs)/2,qy=104;
     x.fillStyle='#f9f3f4';x.beginPath();x.roundRect(qx-12,qy-12,qs+24,qs+24,10);x.fill();
@@ -283,7 +283,7 @@ function prQR(prog,du){
   if(!du){alert('QR belum siap.');return;}
   const w=window.open('','_blank','width=540,height=760');if(!w){alert('Sila benarkan pop-up.');return;}
   const pm1=parseTime(prog.masa_mula),pm2=parseTime(prog.masa_tamat),jam=calcJam(pm1,pm2)||'';
-  w.document.write('<!DOCTYPE html><html><head><title>QR</title><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet"/><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:\'Outfit\',Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#F9F4F5;padding:20px}.card{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 40px rgba(139,26,46,.15);width:360px;text-align:center}.hdr{background:linear-gradient(135deg,#2D0510,#6b1020);padding:16px 20px}.kpm{font-size:8px;color:rgba(255,255,255,.35);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}.sch{font-size:14px;font-weight:800;color:#fff;margin-bottom:2px}.sys{font-size:10px;color:rgba(255,255,255,.4)}.qw{padding:18px;display:flex;justify-content:center;background:#fdf5f6}.qw img{width:210px;height:210px;border-radius:8px}.bar{height:3px;background:#8B1A2E;margin:0 20px}.inf{padding:14px 20px 18px;background:#fdf5f6}.inf h2{font-size:14px;font-weight:700;color:#1A0A0D;margin-bottom:5px}.inf p{font-size:11px;color:#7A4555;margin:2px 0}.nt{font-size:9px;color:#C09AA8;margin-top:10px;padding-top:9px;border-top:1px dashed #EDD8DC;line-height:1.5}.ft{background:#8B1A2E;height:5px}@media print{body{background:#fff;padding:0}}</style></head><body><div class="card"><div class="hdr"><div class="kpm">Kementerian Pendidikan Malaysia</div><div class="sch">SMK Haji Abdul Rahman Limbong</div><div class="sys">Sistem Kehadiran Program</div></div><div class="qw"><img src="'+du+'"/></div><div class="bar"></div><div class="inf"><h2>'+prog.nama+'</h2><p>&#128205; '+prog.tempat+'</p><p>&#128197; '+HR[prog.hari]+', '+fd(prog.tarikh)+'</p>'+(pm1&&pm2?'<p>&#128336; '+pm1+' &mdash; '+pm2+(jam?' ('+jam+')':'')+'</p>':'')+'<p class="nt">Imbas kod QR dengan kamera telefon untuk membuka laman pendaftaran kehadiran.</p></div><div class="ft"></div></div><scr'+'ipt>setTimeout(()=>window.print(),500)</sc'+'ript></body></html>');
+  w.document.write('<!DOCTYPE html><html><head><title>QR</title><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet"/><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:\'Outfit\',Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#F9F4F5;padding:20px}.card{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 40px rgba(139,26,46,.15);width:360px;text-align:center}.hdr{background:linear-gradient(135deg,#2D0510,#6b1020);padding:16px 20px}.kpm{font-size:8px;color:rgba(255,255,255,.35);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}.sch{font-size:14px;font-weight:800;color:#fff;margin-bottom:2px}.sys{font-size:10px;color:rgba(255,255,255,.4)}.qw{padding:18px;display:flex;justify-content:center;background:#fdf5f6}.qw img{width:210px;height:210px;border-radius:8px}.bar{height:3px;background:#8B1A2E;margin:0 20px}.inf{padding:14px 20px 18px;background:#fdf5f6}.inf h2{font-size:14px;font-weight:700;color:#1A0A0D;margin-bottom:5px}.inf p{font-size:11px;color:#7A4555;margin:2px 0}.nt{font-size:9px;color:#C09AA8;margin-top:10px;padding-top:9px;border-top:1px dashed #EDD8DC;line-height:1.5}.ft{background:#8B1A2E;height:5px}@media print{body{background:#fff;padding:0}}</style></head><body><div class="card"><div class="hdr"><div class="kpm">Kementerian Pendidikan Malaysia</div><div class="sch">SMK Haji Abdul Rahman Limbong</div><div class="sys">Sistem Kehadiran Mesyuarat/Kursus/Bengkel</div></div><div class="qw"><img src="'+du+'"/></div><div class="bar"></div><div class="inf"><h2>'+prog.nama+'</h2><p>&#128205; '+prog.tempat+'</p><p>&#128197; '+HR[prog.hari]+', '+fd(prog.tarikh)+'</p>'+(pm1&&pm2?'<p>&#128336; '+pm1+' &mdash; '+pm2+(jam?' ('+jam+')':'')+'</p>':'')+'<p class="nt">Imbas kod QR dengan kamera telefon untuk membuka laman pendaftaran kehadiran.</p></div><div class="ft"></div></div><scr'+'ipt>setTimeout(()=>window.print(),500)</sc'+'ript></body></html>');
   w.document.close();
 }
 
@@ -467,6 +467,8 @@ function Admin({pin,setPin,role,teacherInfo,onBack}){
   const [pfH,setPfH]=useState('1');const [pfMM,setPfMM]=useState('08:00');const [pfMT,setPfMT]=useState('17:00');
   const [pErr,setPErr]=useState('');const [pOk,setPOk]=useState('');
   const [editId,setEditId]=useState(null);
+  const [showProgModal,setShowProgModal]=useState(false);
+  const [confirmDelP,setConfirmDelP]=useState(null);
   const [rP,setRP]=useState('');const [rData,setRData]=useState([]);const [rLoad,setRLoad]=useState(false);
   const [prData,setPrData]=useState([]);const [prLoad,setPrLoad]=useState(false);
   const [nPin,setNPin]=useState('');const [pmErr,setPmErr]=useState('');const [pmOk,setPmOk]=useState('');
@@ -542,7 +544,7 @@ function Admin({pin,setPin,role,teacherInfo,onBack}){
           created_by_nama:role==='teacher'&&teacherInfo?teacherInfo.nama:''});
         setPOk('Program berjaya ditambah');
       }
-      setPfN('');setPfTp('');setPfD('');setPfH('1');setPfMM('08:00');setPfMT('17:00');setEditId(null);
+      setPfN('');setPfTp('');setPfD('');setPfH('1');setPfMM('08:00');setPfMT('17:00');setEditId(null);setShowProgModal(false);
       setTimeout(()=>setPOk(''),3000);
       const p=await DB.getProgs();setProgs(p||[]);
     }catch(e){setPErr('Ralat: '+e.message);}
@@ -554,6 +556,8 @@ function Admin({pin,setPin,role,teacherInfo,onBack}){
     setPErr('');setPOk('');
   };
   const cancelEdit=()=>{setEditId(null);setPfN('');setPfTp('');setPfD('');setPfH('1');setPfMM('08:00');setPfMT('17:00');setPErr('');};
+  const closeModal=()=>{setShowProgModal(false);cancelEdit();};
+  const submitModal=async()=>{await addPr();};
   const delPr=async id=>{try{await DB.delProg(id);setProgs(p=>p.filter(x=>x.id!==id));if(qSel&&qSel.id===id){setQSel(null);setQUrl('');setQDU('');}if(editId===id)cancelEdit();}catch(e){alert('Gagal: '+e.message);}};
   const testGs=async()=>{setGsErr('');setGsOk('');try{await DB.getStaff();setGsOk('Sambungan berjaya!');setTimeout(()=>setGsOk(''),4000);}catch(e){setGsErr('Gagal: '+e.message);}};
   const savePin=async()=>{if(nPin.length<4)return setPmErr('Min 4 digit');await setPin(nPin);setNPin('');setPmErr('');setPmOk('PIN dikemas kini');setTimeout(()=>setPmOk(''),3000);};
@@ -578,7 +582,7 @@ function Admin({pin,setPin,role,teacherInfo,onBack}){
         <div className="card-sh" style={{overflow:'hidden'}}><table className="tbl"><thead><tr>
           <th style={{width:'28%'}}>Program</th><th style={{width:'18%'}}>Tempat</th><th style={{width:'18%'}}>Tarikh</th><th style={{width:'18%'}}>Masa</th><th style={{textAlign:'right'}}>Hadir</th>
         </tr></thead><tbody>{visibleProgs.slice(0,8).map(p=>{const pm1=parseTime(p.masa_mula),pm2=parseTime(p.masa_tamat),jam=calcJam(pm1,pm2);return<tr key={p.id} onClick={()=>{setSelP(p);setSub('rep');setTab('program');}}>
-          <td><div style={{fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.nama}</div></td>
+          <td><div style={{fontWeight:600,whiteSpace:'normal',wordBreak:'break-word'}}>{p.nama}</div></td>
           <td style={{color:'var(--muted)',fontSize:12,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.tempat}</td>
           <td style={{color:'var(--muted)',fontSize:12}}>{HR[p.hari]}, {fds(p.tarikh)}</td>
           <td style={{fontSize:11}}>{pm1&&pm2?<span style={{color:'var(--text)'}}>{pm1}–{pm2}</span>:<span style={{color:'var(--dim)'}}>—</span>}</td>
@@ -713,60 +717,91 @@ function Admin({pin,setPin,role,teacherInfo,onBack}){
     </div>;
   };
 
+  const DelConfirmModal=()=>!confirmDelP?null:<div onClick={e=>{if(e.target===e.currentTarget)setConfirmDelP(null);}}
+      style={{position:'fixed',inset:0,background:'rgba(45,5,16,.45)',display:'flex',alignItems:'center',justifyContent:'center',padding:20,zIndex:1100,animation:'fadeUp .15s ease'}}>
+    <div style={{background:'#fff',borderRadius:16,padding:24,maxWidth:380,width:'100%',boxShadow:'var(--sh3)',textAlign:'center'}}>
+      <div style={{width:56,height:56,borderRadius:'50%',background:'var(--err-l)',color:'var(--err)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px',fontSize:28}}><i className="ti ti-trash"/></div>
+      <div style={{fontSize:16,fontWeight:700,marginBottom:6}}>Padam Program?</div>
+      <div style={{fontSize:13,color:'var(--muted)',marginBottom:4,lineHeight:1.5}}>Anda akan memadam:</div>
+      <div style={{fontSize:14,fontWeight:600,color:'var(--text)',marginBottom:14}}>{confirmDelP.nama}</div>
+      <div style={{fontSize:12,color:'var(--err)',background:'var(--err-l)',padding:'8px 12px',borderRadius:'var(--r-s)',marginBottom:18,lineHeight:1.5}}>
+        Tindakan ini tidak boleh dibatalkan. Rekod kehadiran yang berkaitan tidak akan dipadam.
+      </div>
+      <div style={{display:'flex',gap:8}}>
+        <button className="btn btn-g btn-block" onClick={()=>setConfirmDelP(null)}>Batal</button>
+        <button className="btn btn-block" style={{background:'var(--err)',color:'#fff'}} onClick={()=>{delPr(confirmDelP.id);setConfirmDelP(null);}}>
+          <i className="ti ti-trash" style={{fontSize:15}}/>Padam
+        </button>
+      </div>
+    </div>
+  </div>;
+
+  const ProgModal=()=>!showProgModal?null:<div onClick={e=>{if(e.target===e.currentTarget)closeModal();}}
+      style={{position:'fixed',inset:0,background:'rgba(45,5,16,.45)',display:'flex',alignItems:'center',justifyContent:'center',padding:20,zIndex:1000,animation:'fadeUp .15s ease'}}>
+    <div style={{background:'#fff',borderRadius:16,padding:24,maxWidth:440,width:'100%',boxShadow:'var(--sh3)',maxHeight:'90vh',overflowY:'auto'}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:4}}>
+        <div style={{fontSize:16,fontWeight:700}}>{editId?'Kemaskini Program':'Tambah Program'}</div>
+        <button className="btn-icon" onClick={closeModal}><i className="ti ti-x" style={{fontSize:18}}/></button>
+      </div>
+      <div style={{fontSize:12,color:'var(--muted)',marginBottom:18}}>{editId?'Ubah butiran program sedia ada':'Cipta program baharu untuk rekod kehadiran'}</div>
+      <div style={{display:'flex',flexDirection:'column',gap:12}}>
+        <Fld label="Nama Program"><input placeholder="Cth: Kursus Pemantapan PdP" value={pfN} onChange={e=>setPfN(e.target.value)}/></Fld>
+        <Fld label="Tempat"><input placeholder="Cth: Dewan Sekolah" value={pfTp} onChange={e=>setPfTp(e.target.value)}/></Fld>
+        <Fld label="Tarikh"><input type="date" value={pfD} onChange={e=>{const d=e.target.value;setPfD(d);if(d)setPfH(String(new Date(d+'T00:00').getDay()));}}/></Fld>
+        <Fld label="Hari"><select value={pfH} onChange={e=>setPfH(e.target.value)}>{HR.map((h,i)=><option key={i} value={i}>{h}</option>)}</select></Fld>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+          <Fld label="Masa Mula"><input type="time" value={pfMM} onChange={e=>setPfMM(e.target.value)}/></Fld>
+          <Fld label="Masa Tamat"><input type="time" value={pfMT} onChange={e=>setPfMT(e.target.value)}/></Fld>
+        </div>
+        {pfMM&&pfMT&&calcJam(pfMM,pfMT)&&<div className="alert alert-info" style={{padding:'8px 12px'}}>
+          <i className="ti ti-clock" style={{fontSize:14,flexShrink:0}}/>
+          <span style={{fontWeight:600}}>{calcJam(pfMM,pfMT)}</span>
+          <span style={{color:'var(--muted)',fontSize:12,marginLeft:4}}>— QR tamat 1 jam selepas program</span>
+        </div>}
+        {pErr&&<div className="alert alert-err"><i className="ti ti-alert-circle" style={{fontSize:14,flexShrink:0}}/>{pErr}</div>}
+        {pOk&&<div className="alert alert-ok"><i className="ti ti-check" style={{fontSize:14,flexShrink:0}}/>{pOk}</div>}
+        <div style={{display:'flex',gap:8,marginTop:4}}>
+          <button className="btn btn-g" onClick={closeModal}>Batal</button>
+          <button className="btn btn-p btn-block" onClick={submitModal}>
+            <i className={editId?'ti ti-check':'ti ti-plus'} style={{fontSize:16}}/>{editId?'Simpan Perubahan':'Tambah Program'}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>;
+
   const tProgram=()=>{
     if(sub==='rep'&&selP)return tProgRep();
     if(loading)return<Ldr/>;
-    return<div style={{animation:'fadeUp .25s ease',display:'grid',gridTemplateColumns:'320px 1fr',gap:20,alignItems:'start'}}>
-      <div className="card" style={{padding:20}}>
-        <div style={{fontSize:14,fontWeight:700,marginBottom:3}}>{editId?'Kemaskini Program':'Tambah Program'}</div>
-        <div style={{fontSize:12,color:'var(--muted)',marginBottom:16}}>{editId?'Ubah butiran program sedia ada':'Cipta program baharu untuk rekod kehadiran'}</div>
-        <div style={{display:'flex',flexDirection:'column',gap:12}}>
-          <Fld label="Nama Program"><input placeholder="Cth: Kursus Pemantapan PdP" value={pfN} onChange={e=>setPfN(e.target.value)}/></Fld>
-          <Fld label="Tempat"><input placeholder="Cth: Dewan Sekolah" value={pfTp} onChange={e=>setPfTp(e.target.value)}/></Fld>
-          <Fld label="Tarikh"><input type="date" value={pfD} onChange={e=>{const d=e.target.value;setPfD(d);if(d)setPfH(String(new Date(d+'T00:00').getDay()));}}/></Fld>
-          <Fld label="Hari"><select value={pfH} onChange={e=>setPfH(e.target.value)}>{HR.map((h,i)=><option key={i} value={i}>{h}</option>)}</select></Fld>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-            <Fld label="Masa Mula"><input type="time" value={pfMM} onChange={e=>setPfMM(e.target.value)}/></Fld>
-            <Fld label="Masa Tamat"><input type="time" value={pfMT} onChange={e=>setPfMT(e.target.value)}/></Fld>
-          </div>
-          {pfMM&&pfMT&&calcJam(pfMM,pfMT)&&<div className="alert alert-info" style={{padding:'8px 12px'}}>
-            <i className="ti ti-clock" style={{fontSize:14,flexShrink:0}}/>
-            <span style={{fontWeight:600}}>{calcJam(pfMM,pfMT)}</span>
-            <span style={{color:'var(--muted)',fontSize:12,marginLeft:4}}>— QR tamat 1 jam selepas program</span>
-          </div>}
-          {pErr&&<div className="alert alert-err"><i className="ti ti-alert-circle" style={{fontSize:14,flexShrink:0}}/>{pErr}</div>}
-          {pOk&&<div className="alert alert-ok"><i className="ti ti-check" style={{fontSize:14,flexShrink:0}}/>{pOk}</div>}
-          <div style={{display:'flex',gap:8}}>
-            {editId&&<button className="btn btn-g" style={{flex:'0 0 auto'}} onClick={cancelEdit}><i className="ti ti-x" style={{fontSize:15}}/></button>}
-            <button className="btn btn-p btn-block" onClick={addPr}>
-              <i className={editId?'ti ti-check':'ti ti-plus'} style={{fontSize:16}}/>{editId?'Simpan Perubahan':'Tambah Program'}
-            </button>
-          </div>
-        </div>
+    return<div style={{animation:'fadeUp .25s ease'}}>
+      {ProgModal()}
+      {DelConfirmModal()}
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
+        <div className="sec" style={{marginBottom:0}}>{visibleProgs.length} program{role==='teacher'?' anda':''}</div>
+        <button className="btn btn-p" onClick={()=>{cancelEdit();setShowProgModal(true);}}>
+          <i className="ti ti-plus" style={{fontSize:16}}/>Tambah Program
+        </button>
       </div>
-      <div>
-        <div className="sec">{visibleProgs.length} program{role==='teacher'?' anda':''}</div>
-        {visibleProgs.length===0?<div className="card-sh"><Mty icon="calendar" msg="Belum ada program."/></div>
-        :<div className="card-sh" style={{overflow:'hidden'}}><table className="tbl"><thead><tr>
-          <th style={{width:role==='admin'?'22%':'26%'}}>Program</th><th style={{width:'14%'}}>Tempat</th><th style={{width:'16%'}}>Tarikh</th><th style={{width:'18%'}}>Masa</th>
-          {role==='admin'&&<th style={{width:'14%'}}>Dicipta Oleh</th>}
-          <th style={{width:55,textAlign:'center'}}>Hadir</th><th style={{width:120}}></th>
-        </tr></thead><tbody>{visibleProgs.map(p=>{const pm1=parseTime(p.masa_mula),pm2=parseTime(p.masa_tamat),jam=calcJam(pm1,pm2);return<tr key={p.id}>
-          <td><div style={{fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.nama}</div></td>
-          <td style={{color:'var(--muted)',fontSize:12,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.tempat}</td>
-          <td style={{color:'var(--muted)',fontSize:12}}>{HR[p.hari]}, {fds(p.tarikh)}</td>
-          <td style={{fontSize:11}}>{pm1&&pm2?<div><div style={{color:'var(--text)',fontWeight:500}}>{pm1} — {pm2}</div><div style={{color:BG,fontWeight:600}}>{jam||''}</div></div>:<span style={{color:'var(--dim)'}}>—</span>}</td>
-          {role==='admin'&&<td style={{fontSize:11,color:'var(--muted)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.created_by_nama||'—'}</td>}
-          <td style={{textAlign:'center'}}><span style={{background:BGL,color:BGD,padding:'3px 9px',borderRadius:99,fontWeight:700,fontSize:12}}>{aMap[p.id]||0}</span></td>
-          <td><div style={{display:'flex',gap:4,justifyContent:'flex-end'}}>
-            <button className="btn btn-g btn-sm" onClick={()=>{setQSel(p);goTab('qrkod');}}><i className="ti ti-qrcode" style={{fontSize:13}}/></button>
-            <button className="btn-icon" onClick={()=>{setSelP(p);setSub('rep');}}><i className="ti ti-list" style={{fontSize:15}}/></button>
-            {canEdit(p)&&<button className="btn-icon" onClick={()=>startEdit(p)}><i className="ti ti-edit" style={{fontSize:15}}/></button>}
-            {canEdit(p)&&<button className="btn-icon" onClick={()=>delPr(p.id)}><i className="ti ti-trash" style={{fontSize:15}}/></button>}
-          </div></td>
-        </tr>;})}
-        </tbody></table></div>}
-      </div>
+      {visibleProgs.length===0?<div className="card-sh"><Mty icon="calendar" msg="Belum ada program."/></div>
+      :<div className="card-sh" style={{overflow:'hidden'}}><table className="tbl"><thead><tr>
+        <th style={{width:role==='admin'?'24%':'30%'}}>Program</th><th style={{width:'16%'}}>Tempat</th><th style={{width:'16%'}}>Tarikh</th><th style={{width:'18%'}}>Masa</th>
+        {role==='admin'&&<th style={{width:'14%'}}>Dicipta Oleh</th>}
+        <th style={{width:55,textAlign:'center'}}>Hadir</th><th style={{width:120}}></th>
+      </tr></thead><tbody>{visibleProgs.map(p=>{const pm1=parseTime(p.masa_mula),pm2=parseTime(p.masa_tamat),jam=calcJam(pm1,pm2);return<tr key={p.id}>
+        <td><div style={{fontWeight:600,whiteSpace:'normal',wordBreak:'break-word'}}>{p.nama}</div></td>
+        <td style={{color:'var(--muted)',fontSize:12,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.tempat}</td>
+        <td style={{color:'var(--muted)',fontSize:12}}>{HR[p.hari]}, {fds(p.tarikh)}</td>
+        <td style={{fontSize:11}}>{pm1&&pm2?<div><div style={{color:'var(--text)',fontWeight:500}}>{pm1} — {pm2}</div><div style={{color:BG,fontWeight:600}}>{jam||''}</div></div>:<span style={{color:'var(--dim)'}}>—</span>}</td>
+        {role==='admin'&&<td style={{fontSize:11,color:'var(--muted)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.created_by_nama||'—'}</td>}
+        <td style={{textAlign:'center'}}><span style={{background:BGL,color:BGD,padding:'3px 9px',borderRadius:99,fontWeight:700,fontSize:12}}>{aMap[p.id]||0}</span></td>
+        <td><div style={{display:'flex',gap:4,justifyContent:'flex-end'}}>
+          <button className="btn btn-g btn-sm" onClick={()=>{setQSel(p);goTab('qrkod');}}><i className="ti ti-qrcode" style={{fontSize:13}}/></button>
+          <button className="btn-icon" onClick={()=>{setSelP(p);setSub('rep');}}><i className="ti ti-list" style={{fontSize:15}}/></button>
+          {canEdit(p)&&<button className="btn-icon" onClick={()=>{startEdit(p);setShowProgModal(true);}}><i className="ti ti-edit" style={{fontSize:15}}/></button>}
+          {canEdit(p)&&<button className="btn-icon" onClick={()=>setConfirmDelP(p)}><i className="ti ti-trash" style={{fontSize:15}}/></button>}
+        </div></td>
+      </tr>;})}
+      </tbody></table></div>}
     </div>;
   };
   const tQRKod=()=>{
@@ -983,7 +1018,7 @@ function addProgramOwnerCols(){
           <div style={{width:34,height:34,borderRadius:9,background:'rgba(255,255,255,.1)',border:'1px solid rgba(255,255,255,.14)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><i className="ti ti-school" style={{fontSize:18,color:'rgba(255,255,255,.85)'}}/></div>
           <div style={{fontSize:9,color:'rgba(255,255,255,.3)',letterSpacing:'.06em',textTransform:'uppercase',lineHeight:1.4}}>SMK Haji Abdul<br/>Rahman Limbong</div>
         </div>
-        <div style={{fontSize:10,fontWeight:600,color:'rgba(255,255,255,.7)',lineHeight:1.3,marginBottom:8}}>Sistem Kehadiran Kursus, Mesyuarat, Bengkel</div>
+        <div style={{fontSize:10,fontWeight:600,color:'rgba(255,255,255,.7)',lineHeight:1.3,marginBottom:8}}>Sistem Kehadiran Mesyuarat/Kursus/Bengkel</div>
         <div style={{display:'inline-flex',alignItems:'center',gap:4,background:'rgba(255,255,255,.08)',borderRadius:5,padding:'3px 8px',border:'1px solid rgba(255,255,255,.08)'}}><i className={role==='admin'?'ti ti-shield-check':'ti ti-user-check'} style={{fontSize:10,color:BGL}}/><span style={{fontSize:10,color:BGL,fontWeight:600}}>{role==='admin'?'ADMIN PENUH':'GURU'}</span></div>
       </div>
       <div style={{padding:'9px 8px',flex:1}}>
